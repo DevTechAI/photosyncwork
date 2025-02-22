@@ -23,6 +23,7 @@ export function EstimateForm({ open, onClose }: EstimateFormProps) {
     selectedServices: [],
     estimateDetails: {
       events: [],
+      estimates: [], // Added the missing estimates array
       deliverables: []
     }
   });
