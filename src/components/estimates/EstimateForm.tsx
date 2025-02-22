@@ -3,14 +3,13 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useState } from "react";
-import { ClientDetailsCard } from "../invoices/components/ClientDetailsCard";
-import { InvoiceItemsCard } from "../invoices/components/InvoiceItemsCard";
-import { TotalCard } from "../invoices/components/TotalCard";
+import { WelcomePage } from "./pages/WelcomePage";
+import { ServicesPage } from "./pages/ServicesPage";
+import { EstimateDetailsPage } from "./pages/EstimateDetailsPage";
 
 interface EstimateFormProps {
   open: boolean;
@@ -18,33 +17,70 @@ interface EstimateFormProps {
 }
 
 export function EstimateForm({ open, onClose }: EstimateFormProps) {
-  const [items, setItems] = useState([{ description: "", amount: "" }]);
-  const [gstRate, setGstRate] = useState("18");
+  const [currentPage, setCurrentPage] = useState(0);
+  const [formData, setFormData] = useState({
+    clientName: "",
+    selectedServices: [],
+    estimateDetails: {
+      events: [],
+      deliverables: []
+    }
+  });
+
+  const pages = [
+    <WelcomePage 
+      key="welcome" 
+      clientName={formData.clientName}
+      onClientNameChange={(name) => 
+        setFormData(prev => ({ ...prev, clientName: name }))
+      }
+    />,
+    <ServicesPage 
+      key="services"
+      selectedServices={formData.selectedServices}
+      onServicesChange={(services) =>
+        setFormData(prev => ({ ...prev, selectedServices: services }))
+      }
+    />,
+    <EstimateDetailsPage 
+      key="details"
+      estimateDetails={formData.estimateDetails}
+      onDetailsChange={(details) =>
+        setFormData(prev => ({ ...prev, estimateDetails: details }))
+      }
+    />
+  ];
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create New Estimate</DialogTitle>
-          <DialogDescription>
-            Create a new estimate for your photography services.
-          </DialogDescription>
         </DialogHeader>
-        <form className="space-y-6">
-          <ClientDetailsCard />
-          <InvoiceItemsCard items={items} onItemsChange={setItems} />
-          <TotalCard
-            items={items}
-            gstRate={gstRate}
-            onGstRateChange={setGstRate}
-          />
-          <div className="flex justify-end gap-4">
-            <Button variant="outline" type="button" onClick={onClose}>
-              Cancel
+        <div className="space-y-6">
+          {pages[currentPage]}
+          <div className="flex justify-between pt-6 border-t">
+            <Button
+              variant="outline"
+              onClick={() => setCurrentPage(prev => prev - 1)}
+              disabled={currentPage === 0}
+            >
+              Previous
             </Button>
-            <Button type="submit">Create Estimate</Button>
+            <Button
+              onClick={() => {
+                if (currentPage === pages.length - 1) {
+                  // Handle form submission
+                  console.log("Form data:", formData);
+                } else {
+                  setCurrentPage(prev => prev + 1);
+                }
+              }}
+            >
+              {currentPage === pages.length - 1 ? "Create Estimate" : "Next"}
+            </Button>
           </div>
-        </form>
+        </div>
       </DialogContent>
     </Dialog>
   );
