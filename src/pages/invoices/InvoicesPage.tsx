@@ -1,9 +1,25 @@
 
 import Layout from "@/components/Layout";
+import { InvoiceForm } from "@/components/invoices/InvoiceForm";
+import { InvoiceDetails } from "@/components/invoices/InvoiceDetails";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Plus, Receipt, ArrowUpDown, MoreHorizontal } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import {
+  Plus,
+  Receipt,
+  ArrowUpDown,
+  MoreHorizontal,
+  Search,
+  Filter,
+} from "lucide-react";
 import { useState } from "react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 // Temporary mock data
 const mockInvoices = [
@@ -32,6 +48,26 @@ const mockInvoices = [
 
 export default function InvoicesPage() {
   const [sortBy, setSortBy] = useState<"date" | "amount">("date");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const [showNewInvoice, setShowNewInvoice] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState<typeof mockInvoices[0] | null>(null);
+
+  // Filter and sort invoices
+  const filteredInvoices = mockInvoices
+    .filter((invoice) => {
+      const matchesSearch = invoice.client
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase());
+      const matchesStatus = !statusFilter || invoice.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    })
+    .sort((a, b) => {
+      if (sortBy === "date") {
+        return new Date(b.date).getTime() - new Date(a.date).getTime();
+      }
+      return parseInt(b.amount.replace(/[₹,]/g, "")) - parseInt(a.amount.replace(/[₹,]/g, ""));
+    });
 
   return (
     <Layout>
@@ -43,7 +79,7 @@ export default function InvoicesPage() {
               Manage your client invoices and payments
             </p>
           </div>
-          <Button className="gap-2">
+          <Button className="gap-2" onClick={() => setShowNewInvoice(true)}>
             <Plus className="h-4 w-4" />
             New Invoice
           </Button>
@@ -71,18 +107,60 @@ export default function InvoicesPage() {
           </Card>
         </div>
 
+        {/* Search and Filter Bar */}
+        <div className="flex gap-4 items-center">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search invoices..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="gap-2">
+                <Filter className="h-4 w-4" />
+                {statusFilter || "All Status"}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => setStatusFilter(null)}>
+                All Status
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setStatusFilter("Paid")}>
+                Paid
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setStatusFilter("Pending")}>
+                Pending
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setStatusFilter("Draft")}>
+                Draft
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
         {/* Invoices List */}
         <Card>
           <div className="p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold">Recent Invoices</h2>
-              <Button variant="ghost" size="sm" className="gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-2"
+                onClick={() =>
+                  setSortBy(sortBy === "date" ? "amount" : "date")
+                }
+              >
                 <ArrowUpDown className="h-4 w-4" />
                 Sort by {sortBy === "date" ? "Amount" : "Date"}
               </Button>
             </div>
             <div className="divide-y">
-              {mockInvoices.map((invoice) => (
+              {filteredInvoices.map((invoice) => (
                 <div
                   key={invoice.id}
                   className="flex items-center justify-between py-4"
@@ -105,9 +183,21 @@ export default function InvoicesPage() {
                         {invoice.status}
                       </p>
                     </div>
-                    <Button variant="ghost" size="icon">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => setSelectedInvoice(invoice)}>
+                          View Details
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>Edit Invoice</DropdownMenuItem>
+                        <DropdownMenuItem>Download PDF</DropdownMenuItem>
+                        <DropdownMenuItem>Mark as Paid</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </div>
               ))}
@@ -115,6 +205,14 @@ export default function InvoicesPage() {
           </div>
         </Card>
       </div>
+
+      {/* Modals */}
+      <InvoiceForm open={showNewInvoice} onClose={() => setShowNewInvoice(false)} />
+      <InvoiceDetails
+        invoice={selectedInvoice}
+        open={!!selectedInvoice}
+        onClose={() => setSelectedInvoice(null)}
+      />
     </Layout>
   );
 }
