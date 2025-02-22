@@ -10,22 +10,24 @@ import InvoicesPage from "./pages/invoices/InvoicesPage";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/estimates" element={<NotFound />} />
-          <Route path="/invoices" element={<InvoicesPage />} />
-          <Route path="/finances" element={<NotFound />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-      <Toaster />
-      <Sonner />
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/estimates" element={<NotFound />} />
+            <Route path="/invoices" element={<InvoicesPage />} />
+            <Route path="/finances" element={<NotFound />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+        <Toaster />
+        <Sonner />
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+}
 
 export default App;
