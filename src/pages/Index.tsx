@@ -22,7 +22,7 @@ export default function Index() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <StatCard
             title="Monthly Revenue"
-            value="$24,320"
+            value="₹24,320"
             icon={DollarSign}
             trend={{ value: 12, label: "vs last month" }}
           />
