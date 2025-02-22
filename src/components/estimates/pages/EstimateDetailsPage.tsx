@@ -11,13 +11,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 
 interface Service {
   event: string;
   date: string;
   photographers: string;
   cinematographers: string;
-  amount: string;
 }
 
 interface Event {
@@ -30,6 +30,7 @@ interface Event {
 interface Estimate {
   services: Service[];
   total: string;
+  deliverables: string[];
 }
 
 interface EstimateDetails {
@@ -61,7 +62,18 @@ export function EstimateDetailsPage({ estimateDetails, onDetailsChange }: Estima
       ...estimateDetails,
       estimates: [
         ...estimateDetails.estimates,
-        { services: [], total: "" }
+        { 
+          services: [], 
+          total: "",
+          deliverables: [
+            "Curated online Gallery with 400+ images",
+            "1200+ Processed Images in hard drive (provided by you)",
+            "20-90 min Documentary film of all events Individually, delivered online for you to download",
+            "Wedding film 8-12mins (with live audio & Audio bytes) - delivered online with password protection",
+            "Live streaming for Wedding event only - Complimentary",
+            "Customised 35 Sheet Album - 2 Copies"
+          ]
+        }
       ]
     });
   };
@@ -72,8 +84,7 @@ export function EstimateDetailsPage({ estimateDetails, onDetailsChange }: Estima
       event: "",
       date: "",
       photographers: "",
-      cinematographers: "",
-      amount: ""
+      cinematographers: ""
     });
     onDetailsChange({
       ...estimateDetails,
@@ -107,6 +118,33 @@ export function EstimateDetailsPage({ estimateDetails, onDetailsChange }: Estima
   const updateEstimateTotal = (estimateIndex: number, total: string) => {
     const newEstimates = [...estimateDetails.estimates];
     newEstimates[estimateIndex].total = total;
+    onDetailsChange({
+      ...estimateDetails,
+      estimates: newEstimates
+    });
+  };
+
+  const addDeliverable = (estimateIndex: number) => {
+    const newEstimates = [...estimateDetails.estimates];
+    newEstimates[estimateIndex].deliverables.push("");
+    onDetailsChange({
+      ...estimateDetails,
+      estimates: newEstimates
+    });
+  };
+
+  const updateDeliverable = (estimateIndex: number, deliverableIndex: number, value: string) => {
+    const newEstimates = [...estimateDetails.estimates];
+    newEstimates[estimateIndex].deliverables[deliverableIndex] = value;
+    onDetailsChange({
+      ...estimateDetails,
+      estimates: newEstimates
+    });
+  };
+
+  const removeDeliverable = (estimateIndex: number, deliverableIndex: number) => {
+    const newEstimates = [...estimateDetails.estimates];
+    newEstimates[estimateIndex].deliverables.splice(deliverableIndex, 1);
     onDetailsChange({
       ...estimateDetails,
       estimates: newEstimates
@@ -206,18 +244,6 @@ export function EstimateDetailsPage({ estimateDetails, onDetailsChange }: Estima
                           />
                         </div>
                       </div>
-
-                      <div className="mt-4">
-                        <Label>Amount</Label>
-                        <Input
-                          className="w-48 mt-2"
-                          value={service.amount}
-                          onChange={(e) =>
-                            updateService(estimateIndex, serviceIndex, "amount", e.target.value)
-                          }
-                          placeholder="₹0.00"
-                        />
-                      </div>
                     </Card>
                   ))}
                 </div>
@@ -233,7 +259,36 @@ export function EstimateDetailsPage({ estimateDetails, onDetailsChange }: Estima
                     Add Event
                   </Button>
 
-                  <div className="flex justify-end gap-2 items-center">
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-medium">Deliverables</h3>
+                    {estimate.deliverables.map((deliverable, index) => (
+                      <div key={index} className="flex gap-2">
+                        <Input
+                          value={deliverable}
+                          onChange={(e) => updateDeliverable(estimateIndex, index, e.target.value)}
+                          placeholder="Enter deliverable"
+                        />
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removeDeliverable(estimateIndex, index)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => addDeliverable(estimateIndex)}
+                      size="sm"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Deliverable
+                    </Button>
+                  </div>
+
+                  <div className="flex justify-end gap-2 items-center pt-4 border-t">
                     <Label>Total Amount:</Label>
                     <Input
                       value={estimate.total}
@@ -255,18 +310,6 @@ export function EstimateDetailsPage({ estimateDetails, onDetailsChange }: Estima
               <Plus className="h-4 w-4 mr-2" />
               Add Estimate Option
             </Button>
-
-            <div>
-              <h3 className="text-lg font-medium mb-4">Deliverables</h3>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>Curated online Gallery with 400+ images</li>
-                <li>1200+ Processed Images in hard drive (provided by you)</li>
-                <li>20-90 min Documentary film of all events Individually, delivered online for you to download</li>
-                <li>Wedding film 8-12mins (with live audio & Audio bytes) - delivered online with password protection</li>
-                <li>Live streaming for Wedding event only - Complimentary</li>
-                <li>Customised 35 Sheet Album - 2 Copies</li>
-              </ul>
-            </div>
           </div>
         </Card>
       </div>
