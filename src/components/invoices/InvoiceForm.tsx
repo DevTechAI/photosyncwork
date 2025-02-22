@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -20,7 +19,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-// Service templates
 const serviceTemplates = [
   { label: "Wedding Photography - Full Day", price: "45000" },
   { label: "Pre-wedding Photoshoot", price: "25000" },
@@ -37,7 +35,7 @@ interface InvoiceFormProps {
 
 export function InvoiceForm({ open, onClose }: InvoiceFormProps) {
   const [items, setItems] = useState([{ description: "", amount: "" }]);
-  const [gstRate, setGstRate] = useState("18"); // Default GST rate is 18%
+  const [gstRate, setGstRate] = useState("18");
 
   const addItem = () => {
     setItems([...items, { description: "", amount: "" }]);
@@ -79,16 +77,41 @@ export function InvoiceForm({ open, onClose }: InvoiceFormProps) {
           </DialogDescription>
         </DialogHeader>
         <form className="space-y-6">
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="client">Client Name</Label>
-              <Input id="client" placeholder="Enter client name" />
+          <Card className="p-4">
+            <h3 className="font-medium mb-4">Client Details</h3>
+            <div className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="client">Client Name</Label>
+                  <Input id="client" placeholder="Enter client name" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="date">Invoice Date</Label>
+                  <Input id="date" type="date" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input id="email" type="email" placeholder="client@example.com" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Phone Number</Label>
+                  <Input id="phone" type="tel" placeholder="+91 98765 43210" />
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <Label htmlFor="address">Address</Label>
+                  <Input id="address" placeholder="Enter client's address" />
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <Label htmlFor="clientGst">Client GST Number</Label>
+                  <Input 
+                    id="clientGst" 
+                    placeholder="Enter client's GST number"
+                    className="uppercase"
+                  />
+                </div>
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="date">Invoice Date</Label>
-              <Input id="date" type="date" />
-            </div>
-          </div>
+          </Card>
 
           <Card className="p-4">
             <h3 className="font-medium mb-4">Invoice Items</h3>
