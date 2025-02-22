@@ -20,29 +20,46 @@ interface InvoiceFormProps {
 export function InvoiceForm({ open, onClose }: InvoiceFormProps) {
   const [items, setItems] = useState([{ description: "", amount: "" }]);
   const [gstRate, setGstRate] = useState("18");
+  const [invoiceType, setInvoiceType] = useState<"proforma" | "paid">("proforma");
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Create New Invoice</DialogTitle>
+          <DialogTitle>
+            Create New {invoiceType === "proforma" ? "Proforma" : "Paid"} Invoice
+          </DialogTitle>
           <DialogDescription>
-            Create a new invoice for your photography services.
+            Create a new {invoiceType.toLowerCase()} invoice for your photography services.
           </DialogDescription>
         </DialogHeader>
         <form className="space-y-6">
-          <ClientDetailsCard />
-          <InvoiceItemsCard items={items} onItemsChange={setItems} />
-          <TotalCard
-            items={items}
-            gstRate={gstRate}
-            onGstRateChange={setGstRate}
+          <ClientDetailsCard 
+            invoiceType={invoiceType}
+            onInvoiceTypeChange={setInvoiceType}
           />
+          <InvoiceItemsCard items={items} onItemsChange={setItems} />
+          {invoiceType === "paid" ? (
+            <TotalCard
+              items={items}
+              gstRate={gstRate}
+              onGstRateChange={setGstRate}
+            />
+          ) : (
+            <TotalCard
+              items={items}
+              gstRate="0"
+              onGstRateChange={() => {}}
+              hideGst
+            />
+          )}
           <div className="flex justify-end gap-4">
             <Button variant="outline" type="button" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit">Create Invoice</Button>
+            <Button type="submit">
+              Create {invoiceType === "proforma" ? "Proforma" : "Paid"} Invoice
+            </Button>
           </div>
         </form>
       </DialogContent>
