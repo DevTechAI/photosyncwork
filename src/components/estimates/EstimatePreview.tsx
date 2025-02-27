@@ -51,17 +51,14 @@ export function EstimatePreview({ open, onClose, estimate, onStatusChange }: Est
     let intervalId: ReturnType<typeof setTimeout>;
     
     if (showEmailForm && estimate?.status === 'pending') {
-      intervalId = setInterval(async () => {
-        try {
-          const { data, error } = await supabase
-            .from('estimates')
-            .select('status')
-            .eq('id', estimate.id)
-            .single();
-            
-          if (error) throw error;
+      intervalId = setInterval(() => {
+        // Check localStorage for estimate status updates
+        const savedEstimates = localStorage.getItem("estimates");
+        if (savedEstimates) {
+          const estimates = JSON.parse(savedEstimates);
+          const updatedEstimate = estimates.find((est: any) => est.id === estimate.id);
           
-          if (data && data.status === 'approved' && onStatusChange) {
+          if (updatedEstimate && updatedEstimate.status === 'approved' && onStatusChange) {
             onStatusChange(estimate.id, 'approved');
             toast({
               title: "Estimate Approved!",
@@ -69,8 +66,6 @@ export function EstimatePreview({ open, onClose, estimate, onStatusChange }: Est
             });
             clearInterval(intervalId);
           }
-        } catch (error) {
-          console.error('Error checking estimate status:', error);
         }
       }, 5000); // Check every 5 seconds
     }
