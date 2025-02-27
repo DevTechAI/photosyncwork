@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { EstimateDetails, Service } from "../types";
 import { EstimateCard } from "../components/EstimateCard";
+import { useToast } from "@/components/ui/use-toast";
 
 interface EstimateDetailsPageProps {
   estimateDetails: EstimateDetails;
@@ -11,7 +12,19 @@ interface EstimateDetailsPageProps {
 }
 
 export function EstimateDetailsPage({ estimateDetails, onDetailsChange }: EstimateDetailsPageProps) {
+  const { toast } = useToast();
+  
   const addEstimate = () => {
+    // Check if we've reached the maximum of 3 estimate options
+    if (estimateDetails.estimates.length >= 3) {
+      toast({
+        title: "Maximum packages reached",
+        description: "You can only create up to 3 package options",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     onDetailsChange({
       ...estimateDetails,
       estimates: [
@@ -98,11 +111,54 @@ export function EstimateDetailsPage({ estimateDetails, onDetailsChange }: Estima
 
   const updateEstimateTotal = (estimateIndex: number, total: string) => {
     const newEstimates = [...estimateDetails.estimates];
+    
+    // We need to check if this total makes the package identical to another
+    const isIdentical = checkIfIdenticalPackage(estimateIndex, {
+      ...newEstimates[estimateIndex],
+      total
+    });
+    
+    if (isIdentical) {
+      toast({
+        title: "Identical package detected",
+        description: "Please ensure each package is unique by varying deliverables or pricing",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     newEstimates[estimateIndex].total = total;
     onDetailsChange({
       ...estimateDetails,
       estimates: newEstimates
     });
+  };
+  
+  const checkIfIdenticalPackage = (currentIndex: number, updatedPackage: any) => {
+    // We'll compare the deliverables list and total amount to check for identical packages
+    // Event services are allowed to be the same across packages
+    
+    for (let i = 0; i < estimateDetails.estimates.length; i++) {
+      // Skip comparing with itself
+      if (i === currentIndex) continue;
+      
+      const otherPackage = estimateDetails.estimates[i];
+      
+      // Check if total is the same
+      if (updatedPackage.total === otherPackage.total) {
+        
+        // Check if deliverables are the same
+        // Convert to strings for comparison
+        const updatedDeliverables = JSON.stringify(updatedPackage.deliverables.sort());
+        const otherDeliverables = JSON.stringify(otherPackage.deliverables.sort());
+        
+        if (updatedDeliverables === otherDeliverables) {
+          return true; // Identical package found
+        }
+      }
+    }
+    
+    return false; // No identical package found
   };
 
   return (
@@ -145,9 +201,10 @@ export function EstimateDetailsPage({ estimateDetails, onDetailsChange }: Estima
               variant="outline"
               onClick={addEstimate}
               className="w-full"
+              disabled={estimateDetails.estimates.length >= 3}
             >
               <Plus className="h-4 w-4 mr-2" />
-              Add Estimate Option
+              Add Estimate Option {estimateDetails.estimates.length >= 3 && "(Maximum 3)"}
             </Button>
           </div>
         </Card>

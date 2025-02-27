@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/select";
 import { Trash2 } from "lucide-react";
 import { Service, EVENT_OPTIONS } from "../types";
+import { useToast } from "@/components/ui/use-toast";
 
 interface ServiceCardProps {
   service: Service;
@@ -20,6 +21,30 @@ interface ServiceCardProps {
 }
 
 export function ServiceCard({ service, onUpdate, onRemove }: ServiceCardProps) {
+  const { toast } = useToast();
+  
+  // Get today's date in YYYY-MM-DD format for min attribute
+  const today = new Date().toISOString().split('T')[0];
+  
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedDate = new Date(e.target.value);
+    const currentDate = new Date();
+    
+    // Remove time part for comparison
+    currentDate.setHours(0, 0, 0, 0);
+    
+    if (selectedDate < currentDate) {
+      toast({
+        title: "Invalid date",
+        description: "Cannot select a past date for events",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    onUpdate("date", e.target.value);
+  };
+
   return (
     <Card className="p-4 relative">
       <div className="absolute right-2 top-2">
@@ -57,7 +82,8 @@ export function ServiceCard({ service, onUpdate, onRemove }: ServiceCardProps) {
           <Input
             type="date"
             value={service.date}
-            onChange={(e) => onUpdate("date", e.target.value)}
+            min={today}
+            onChange={handleDateChange}
           />
         </div>
 
