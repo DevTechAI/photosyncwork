@@ -20,8 +20,8 @@ export function UpcomingEventsCalendar({ events }: UpcomingEventsCalendarProps) 
   const datesWithEvents = events.map(event => new Date(event.date));
   
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <Card className="p-4 md:col-span-1">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <Card className="p-4 md:col-span-1 h-fit">
         <Calendar
           mode="single"
           selected={date}
@@ -41,7 +41,7 @@ export function UpcomingEventsCalendar({ events }: UpcomingEventsCalendarProps) 
           {date ? date.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Select a date'}
         </h3>
         
-        <div className="space-y-4">
+        <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
           {selectedDateEvents.length > 0 ? (
             selectedDateEvents.map(event => (
               <div key={event.id} className="p-3 border rounded-md">
