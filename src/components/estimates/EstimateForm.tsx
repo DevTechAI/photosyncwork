@@ -13,7 +13,7 @@ import { EstimateDetailsPage } from "./pages/EstimateDetailsPage";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
 import { EstimateDetails } from "./preview/EstimateDetails";
-import { Email, Share2 } from "lucide-react";
+import { Mail, Share2 } from "lucide-react";
 import { EmailForm } from "./preview/EmailForm";
 import { WhatsAppForm } from "./preview/WhatsAppForm";
 
@@ -186,7 +186,7 @@ export function EstimateForm({ open, onClose }: EstimateFormProps) {
               {!showEmailForm && !showWhatsAppForm && (
                 <div className="flex justify-center space-x-4 mb-4">
                   <Button onClick={() => setShowEmailForm(true)} variant="outline">
-                    <Email className="mr-2 h-4 w-4" />
+                    <Mail className="mr-2 h-4 w-4" />
                     Send via Email
                   </Button>
                   <Button onClick={() => setShowWhatsAppForm(true)} variant="outline">
