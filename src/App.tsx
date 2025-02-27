@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
-import ProtectedRoute from "./components/ProtectedRoute";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 import EstimatesPage from "./pages/estimates/EstimatesPage";
 import InvoicesPage from "./pages/invoices/InvoicesPage";
 import PreProductionPage from "./pages/workflow/PreProductionPage";
@@ -22,15 +22,15 @@ function App() {
       <Router>
         <Routes>
           <Route path="/login" element={<Login />} />
-          <Route path="/" element={<ProtectedRoute component={Index} />} />
-          <Route path="/estimates" element={<ProtectedRoute component={EstimatesPage} />} />
-          <Route path="/invoices" element={<ProtectedRoute component={InvoicesPage} />} />
-          <Route path="/pre-production" element={<ProtectedRoute component={PreProductionPage} />} />
-          <Route path="/production" element={<ProtectedRoute component={ProductionPage} />} />
-          <Route path="/post-production" element={<ProtectedRoute component={PostProductionPage} />} />
-          <Route path="/finances" element={<ProtectedRoute component={FinancesPage} />} />
-          <Route path="/scheduling" element={<ProtectedRoute component={SchedulingPage} />} />
-          <Route path="/realtime-test" element={<ProtectedRoute component={RealtimeTestPage} />} />
+          <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+          <Route path="/estimates" element={<ProtectedRoute><EstimatesPage /></ProtectedRoute>} />
+          <Route path="/invoices" element={<ProtectedRoute><InvoicesPage /></ProtectedRoute>} />
+          <Route path="/pre-production" element={<ProtectedRoute><PreProductionPage /></ProtectedRoute>} />
+          <Route path="/production" element={<ProtectedRoute><ProductionPage /></ProtectedRoute>} />
+          <Route path="/post-production" element={<ProtectedRoute><PostProductionPage /></ProtectedRoute>} />
+          <Route path="/finances" element={<ProtectedRoute><FinancesPage /></ProtectedRoute>} />
+          <Route path="/scheduling" element={<ProtectedRoute><SchedulingPage /></ProtectedRoute>} />
+          <Route path="/realtime-test" element={<ProtectedRoute><RealtimeTestPage /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Router>
