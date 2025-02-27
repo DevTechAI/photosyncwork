@@ -23,22 +23,16 @@ export function useRealtime() {
       try {
         setIsLoading(true);
         
-        // Using more type-safe approach by explicitly casting the response
-        const response = await supabase
-          .from('realtime_messages')
-          .select('*')
+        // Use a non-typed approach with the generic client
+        // @ts-ignore - Ignoring TypeScript for this line since we know the table exists
+        const { data, error } = await supabase.from('realtime_messages').select('*')
           .order('created_at', { ascending: false })
           .limit(50);
           
-        // Handle the response data and errors
-        const { data, error } = response as unknown as { 
-          data: RealtimeMessage[] | null; 
-          error: any 
-        };
-          
         if (error) throw error;
         
-        setMessages(data || []);
+        // Cast the data to our interface
+        setMessages((data || []) as RealtimeMessage[]);
       } catch (error) {
         console.error('Error fetching messages:', error);
       } finally {
@@ -76,16 +70,13 @@ export function useRealtime() {
     if (!currentUser) return false;
     
     try {
-      // Using a more type-safe approach by casting the table name
-      const response = await supabase
-        .from('realtime_messages')
-        .insert({
-          user_id: currentUser.id,
-          user_name: currentUser.name,
-          message: messageText
-        }) as unknown as { error: any };
+      // @ts-ignore - Ignoring TypeScript for this line since we know the table exists
+      const { error } = await supabase.from('realtime_messages').insert({
+        user_id: currentUser.id,
+        user_name: currentUser.name,
+        message: messageText
+      });
         
-      const { error } = response;
       if (error) throw error;
       
       return true;
