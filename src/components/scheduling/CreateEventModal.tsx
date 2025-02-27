@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -6,6 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { ScheduledEvent } from "./types";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { getApprovedEstimates, createEventFromEstimate } from "./utils/estimatesHelpers";
 
 interface CreateEventModalProps {
   open: boolean;
@@ -33,6 +34,15 @@ export function CreateEventModal({
     videographersCount: 1,
     stage: "pre-production"
   });
+  
+  const [approvedEstimates, setApprovedEstimates] = useState([]);
+  const [selectedEstimateId, setSelectedEstimateId] = useState<string>("");
+  
+  // Load approved estimates
+  useEffect(() => {
+    const estimates = getApprovedEstimates();
+    setApprovedEstimates(estimates);
+  }, [open]);
 
   // Load default values if provided
   useEffect(() => {
@@ -41,8 +51,39 @@ export function CreateEventModal({
         ...prev,
         ...defaultValues
       }));
+      
+      if (defaultValues.estimateId) {
+        setSelectedEstimateId(defaultValues.estimateId);
+      }
     }
   }, [defaultValues]);
+  
+  // Handle estimate selection
+  const handleEstimateChange = (estimateId: string) => {
+    setSelectedEstimateId(estimateId);
+    
+    if (!estimateId) {
+      // If no estimate selected, clear relevant fields but keep others
+      setEventData(prev => ({
+        ...prev,
+        clientName: "",
+        clientPhone: "",
+        photographersCount: 1,
+        videographersCount: 1,
+        clientRequirements: ""
+      }));
+      return;
+    }
+    
+    const selectedEstimate = approvedEstimates.find(est => est.id === estimateId);
+    if (selectedEstimate) {
+      const eventFromEstimate = createEventFromEstimate(selectedEstimate);
+      setEventData(prev => ({
+        ...prev,
+        ...eventFromEstimate
+      }));
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,7 +101,7 @@ export function CreateEventModal({
     // Generate unique ID
     const newEvent: ScheduledEvent = {
       id: `evt-${Date.now()}`,
-      estimateId: eventData.estimateId || `est-${Date.now()}`,
+      estimateId: selectedEstimateId || `est-${Date.now()}`,
       name: eventData.name || "",
       date: eventData.date || "",
       startTime: eventData.startTime || "09:00",
@@ -72,7 +113,8 @@ export function CreateEventModal({
       videographersCount: eventData.videographersCount || 1,
       assignments: [],
       stage: "pre-production",
-      clientRequirements: eventData.clientRequirements || ""
+      clientRequirements: eventData.clientRequirements || "",
+      deliverables: eventData.deliverables || []
     };
     
     onCreateEvent(newEvent);
@@ -94,6 +136,7 @@ export function CreateEventModal({
       videographersCount: 1,
       stage: "pre-production"
     });
+    setSelectedEstimateId("");
     
     onClose();
   };
@@ -106,6 +149,32 @@ export function CreateEventModal({
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Estimate Selection */}
+          <div className="space-y-2">
+            <Label htmlFor="estimate-select">Based on Approved Estimate</Label>
+            <Select
+              value={selectedEstimateId}
+              onValueChange={handleEstimateChange}
+            >
+              <SelectTrigger id="estimate-select">
+                <SelectValue placeholder="Select an approved estimate (optional)" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">None (Manual Entry)</SelectItem>
+                {approvedEstimates.map((estimate) => (
+                  <SelectItem key={estimate.id} value={estimate.id}>
+                    {estimate.clientName} - {estimate.id}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {selectedEstimateId && (
+              <p className="text-xs text-muted-foreground">
+                Event details will be populated from the selected estimate
+              </p>
+            )}
+          </div>
+          
           <div className="space-y-2">
             <Label htmlFor="event-name">Event Name</Label>
             <Input
