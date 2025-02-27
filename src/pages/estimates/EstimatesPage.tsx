@@ -2,9 +2,10 @@
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { FileText, Plus, ArrowRight } from "lucide-react";
+import { FileText, Plus, ArrowRight, Eye } from "lucide-react";
 import { useState, useEffect } from "react";
 import { EstimateForm } from "@/components/estimates/EstimateForm";
+import { EstimatePreview } from "@/components/estimates/EstimatePreview";
 import { useNavigate } from "react-router-dom";
 
 // Mock data for estimates
@@ -14,13 +15,34 @@ const initialEstimates = [
     clientName: "Raj & Simran Wedding",
     date: "2023-11-15",
     amount: "₹250,000",
-    status: "pending"
+    status: "pending",
+    services: [
+      {
+        event: "Wedding",
+        date: "2023-12-15",
+        photographers: "2",
+        cinematographers: "1"
+      },
+      {
+        event: "Reception",
+        date: "2023-12-16",
+        photographers: "1",
+        cinematographers: "1"
+      }
+    ],
+    deliverables: [
+      "Curated online Gallery with 400+ images",
+      "Wedding film 8-12mins (with live audio & Audio bytes)",
+      "Customised 35 Sheet Album - 2 Copies"
+    ]
   }
 ];
 
 export default function EstimatesPage() {
   const navigate = useNavigate();
   const [showNewEstimateForm, setShowNewEstimateForm] = useState(false);
+  const [selectedEstimate, setSelectedEstimate] = useState(null);
+  const [showPreview, setShowPreview] = useState(false);
   const [estimates, setEstimates] = useState(() => {
     // Try to get estimates from localStorage
     const savedEstimates = localStorage.getItem("estimates");
@@ -35,6 +57,12 @@ export default function EstimatesPage() {
   // Function to handle navigating to pre-production
   const handleContinueToPreProduction = (estimateId: string) => {
     navigate(`/pre-production?estimateId=${estimateId}`);
+  };
+
+  // Function to handle opening estimate preview
+  const handleOpenPreview = (estimate) => {
+    setSelectedEstimate(estimate);
+    setShowPreview(true);
   };
 
   return (
@@ -66,12 +94,21 @@ export default function EstimatesPage() {
                       <span className="capitalize">Status: {estimate.status}</span>
                     </div>
                   </div>
-                  <Button
-                    onClick={() => handleContinueToPreProduction(estimate.id)}
-                  >
-                    Continue to Pre-Production
-                    <ArrowRight className="h-4 w-4 ml-2" />
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button 
+                      variant="outline"
+                      onClick={() => handleOpenPreview(estimate)}
+                    >
+                      <Eye className="h-4 w-4 mr-2" />
+                      Preview
+                    </Button>
+                    <Button
+                      onClick={() => handleContinueToPreProduction(estimate.id)}
+                    >
+                      Continue to Pre-Production
+                      <ArrowRight className="h-4 w-4 ml-2" />
+                    </Button>
+                  </div>
                 </div>
               </Card>
             ))
@@ -96,6 +133,14 @@ export default function EstimatesPage() {
           open={showNewEstimateForm}
           onClose={() => setShowNewEstimateForm(false)}
         />
+
+        {selectedEstimate && (
+          <EstimatePreview
+            open={showPreview}
+            onClose={() => setShowPreview(false)}
+            estimate={selectedEstimate}
+          />
+        )}
       </div>
     </Layout>
   );
