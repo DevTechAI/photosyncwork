@@ -39,8 +39,7 @@ export function UpcomingEventsCalendar({ events }: UpcomingEventsCalendarProps) 
             table: { width: '100%', borderSpacing: '0.5rem', borderCollapse: 'separate' },
             head_cell: { textTransform: 'uppercase', fontSize: '0.75rem', fontWeight: 500, opacity: 0.6 },
             cell: { width: '2.5rem', height: '2.5rem', borderRadius: '0.5rem' },
-            day: { width: '2.5rem', height: '2.5rem', fontSize: '0.875rem', borderRadius: '0.5rem' },
-            day_today: { fontWeight: 'bold' }
+            day: { width: '2.5rem', height: '2.5rem', fontSize: '0.875rem', borderRadius: '0.5rem' }
           }}
         />
       </Card>
