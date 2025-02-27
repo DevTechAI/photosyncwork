@@ -1,4 +1,3 @@
-
 import Layout from "@/components/Layout";
 import { StatCard } from "@/components/stats/StatCard";
 import {
@@ -6,100 +5,149 @@ import {
   FileText,
   Receipt,
   Users,
-  Camera,
-  Film,
-  Calendar,
+  TrendingUp,
+  AlertCircle,
   Clock,
+  Calendar,
   CheckSquare,
   Edit,
+  Camera,
+  Film,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useUser } from "@/contexts/UserContext";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+
+// Sample data for the chart - replace with real data later
+const revenueData = [
+  { month: 'Jan', revenue: 24000 },
+  { month: 'Feb', revenue: 28000 },
+  { month: 'Mar', revenue: 32000 },
+  { month: 'Apr', revenue: 38000 },
+  { month: 'May', revenue: 42000 },
+  { month: 'Jun', revenue: 48000 },
+];
+
+// Sample data for upcoming payments - replace with real data later
+const upcomingPayments = [
+  { id: 1, client: "Sharma Wedding", amount: "₹45,000", due: "2024-05-20", status: "pending" },
+  { id: 2, client: "Corporate Event", amount: "₹28,000", due: "2024-05-22", status: "overdue" },
+  { id: 3, client: "Product Shoot", amount: "₹15,000", due: "2024-05-25", status: "pending" },
+];
 
 export default function Index() {
   const { currentUser } = useUser();
 
-  // Manager Dashboard
-  if (currentUser?.role === "manager") {
+  // Manager Dashboard - Enhanced with financial overview
+  if (currentUser?.role === "manager" || currentUser?.role === "accounts") {
     return (
       <Layout>
         <div className="space-y-8 animate-in">
           <div>
-            <h1 className="text-3xl font-semibold tracking-tight">Dashboard</h1>
+            <h1 className="text-3xl font-semibold tracking-tight">Financial Overview</h1>
             <p className="text-muted-foreground mt-2">
-              Welcome back to your photography business overview.
+              Track your business performance and financial health
             </p>
           </div>
 
+          {/* Key Metrics */}
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <StatCard
-              title="Monthly Revenue"
-              value="₹24,320"
+              title="Total Revenue"
+              value="₹2,48,000"
               icon={DollarSign}
               trend={{ value: 12, label: "vs last month" }}
             />
             <StatCard
+              title="Outstanding"
+              value="₹88,000"
+              icon={AlertCircle}
+              trend={{ value: -5, label: "vs last month" }}
+            />
+            <StatCard
+              title="Upcoming Payments"
+              value="₹1,25,000"
+              icon={Clock}
+              trend={{ value: 8, label: "vs last month" }}
+            />
+            <StatCard
               title="Active Estimates"
-              value="8"
+              value="12"
               icon={FileText}
-              trend={{ value: -2, label: "vs last month" }}
-            />
-            <StatCard
-              title="Pending Invoices"
-              value="5"
-              icon={Receipt}
-              trend={{ value: 0, label: "vs last month" }}
-            />
-            <StatCard
-              title="Active Clients"
-              value="24"
-              icon={Users}
-              trend={{ value: 4, label: "vs last month" }}
+              trend={{ value: 2, label: "vs last month" }}
             />
           </div>
 
+          {/* Revenue Chart */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Revenue Trend</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={revenueData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" />
+                    <YAxis />
+                    <Tooltip />
+                    <Line 
+                      type="monotone" 
+                      dataKey="revenue" 
+                      stroke="#2563eb" 
+                      strokeWidth={2}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Recent Activity and Upcoming Payments */}
           <div className="grid gap-6 md:grid-cols-2">
-            <Card className="shadow-sm">
+            {/* Upcoming Payments */}
+            <Card>
               <CardHeader>
-                <CardTitle>Business Overview</CardTitle>
+                <CardTitle>Upcoming Payments</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-5 w-5 text-blue-500" />
-                      <span>Upcoming Events</span>
+                  {upcomingPayments.map((payment) => (
+                    <div 
+                      key={payment.id} 
+                      className="flex items-center justify-between p-4 border rounded-lg"
+                    >
+                      <div>
+                        <h4 className="font-medium">{payment.client}</h4>
+                        <p className="text-sm text-muted-foreground">
+                          Due: {new Date(payment.due).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-medium">{payment.amount}</p>
+                        <span 
+                          className={`text-xs px-2 py-1 rounded-full ${
+                            payment.status === 'overdue' 
+                              ? 'bg-red-100 text-red-800' 
+                              : 'bg-yellow-100 text-yellow-800'
+                          }`}
+                        >
+                          {payment.status}
+                        </span>
+                      </div>
                     </div>
-                    <span className="font-medium">7</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-2">
-                      <Camera className="h-5 w-5 text-green-500" />
-                      <span>Team Members</span>
-                    </div>
-                    <span className="font-medium">6</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-2">
-                      <CheckSquare className="h-5 w-5 text-purple-500" />
-                      <span>Completed Projects</span>
-                    </div>
-                    <span className="font-medium">34</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-2">
-                      <DollarSign className="h-5 w-5 text-amber-500" />
-                      <span>Annual Revenue</span>
-                    </div>
-                    <span className="font-medium">₹2,83,500</span>
-                  </div>
+                  ))}
+                  <Button className="w-full mt-4" variant="outline" asChild>
+                    <Link to="/invoices">View All Invoices</Link>
+                  </Button>
                 </div>
               </CardContent>
             </Card>
-            
-            <Card className="shadow-sm">
+
+            {/* Quick Actions */}
+            <Card>
               <CardHeader>
                 <CardTitle>Quick Actions</CardTitle>
               </CardHeader>
@@ -123,150 +171,21 @@ export default function Index() {
                       </div>
                     </Button>
                   </Link>
-                  <Link to="/pre-production">
-                    <Button variant="outline" className="w-full flex items-center gap-2 h-auto py-4">
-                      <Calendar className="h-5 w-5 text-purple-500" />
-                      <div className="text-left">
-                        <div className="font-medium">Schedule</div>
-                        <div className="text-xs text-muted-foreground">Plan new event</div>
-                      </div>
-                    </Button>
-                  </Link>
-                  <Link to="/finances">
-                    <Button variant="outline" className="w-full flex items-center gap-2 h-auto py-4">
-                      <DollarSign className="h-5 w-5 text-amber-500" />
-                      <div className="text-left">
-                        <div className="font-medium">Finances</div>
-                        <div className="text-xs text-muted-foreground">Review finances</div>
-                      </div>
-                    </Button>
-                  </Link>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </Layout>
-    );
-  }
-
-  // Accounts Dashboard
-  if (currentUser?.role === "accounts") {
-    return (
-      <Layout>
-        <div className="space-y-8 animate-in">
-          <div>
-            <h1 className="text-3xl font-semibold tracking-tight">Financial Dashboard</h1>
-            <p className="text-muted-foreground mt-2">
-              Welcome to your financial management overview.
-            </p>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <StatCard
-              title="Monthly Revenue"
-              value="₹24,320"
-              icon={DollarSign}
-              trend={{ value: 12, label: "vs last month" }}
-            />
-            <StatCard
-              title="Outstanding"
-              value="₹85,000"
-              icon={Receipt}
-              trend={{ value: -5, label: "vs last month" }}
-            />
-            <StatCard
-              title="Overdue"
-              value="₹12,500"
-              icon={Clock}
-              trend={{ value: 2, label: "vs last month" }}
-            />
-            <StatCard
-              title="Expenses"
-              value="₹8,450"
-              icon={DollarSign}
-              trend={{ value: -10, label: "vs last month" }}
-            />
-          </div>
-
-          <div className="grid gap-6 md:grid-cols-2">
-            <Card className="shadow-sm">
-              <CardHeader>
-                <CardTitle>Financial Overview</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-2">
-                      <Receipt className="h-5 w-5 text-blue-500" />
-                      <span>Pending Invoices</span>
-                    </div>
-                    <span className="font-medium">8</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-2">
-                      <CheckSquare className="h-5 w-5 text-green-500" />
-                      <span>Paid Invoices (This Month)</span>
-                    </div>
-                    <span className="font-medium">12</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-2">
-                      <DollarSign className="h-5 w-5 text-purple-500" />
-                      <span>Profit Margin</span>
-                    </div>
-                    <span className="font-medium">68%</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-5 w-5 text-amber-500" />
-                      <span>Quarterly Projection</span>
-                    </div>
-                    <span className="font-medium">₹3,25,000</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card className="shadow-sm">
-              <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 gap-4">
-                  <Link to="/invoices">
-                    <Button variant="outline" className="w-full flex items-center gap-2 h-auto py-4">
-                      <Receipt className="h-5 w-5 text-blue-500" />
-                      <div className="text-left">
-                        <div className="font-medium">New Invoice</div>
-                        <div className="text-xs text-muted-foreground">Bill a client</div>
-                      </div>
-                    </Button>
-                  </Link>
-                  <Link to="/invoices">
-                    <Button variant="outline" className="w-full flex items-center gap-2 h-auto py-4">
-                      <CheckSquare className="h-5 w-5 text-green-500" />
-                      <div className="text-left">
-                        <div className="font-medium">Review Invoices</div>
-                        <div className="text-xs text-muted-foreground">Manage payments</div>
-                      </div>
-                    </Button>
-                  </Link>
                   <Link to="/finances">
                     <Button variant="outline" className="w-full flex items-center gap-2 h-auto py-4">
                       <DollarSign className="h-5 w-5 text-purple-500" />
                       <div className="text-left">
-                        <div className="font-medium">Expenses</div>
-                        <div className="text-xs text-muted-foreground">Track costs</div>
+                        <div className="font-medium">Track Expense</div>
+                        <div className="text-xs text-muted-foreground">Record new expense</div>
                       </div>
                     </Button>
                   </Link>
                   <Link to="/finances">
                     <Button variant="outline" className="w-full flex items-center gap-2 h-auto py-4">
-                      <FileText className="h-5 w-5 text-amber-500" />
+                      <TrendingUp className="h-5 w-5 text-amber-500" />
                       <div className="text-left">
                         <div className="font-medium">Reports</div>
-                        <div className="text-xs text-muted-foreground">Generate report</div>
+                        <div className="text-xs text-muted-foreground">View analytics</div>
                       </div>
                     </Button>
                   </Link>
