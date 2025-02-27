@@ -56,13 +56,40 @@ export default function EstimatesPage() {
 
   // Function to handle navigating to pre-production
   const handleContinueToPreProduction = (estimateId: string) => {
-    navigate(`/pre-production?estimateId=${estimateId}`);
+    // Get the estimate data to pass to pre-production
+    const estimate = estimates.find(est => est.id === estimateId);
+    
+    if (estimate && estimate.status === "approved") {
+      // Store the selected estimate in localStorage for pre-production
+      localStorage.setItem("selectedEstimate", JSON.stringify(estimate));
+      navigate(`/pre-production?estimateId=${estimateId}`);
+    } else {
+      // Show error if the estimate is not approved
+      alert("Estimate must be approved by the client before proceeding to pre-production.");
+    }
   };
 
   // Function to handle opening estimate preview
   const handleOpenPreview = (estimate) => {
     setSelectedEstimate(estimate);
     setShowPreview(true);
+  };
+
+  // Function to handle estimate status change
+  const handleStatusChange = (estimateId: string, newStatus: string, negotiatedAmount?: string) => {
+    const updatedEstimates = estimates.map(est => {
+      if (est.id === estimateId) {
+        return {
+          ...est,
+          status: newStatus,
+          amount: negotiatedAmount || est.amount
+        };
+      }
+      return est;
+    });
+    
+    setEstimates(updatedEstimates);
+    setSelectedEstimate(updatedEstimates.find(est => est.id === estimateId));
   };
 
   return (
@@ -91,7 +118,14 @@ export default function EstimatesPage() {
                     <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
                       <span>Created: {new Date(estimate.date).toLocaleDateString()}</span>
                       <span>Amount: {estimate.amount}</span>
-                      <span className="capitalize">Status: {estimate.status}</span>
+                      <span className={`capitalize px-2 py-1 rounded-full text-xs ${
+                        estimate.status === "approved" ? "bg-green-100 text-green-800" :
+                        estimate.status === "declined" ? "bg-red-100 text-red-800" :
+                        estimate.status === "negotiating" ? "bg-yellow-100 text-yellow-800" :
+                        "bg-gray-100 text-gray-800"
+                      }`}>
+                        {estimate.status}
+                      </span>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -104,6 +138,7 @@ export default function EstimatesPage() {
                     </Button>
                     <Button
                       onClick={() => handleContinueToPreProduction(estimate.id)}
+                      disabled={estimate.status !== "approved"}
                     >
                       Continue to Pre-Production
                       <ArrowRight className="h-4 w-4 ml-2" />
@@ -139,6 +174,7 @@ export default function EstimatesPage() {
             open={showPreview}
             onClose={() => setShowPreview(false)}
             estimate={selectedEstimate}
+            onStatusChange={handleStatusChange}
           />
         )}
       </div>

@@ -2,12 +2,13 @@
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Calendar, FileText, Plus } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UpcomingEventsCalendar } from "@/components/scheduling/UpcomingEventsCalendar";
 import { EventAssignments } from "@/components/scheduling/EventAssignments";
 import { CreateEventModal } from "@/components/scheduling/CreateEventModal";
 import { ScheduledEvent, TeamMember, EventAssignment } from "@/components/scheduling/types";
+import { useLocation } from "react-router-dom";
 
 // Mock data for demonstration
 const mockEvents: ScheduledEvent[] = [
@@ -68,12 +69,83 @@ const mockTeamMembers: TeamMember[] = [
 ];
 
 export default function PreProductionPage() {
-  const [events, setEvents] = useState<ScheduledEvent[]>(mockEvents);
+  const location = useLocation();
+  const [events, setEvents] = useState<ScheduledEvent[]>(() => {
+    // Try to get events from localStorage
+    const savedEvents = localStorage.getItem("events");
+    return savedEvents ? JSON.parse(savedEvents) : mockEvents;
+  });
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>(mockTeamMembers);
   const [showCreateEventModal, setShowCreateEventModal] = useState(false);
   const [activeTab, setActiveTab] = useState("scheduling");
+  const [defaultEventValues, setDefaultEventValues] = useState<Partial<ScheduledEvent> | undefined>(undefined);
+  
+  // Use query parameters and localStorage to get estimate details
+  useEffect(() => {
+    const queryParams = new URLSearchParams(location.search);
+    const estimateId = queryParams.get('estimateId');
+    
+    if (estimateId) {
+      // Try to get the selected estimate from localStorage
+      const selectedEstimateStr = localStorage.getItem("selectedEstimate");
+      if (selectedEstimateStr) {
+        try {
+          const selectedEstimate = JSON.parse(selectedEstimateStr);
+          if (selectedEstimate.id === estimateId) {
+            console.log("Found selected estimate:", selectedEstimate);
+            
+            // Only set default values if no events exist for this estimate
+            const existingEvent = events.find(e => e.estimateId === estimateId);
+            if (!existingEvent) {
+              // Extract values from the estimate to pre-populate event form
+              const eventDefaults: Partial<ScheduledEvent> = {
+                estimateId: estimateId,
+                name: `${selectedEstimate.clientName} Event`,
+                clientName: selectedEstimate.clientName,
+                // Extract first event info if available
+                ...(selectedEstimate.services && selectedEstimate.services.length > 0 ? {
+                  date: selectedEstimate.services[0].date,
+                  photographersCount: parseInt(selectedEstimate.services[0].photographers) || 1,
+                  videographersCount: parseInt(selectedEstimate.services[0].cinematographers) || 1,
+                } : {})
+              };
+              
+              setDefaultEventValues(eventDefaults);
+              // Automatically open the event creation modal if coming directly from estimates
+              setShowCreateEventModal(true);
+            }
+          }
+        } catch (error) {
+          console.error("Error parsing selected estimate:", error);
+        }
+      }
+    }
+  }, [location, events]);
+  
+  // Save events to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem("events", JSON.stringify(events));
+  }, [events]);
   
   const handleCreateEvent = (newEvent: ScheduledEvent) => {
+    // Add deliverables from the estimate if available
+    const selectedEstimateStr = localStorage.getItem("selectedEstimate");
+    if (selectedEstimateStr) {
+      try {
+        const selectedEstimate = JSON.parse(selectedEstimateStr);
+        if (selectedEstimate.id === newEvent.estimateId && selectedEstimate.deliverables) {
+          newEvent.deliverables = selectedEstimate.deliverables.map(item => ({
+            type: item.toLowerCase().includes('photo') ? 'photos' : 
+                  item.toLowerCase().includes('video') || item.toLowerCase().includes('film') ? 'videos' : 'album',
+            status: 'pending',
+            deliveryDate: new Date(new Date(newEvent.date).getTime() + 14*24*60*60*1000).toISOString().split('T')[0]
+          }));
+        }
+      } catch (error) {
+        console.error("Error adding deliverables from estimate:", error);
+      }
+    }
+
     setEvents(prev => [...prev, newEvent]);
     setShowCreateEventModal(false);
   };
@@ -184,7 +256,10 @@ export default function PreProductionPage() {
               Plan and schedule your upcoming events
             </p>
           </div>
-          <Button onClick={() => setShowCreateEventModal(true)}>
+          <Button onClick={() => {
+            setDefaultEventValues(undefined);
+            setShowCreateEventModal(true);
+          }}>
             <Plus className="h-4 w-4 mr-2" />
             New Event
           </Button>
@@ -250,6 +325,21 @@ export default function PreProductionPage() {
                             <p className="text-sm text-muted-foreground">No references added</p>
                           )}
                         </div>
+                        {event.deliverables && event.deliverables.length > 0 && (
+                          <div>
+                            <h5 className="text-sm font-medium">Deliverables (From Estimate)</h5>
+                            <div className="space-y-2 mt-2">
+                              {event.deliverables.map((deliverable, index) => (
+                                <div key={index} className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                                  <span className="text-sm">{deliverable.type.charAt(0).toUpperCase() + deliverable.type.slice(1)}</span>
+                                  <span className="text-xs px-2 py-1 rounded bg-yellow-100 text-yellow-800">
+                                    {deliverable.status}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))
@@ -321,6 +411,7 @@ export default function PreProductionPage() {
         open={showCreateEventModal}
         onClose={() => setShowCreateEventModal(false)}
         onCreateEvent={handleCreateEvent}
+        defaultValues={defaultEventValues}
       />
     </Layout>
   );

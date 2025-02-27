@@ -1,257 +1,222 @@
 
-import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
 import { ScheduledEvent } from "./types";
 
 interface CreateEventModalProps {
   open: boolean;
   onClose: () => void;
   onCreateEvent: (event: ScheduledEvent) => void;
+  defaultValues?: Partial<ScheduledEvent>;
 }
 
-export function CreateEventModal({ open, onClose, onCreateEvent }: CreateEventModalProps) {
-  const [eventData, setEventData] = useState({
+export function CreateEventModal({ 
+  open, 
+  onClose, 
+  onCreateEvent,
+  defaultValues 
+}: CreateEventModalProps) {
+  const { toast } = useToast();
+  const [eventData, setEventData] = useState<Partial<ScheduledEvent>>({
     name: "",
-    estimateId: "",
     date: "",
-    startTime: "09:00",
-    endTime: "17:00",
+    startTime: "",
+    endTime: "",
     location: "",
     clientName: "",
     clientPhone: "",
     photographersCount: 1,
-    videographersCount: 0,
-    notes: "",
-    stage: "pre-production" as const, // Default stage
+    videographersCount: 1,
+    stage: "pre-production"
   });
-  
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setEventData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-  
-  const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setEventData(prev => ({
-      ...prev,
-      [name]: parseInt(value) || 0
-    }));
-  };
-  
-  const handleSelectChange = (name: string, value: string) => {
-    setEventData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-  
+
+  // Load default values if provided
+  useEffect(() => {
+    if (defaultValues) {
+      setEventData(prev => ({
+        ...prev,
+        ...defaultValues
+      }));
+    }
+  }, [defaultValues]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Validate form
+    if (!eventData.name || !eventData.date || !eventData.location || !eventData.clientName) {
+      toast({
+        title: "Missing information",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Generate unique ID
     const newEvent: ScheduledEvent = {
       id: `evt-${Date.now()}`,
-      ...eventData,
+      estimateId: eventData.estimateId || `est-${Date.now()}`,
+      name: eventData.name || "",
+      date: eventData.date || "",
+      startTime: eventData.startTime || "09:00",
+      endTime: eventData.endTime || "17:00",
+      location: eventData.location || "",
+      clientName: eventData.clientName || "",
+      clientPhone: eventData.clientPhone || "",
+      photographersCount: eventData.photographersCount || 1,
+      videographersCount: eventData.videographersCount || 1,
       assignments: [],
+      stage: "pre-production",
+      clientRequirements: eventData.clientRequirements || ""
     };
     
     onCreateEvent(newEvent);
+    toast({
+      title: "Event Created",
+      description: "The event has been scheduled successfully",
+    });
     
     // Reset form
     setEventData({
       name: "",
-      estimateId: "",
       date: "",
-      startTime: "09:00",
-      endTime: "17:00",
+      startTime: "",
+      endTime: "",
       location: "",
       clientName: "",
       clientPhone: "",
       photographersCount: 1,
-      videographersCount: 0,
-      notes: "",
-      stage: "pre-production",
+      videographersCount: 1,
+      stage: "pre-production"
     });
+    
+    onClose();
   };
   
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[550px]">
         <DialogHeader>
-          <DialogTitle>Create New Event</DialogTitle>
+          <DialogTitle>Schedule New Event</DialogTitle>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-4 mt-4">
-          {/* Event Details */}
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Event Name</Label>
+            <Label htmlFor="event-name">Event Name</Label>
             <Input
-              id="name"
-              name="name"
+              id="event-name"
               value={eventData.name}
-              onChange={handleChange}
-              placeholder="Wedding, Portrait Session, etc."
-              required
+              onChange={(e) => setEventData({ ...eventData, name: e.target.value })}
+              placeholder="Enter event name"
             />
           </div>
           
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="estimateId">Estimate ID</Label>
+              <Label htmlFor="event-date">Date</Label>
               <Input
-                id="estimateId"
-                name="estimateId"
-                value={eventData.estimateId}
-                onChange={handleChange}
-                placeholder="EST-001"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="stage">Workflow Stage</Label>
-              <Select
-                value={eventData.stage}
-                onValueChange={(value) => handleSelectChange("stage", value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select stage" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pre-production">Pre-Production</SelectItem>
-                  <SelectItem value="production">Production</SelectItem>
-                  <SelectItem value="post-production">Post-Production</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="date">Date</Label>
-              <Input
-                id="date"
-                name="date"
+                id="event-date"
                 type="date"
                 value={eventData.date}
-                onChange={handleChange}
-                required
+                onChange={(e) => setEventData({ ...eventData, date: e.target.value })}
               />
             </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-2">
-                <Label htmlFor="startTime">Start Time</Label>
-                <Input
-                  id="startTime"
-                  name="startTime"
-                  type="time"
-                  value={eventData.startTime}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="endTime">End Time</Label>
-                <Input
-                  id="endTime"
-                  name="endTime"
-                  type="time"
-                  value={eventData.endTime}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="event-location">Location</Label>
+              <Input
+                id="event-location"
+                value={eventData.location}
+                onChange={(e) => setEventData({ ...eventData, location: e.target.value })}
+                placeholder="Event venue"
+              />
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="event-start">Start Time</Label>
+              <Input
+                id="event-start"
+                type="time"
+                value={eventData.startTime}
+                onChange={(e) => setEventData({ ...eventData, startTime: e.target.value })}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="event-end">End Time</Label>
+              <Input
+                id="event-end"
+                type="time"
+                value={eventData.endTime}
+                onChange={(e) => setEventData({ ...eventData, endTime: e.target.value })}
+              />
             </div>
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="location">Location</Label>
+            <Label htmlFor="client-name">Client Name</Label>
             <Input
-              id="location"
-              name="location"
-              value={eventData.location}
-              onChange={handleChange}
-              placeholder="Enter event location"
-              required
+              id="client-name"
+              value={eventData.clientName}
+              onChange={(e) => setEventData({ ...eventData, clientName: e.target.value })}
+              placeholder="Enter client name"
             />
           </div>
           
-          {/* Client Details */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="clientName">Client Name</Label>
-              <Input
-                id="clientName"
-                name="clientName"
-                value={eventData.clientName}
-                onChange={handleChange}
-                placeholder="Client name"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="clientPhone">Client Phone</Label>
-              <Input
-                id="clientPhone"
-                name="clientPhone"
-                value={eventData.clientPhone}
-                onChange={handleChange}
-                placeholder="Client phone number"
-              />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="client-phone">Client Phone</Label>
+            <Input
+              id="client-phone"
+              value={eventData.clientPhone}
+              onChange={(e) => setEventData({ ...eventData, clientPhone: e.target.value })}
+              placeholder="Enter client phone number"
+            />
           </div>
           
-          {/* Team Requirements */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="photographersCount">Photographers Needed</Label>
+              <Label htmlFor="photographers">Number of Photographers</Label>
               <Input
-                id="photographersCount"
-                name="photographersCount"
+                id="photographers"
                 type="number"
                 min="0"
                 value={eventData.photographersCount}
-                onChange={handleNumberChange}
+                onChange={(e) => setEventData({ ...eventData, photographersCount: parseInt(e.target.value) || 0 })}
               />
             </div>
+            
             <div className="space-y-2">
-              <Label htmlFor="videographersCount">Videographers Needed</Label>
+              <Label htmlFor="videographers">Number of Videographers</Label>
               <Input
-                id="videographersCount"
-                name="videographersCount"
+                id="videographers"
                 type="number"
                 min="0"
                 value={eventData.videographersCount}
-                onChange={handleNumberChange}
+                onChange={(e) => setEventData({ ...eventData, videographersCount: parseInt(e.target.value) || 0 })}
               />
             </div>
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="notes">Notes</Label>
-            <Textarea
-              id="notes"
-              name="notes"
-              value={eventData.notes}
-              onChange={handleChange}
-              placeholder="Any additional information..."
-              rows={3}
+            <Label htmlFor="client-requirements">Client Requirements</Label>
+            <Input
+              id="client-requirements"
+              value={eventData.clientRequirements}
+              onChange={(e) => setEventData({ ...eventData, clientRequirements: e.target.value })}
+              placeholder="Special requests or requirements"
             />
           </div>
           
-          <div className="flex justify-end space-x-2 pt-4">
-            <Button variant="outline" type="button" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button type="submit">
-              Create Event
-            </Button>
-          </div>
+          <DialogFooter>
+            <Button type="submit">Create Event</Button>
+          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>

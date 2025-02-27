@@ -5,9 +5,16 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Mail, Send, Share2, X } from "lucide-react";
+import { Mail, Send, Share2, X, Check, ThumbsUp } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface EstimatePreviewProps {
   open: boolean;
@@ -26,14 +33,17 @@ interface EstimatePreviewProps {
     }>;
     deliverables?: string[];
   };
+  onStatusChange?: (estimateId: string, newStatus: string, negotiatedAmount?: string) => void;
 }
 
-export function EstimatePreview({ open, onClose, estimate }: EstimatePreviewProps) {
+export function EstimatePreview({ open, onClose, estimate, onStatusChange }: EstimatePreviewProps) {
   const { toast } = useToast();
   const [emailInput, setEmailInput] = useState("");
   const [phoneInput, setPhoneInput] = useState("");
   const [showEmailForm, setShowEmailForm] = useState(false);
   const [showWhatsAppForm, setShowWhatsAppForm] = useState(false);
+  const [showApprovalForm, setShowApprovalForm] = useState(false);
+  const [negotiatedAmount, setNegotiatedAmount] = useState(estimate?.amount || "");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSendEmail = async () => {
@@ -90,6 +100,22 @@ export function EstimatePreview({ open, onClose, estimate }: EstimatePreviewProp
     setShowWhatsAppForm(false);
   };
 
+  const handleStatusChange = (newStatus: string) => {
+    if (onStatusChange) {
+      onStatusChange(estimate.id, newStatus, negotiatedAmount);
+      setShowApprovalForm(false);
+      
+      toast({
+        title: "Estimate Updated",
+        description: `Estimate status changed to ${newStatus}`,
+      });
+    }
+  };
+
+  const handleApproval = () => {
+    handleStatusChange("approved");
+  };
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -105,6 +131,7 @@ export function EstimatePreview({ open, onClose, estimate }: EstimatePreviewProp
                     onClick={() => {
                       setShowEmailForm(true);
                       setShowWhatsAppForm(false);
+                      setShowApprovalForm(false);
                     }}
                   >
                     <Mail className="h-4 w-4" />
@@ -125,6 +152,7 @@ export function EstimatePreview({ open, onClose, estimate }: EstimatePreviewProp
                     onClick={() => {
                       setShowWhatsAppForm(true);
                       setShowEmailForm(false);
+                      setShowApprovalForm(false);
                     }}
                   >
                     <Share2 className="h-4 w-4" />
@@ -132,6 +160,28 @@ export function EstimatePreview({ open, onClose, estimate }: EstimatePreviewProp
                 </TooltipTrigger>
                 <TooltipContent>
                   <p>Share via WhatsApp</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => {
+                      setShowApprovalForm(true);
+                      setShowEmailForm(false);
+                      setShowWhatsAppForm(false);
+                    }}
+                    className={estimate.status === "approved" ? "bg-green-100 text-green-700" : ""}
+                  >
+                    <ThumbsUp className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Client Approval</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -203,11 +253,69 @@ export function EstimatePreview({ open, onClose, estimate }: EstimatePreviewProp
           </Card>
         )}
 
+        {/* Approval form */}
+        {showApprovalForm && (
+          <Card className="mb-4">
+            <CardContent className="pt-6">
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="status">Update Estimate Status</Label>
+                  <Select
+                    onValueChange={(value) => handleStatusChange(value)}
+                    defaultValue={estimate.status}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="negotiating">Negotiating</SelectItem>
+                      <SelectItem value="approved">Approved</SelectItem>
+                      <SelectItem value="declined">Declined</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <Label htmlFor="negotiatedAmount">Negotiated Amount</Label>
+                  <div className="flex items-end gap-2">
+                    <Input
+                      id="negotiatedAmount"
+                      placeholder="₹0.00"
+                      value={negotiatedAmount}
+                      onChange={(e) => setNegotiatedAmount(e.target.value)}
+                    />
+                    <Button onClick={handleApproval} variant="default" className="bg-green-600 hover:bg-green-700">
+                      <Check className="mr-2 h-4 w-4" />
+                      Approve
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setShowApprovalForm(false)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Estimate Preview */}
         <div className="border rounded-lg p-6 space-y-6">
           <div className="text-center space-y-2">
             <h1 className="text-2xl font-semibold">ESTIMATE</h1>
             <p className="text-muted-foreground">StudioSync Photography Services</p>
+            <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm ${
+              estimate.status === "approved" ? "bg-green-100 text-green-800" :
+              estimate.status === "declined" ? "bg-red-100 text-red-800" :
+              estimate.status === "negotiating" ? "bg-yellow-100 text-yellow-800" :
+              "bg-gray-100 text-gray-800"
+            }`}>
+              Status: {estimate.status.charAt(0).toUpperCase() + estimate.status.slice(1)}
+            </div>
           </div>
 
           <div className="flex justify-between items-start border-b pb-4">
@@ -221,7 +329,7 @@ export function EstimatePreview({ open, onClose, estimate }: EstimatePreviewProp
             <div className="text-right">
               <h2 className="font-medium">Estimate #{estimate.id}</h2>
               <p className="text-sm text-muted-foreground capitalize">
-                Status: {estimate.status}
+                Valid until: {new Date(new Date(estimate.date).getTime() + 30*24*60*60*1000).toLocaleDateString()}
               </p>
             </div>
           </div>
