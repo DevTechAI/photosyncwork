@@ -1,3 +1,4 @@
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useState, useEffect } from "react";
 import { WelcomePage } from "./pages/WelcomePage";
@@ -21,6 +22,7 @@ export function EstimateForm({ open, onClose, editingEstimate }: EstimateFormPro
   const [currentPage, setCurrentPage] = useState(0);
   const [formData, setFormData] = useState({
     clientName: "",
+    clientEmail: "", // Add clientEmail to formData
     selectedServices: [],
     estimateDetails: {
       events: [],
@@ -52,6 +54,7 @@ export function EstimateForm({ open, onClose, editingEstimate }: EstimateFormPro
       
       setFormData({
         clientName: editingEstimate.clientName || "",
+        clientEmail: editingEstimate.clientEmail || "", // Include clientEmail from editing estimate
         selectedServices,
         estimateDetails: {
           events: [],
@@ -70,7 +73,12 @@ export function EstimateForm({ open, onClose, editingEstimate }: EstimateFormPro
       if (editingEstimate) {
         preview.id = editingEstimate.id;
         preview.status = editingEstimate.status;
-        preview.clientEmail = editingEstimate.clientEmail;
+        
+        // Use the clientEmail from formData or existing estimate
+        preview.clientEmail = formData.clientEmail || editingEstimate.clientEmail || "";
+      } else {
+        // Set clientEmail from formData for new estimates
+        preview.clientEmail = formData.clientEmail || "";
       }
       
       setPreviewEstimate(preview);
@@ -131,6 +139,7 @@ export function EstimateForm({ open, onClose, editingEstimate }: EstimateFormPro
     if (!editingEstimate) {
       setFormData({
         clientName: "",
+        clientEmail: "", // Reset clientEmail
         selectedServices: [],
         estimateDetails: {
           events: [],

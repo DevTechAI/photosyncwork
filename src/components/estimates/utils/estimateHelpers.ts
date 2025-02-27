@@ -76,6 +76,7 @@ export function generatePreviewEstimate(formData: any, toast: any) {
   const previewData = {
     id: Math.floor(Math.random() * 10000).toString(),
     clientName: formData.clientName,
+    clientEmail: formData.clientEmail || "", // Include clientEmail in the preview data
     date: new Date().toISOString(),
     // Still keep the first estimate's amount as the main amount for compatibility
     amount: estimates[0].total,
