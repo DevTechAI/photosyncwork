@@ -9,7 +9,9 @@ import NotFound from "./pages/NotFound";
 import InvoicesPage from "./pages/invoices/InvoicesPage";
 import EstimatesPage from "./pages/estimates/EstimatesPage";
 import FinancesPage from "./pages/finances/FinancesPage";
-import SchedulingPage from "./pages/scheduling/SchedulingPage";
+import PreProductionPage from "./pages/workflow/PreProductionPage";
+import ProductionPage from "./pages/workflow/ProductionPage";
+import PostProductionPage from "./pages/workflow/PostProductionPage";
 
 const queryClient = new QueryClient();
 
@@ -23,7 +25,9 @@ function App() {
             <Route path="/estimates" element={<EstimatesPage />} />
             <Route path="/invoices" element={<InvoicesPage />} />
             <Route path="/finances" element={<FinancesPage />} />
-            <Route path="/scheduling" element={<SchedulingPage />} />
+            <Route path="/pre-production" element={<PreProductionPage />} />
+            <Route path="/production" element={<ProductionPage />} />
+            <Route path="/post-production" element={<PostProductionPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

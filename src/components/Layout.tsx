@@ -9,6 +9,9 @@ import {
   Menu,
   X,
   Calendar,
+  Camera,
+  Film,
+  FileCheck,
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { useEffect, useState } from "react";
@@ -18,7 +21,9 @@ const navItems = [
   { path: "/estimates", label: "Estimates", icon: FileText },
   { path: "/invoices", label: "Invoices", icon: Receipt },
   { path: "/finances", label: "Finances", icon: LineChart },
-  { path: "/scheduling", label: "Scheduling", icon: Calendar },
+  { path: "/pre-production", label: "Pre-Production", icon: Calendar },
+  { path: "/production", label: "Production", icon: Camera },
+  { path: "/post-production", label: "Post-Production", icon: Film },
 ];
 
 export default function Layout({ children }: { children: React.ReactNode }) {

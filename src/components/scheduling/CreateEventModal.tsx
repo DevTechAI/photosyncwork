@@ -1,16 +1,11 @@
 
+import { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScheduledEvent } from "./types";
 
 interface CreateEventModalProps {
@@ -19,210 +14,244 @@ interface CreateEventModalProps {
   onCreateEvent: (event: ScheduledEvent) => void;
 }
 
-export function CreateEventModal({
-  open,
-  onClose,
-  onCreateEvent,
-}: CreateEventModalProps) {
-  const { toast } = useToast();
-  const [formData, setFormData] = useState({
+export function CreateEventModal({ open, onClose, onCreateEvent }: CreateEventModalProps) {
+  const [eventData, setEventData] = useState({
     name: "",
+    estimateId: "",
     date: "",
-    startTime: "",
-    endTime: "",
+    startTime: "09:00",
+    endTime: "17:00",
     location: "",
     clientName: "",
     clientPhone: "",
-    photographersCount: "1",
-    videographersCount: "1",
+    photographersCount: 1,
+    videographersCount: 0,
     notes: "",
+    stage: "pre-production" as const, // Default stage
   });
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { id, value } = e.target;
-    setFormData((prev) => ({ ...prev, [id]: value }));
+  
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setEventData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
-
+  
+  const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setEventData(prev => ({
+      ...prev,
+      [name]: parseInt(value) || 0
+    }));
+  };
+  
+  const handleSelectChange = (name: string, value: string) => {
+    setEventData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+  
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Validate required fields
-    if (!formData.name || !formData.date || !formData.location || !formData.clientName) {
-      toast({
-        title: "Missing information",
-        description: "Please fill in all required fields",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Create new event
+    
     const newEvent: ScheduledEvent = {
       id: `evt-${Date.now()}`,
-      estimateId: "", // This would be linked to an estimate in a real app
-      name: formData.name,
-      date: formData.date,
-      startTime: formData.startTime,
-      endTime: formData.endTime,
-      location: formData.location,
-      clientName: formData.clientName,
-      clientPhone: formData.clientPhone,
-      photographersCount: parseInt(formData.photographersCount) || 1,
-      videographersCount: parseInt(formData.videographersCount) || 1,
+      ...eventData,
       assignments: [],
-      notes: formData.notes,
     };
-
+    
     onCreateEvent(newEvent);
     
     // Reset form
-    setFormData({
+    setEventData({
       name: "",
+      estimateId: "",
       date: "",
-      startTime: "",
-      endTime: "",
+      startTime: "09:00",
+      endTime: "17:00",
       location: "",
       clientName: "",
       clientPhone: "",
-      photographersCount: "1",
-      videographersCount: "1",
+      photographersCount: 1,
+      videographersCount: 0,
       notes: "",
-    });
-
-    toast({
-      title: "Event created",
-      description: "The event has been successfully created",
+      stage: "pre-production",
     });
   };
-
+  
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="sm:max-w-[550px]">
         <DialogHeader>
           <DialogTitle>Create New Event</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        
+        <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+          {/* Event Details */}
           <div className="space-y-2">
-            <Label htmlFor="name">Event Name*</Label>
+            <Label htmlFor="name">Event Name</Label>
             <Input
               id="name"
-              placeholder="e.g. Sharma Wedding - Engagement"
-              value={formData.name}
-              onChange={handleInputChange}
+              name="name"
+              value={eventData.name}
+              onChange={handleChange}
+              placeholder="Wedding, Portrait Session, etc."
               required
             />
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="date">Date*</Label>
+              <Label htmlFor="estimateId">Estimate ID</Label>
+              <Input
+                id="estimateId"
+                name="estimateId"
+                value={eventData.estimateId}
+                onChange={handleChange}
+                placeholder="EST-001"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="stage">Workflow Stage</Label>
+              <Select
+                value={eventData.stage}
+                onValueChange={(value) => handleSelectChange("stage", value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select stage" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pre-production">Pre-Production</SelectItem>
+                  <SelectItem value="production">Production</SelectItem>
+                  <SelectItem value="post-production">Post-Production</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="date">Date</Label>
               <Input
                 id="date"
+                name="date"
                 type="date"
-                value={formData.date}
-                onChange={handleInputChange}
+                value={eventData.date}
+                onChange={handleChange}
                 required
               />
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="location">Location*</Label>
-              <Input
-                id="location"
-                placeholder="e.g. Taj Hotel, Mumbai"
-                value={formData.location}
-                onChange={handleInputChange}
-                required
-              />
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-2">
+                <Label htmlFor="startTime">Start Time</Label>
+                <Input
+                  id="startTime"
+                  name="startTime"
+                  type="time"
+                  value={eventData.startTime}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="endTime">End Time</Label>
+                <Input
+                  id="endTime"
+                  name="endTime"
+                  type="time"
+                  value={eventData.endTime}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
             </div>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="startTime">Start Time</Label>
-              <Input
-                id="startTime"
-                type="time"
-                value={formData.startTime}
-                onChange={handleInputChange}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="endTime">End Time</Label>
-              <Input
-                id="endTime"
-                type="time"
-                value={formData.endTime}
-                onChange={handleInputChange}
-              />
-            </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="location">Location</Label>
+            <Input
+              id="location"
+              name="location"
+              value={eventData.location}
+              onChange={handleChange}
+              placeholder="Enter event location"
+              required
+            />
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          
+          {/* Client Details */}
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="clientName">Client Name*</Label>
+              <Label htmlFor="clientName">Client Name</Label>
               <Input
                 id="clientName"
-                placeholder="Enter client name"
-                value={formData.clientName}
-                onChange={handleInputChange}
+                name="clientName"
+                value={eventData.clientName}
+                onChange={handleChange}
+                placeholder="Client name"
                 required
               />
             </div>
-
             <div className="space-y-2">
               <Label htmlFor="clientPhone">Client Phone</Label>
               <Input
                 id="clientPhone"
-                type="tel"
-                placeholder="+91 98765 43210"
-                value={formData.clientPhone}
-                onChange={handleInputChange}
+                name="clientPhone"
+                value={eventData.clientPhone}
+                onChange={handleChange}
+                placeholder="Client phone number"
               />
             </div>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          
+          {/* Team Requirements */}
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="photographersCount">Photographers</Label>
+              <Label htmlFor="photographersCount">Photographers Needed</Label>
               <Input
                 id="photographersCount"
+                name="photographersCount"
                 type="number"
                 min="0"
-                value={formData.photographersCount}
-                onChange={handleInputChange}
+                value={eventData.photographersCount}
+                onChange={handleNumberChange}
               />
             </div>
-
             <div className="space-y-2">
-              <Label htmlFor="videographersCount">Videographers</Label>
+              <Label htmlFor="videographersCount">Videographers Needed</Label>
               <Input
                 id="videographersCount"
+                name="videographersCount"
                 type="number"
                 min="0"
-                value={formData.videographersCount}
-                onChange={handleInputChange}
+                value={eventData.videographersCount}
+                onChange={handleNumberChange}
               />
             </div>
           </div>
-
+          
           <div className="space-y-2">
             <Label htmlFor="notes">Notes</Label>
-            <Input
+            <Textarea
               id="notes"
-              placeholder="Any additional notes"
-              value={formData.notes}
-              onChange={handleInputChange}
+              name="notes"
+              value={eventData.notes}
+              onChange={handleChange}
+              placeholder="Any additional information..."
+              rows={3}
             />
           </div>
-
-          <DialogFooter>
+          
+          <div className="flex justify-end space-x-2 pt-4">
             <Button variant="outline" type="button" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit">Create Event</Button>
-          </DialogFooter>
+            <Button type="submit">
+              Create Event
+            </Button>
+          </div>
         </form>
       </DialogContent>
     </Dialog>
