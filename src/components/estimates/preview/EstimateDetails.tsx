@@ -44,6 +44,7 @@ export function EstimateDetails({ estimate }: EstimateDetailsProps) {
   
   // If we don't have packages, use the legacy format (services and deliverables directly on estimate)
   const legacyPackage = {
+    name: "Standard Package", // Add a default name for legacy packages
     amount: estimate.amount,
     services: estimate.services || [],
     deliverables: estimate.deliverables || []
