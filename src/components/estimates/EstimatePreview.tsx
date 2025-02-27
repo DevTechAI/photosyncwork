@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Mail, Send, Share2, X, Check, ThumbsUp } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Select,
   SelectContent,
@@ -57,17 +58,43 @@ export function EstimatePreview({ open, onClose, estimate, onStatusChange }: Est
     }
 
     setIsLoading(true);
-    // Simulate sending email
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    setIsLoading(false);
-    
-    toast({
-      title: "Estimate Sent!",
-      description: `Estimate has been sent to ${emailInput}`,
-    });
-    
-    setEmailInput("");
-    setShowEmailForm(false);
+
+    try {
+      // Call our Supabase edge function to send the email
+      const { data, error } = await supabase.functions.invoke("send-estimate-email", {
+        body: {
+          to: emailInput,
+          clientName: estimate.clientName,
+          estimateId: estimate.id,
+          amount: estimate.amount,
+          services: estimate.services,
+          deliverables: estimate.deliverables
+        }
+      });
+      
+      if (error) {
+        throw new Error(error.message);
+      }
+      
+      console.log("Email function response:", data);
+      
+      toast({
+        title: "Estimate Sent!",
+        description: `Estimate has been sent to ${emailInput}`,
+      });
+      
+      setEmailInput("");
+      setShowEmailForm(false);
+    } catch (error) {
+      console.error("Failed to send email:", error);
+      toast({
+        title: "Error",
+        description: `Failed to send email: ${error.message || "Unknown error"}`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSendWhatsApp = () => {
