@@ -11,7 +11,7 @@ export function WelcomePage({ clientName, onClientNameChange }: WelcomePageProps
   return (
     <div className="space-y-8">
       <div className="text-center space-y-4">
-        <h1 className="text-4xl font-light tracking-tight">PIXEL ARMY</h1>
+        <h1 className="text-4xl font-light tracking-tight">STUDIOSYNC</h1>
         <p className="text-2xl font-light text-muted-foreground">
           {clientName ? `Hello ${clientName}!` : "Welcome"}
         </p>
