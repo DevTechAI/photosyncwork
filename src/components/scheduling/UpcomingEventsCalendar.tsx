@@ -20,13 +20,13 @@ export function UpcomingEventsCalendar({ events }: UpcomingEventsCalendarProps) 
   const datesWithEvents = events.map(event => new Date(event.date));
   
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <Card className="p-4 md:col-span-1 h-fit">
+    <div className="space-y-6">
+      <Card className="p-4">
         <Calendar
           mode="single"
           selected={date}
           onSelect={setDate}
-          className="rounded-md"
+          className="rounded-md mx-auto"
           modifiers={{
             booked: datesWithEvents
           }}
@@ -36,7 +36,7 @@ export function UpcomingEventsCalendar({ events }: UpcomingEventsCalendarProps) 
         />
       </Card>
       
-      <Card className="p-4 md:col-span-2">
+      <Card className="p-4">
         <h3 className="font-medium mb-4">
           {date ? date.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Select a date'}
         </h3>
