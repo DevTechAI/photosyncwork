@@ -13,6 +13,17 @@ interface WhatsAppFormProps {
     clientName: string;
     amount: string;
     date: string;
+    packages?: Array<{
+      name?: string;
+      amount: string;
+      services: Array<{
+        event: string;
+        date: string;
+        photographers: string;
+        cinematographers: string;
+      }>;
+      deliverables: string[];
+    }>;
   };
 }
 
@@ -32,8 +43,27 @@ export function WhatsAppForm({ onClose, estimate }: WhatsAppFormProps) {
 
     const formattedPhone = phoneInput.replace(/\D/g, "");
     
+    // Generate package information
+    let packageText = "";
+    
+    if (estimate.packages && estimate.packages.length > 0) {
+      estimate.packages.forEach((pkg, idx) => {
+        packageText += `\n\n*Package Option ${idx + 1}${pkg.name ? `: ${pkg.name}` : ''}*`;
+        packageText += `\nAmount: ${pkg.amount}`;
+        
+        if (pkg.services && pkg.services.length > 0) {
+          packageText += "\n\nEvents:";
+          pkg.services.forEach(service => {
+            packageText += `\n- ${service.event} (${new Date(service.date).toLocaleDateString()})`;
+          });
+        }
+      });
+    } else {
+      packageText = `\n\nAmount: ${estimate.amount}`;
+    }
+    
     const message = encodeURIComponent(
-      `*Estimate for ${estimate.clientName}*\n\nAmount: ${estimate.amount}\nDate: ${new Date(estimate.date).toLocaleDateString()}\n\nThank you for considering our services!`
+      `*Estimate for ${estimate.clientName}*\n\nDate: ${new Date(estimate.date).toLocaleDateString()}${packageText}\n\nThank you for considering our services!`
     );
     
     window.open(`https://wa.me/${formattedPhone}?text=${message}`, "_blank");

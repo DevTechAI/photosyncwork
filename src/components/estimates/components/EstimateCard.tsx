@@ -32,7 +32,7 @@ export function EstimateCard({
 }: EstimateCardProps) {
   return (
     <div className="space-y-4 pt-6 border-t">
-      <h3 className="text-lg font-medium">ESTIMATE {index + 1}</h3>
+      <h3 className="text-lg font-medium">PACKAGE OPTION {index + 1}</h3>
       
       <div className="space-y-6">
         {estimate.services.map((service, serviceIndex) => (

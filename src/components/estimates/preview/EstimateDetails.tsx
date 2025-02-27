@@ -15,6 +15,17 @@ interface EstimateDetailsProps {
       cinematographers: string;
     }>;
     deliverables?: string[];
+    packages?: Array<{
+      name?: string;
+      amount: string;
+      services: Array<{
+        event: string;
+        date: string;
+        photographers: string;
+        cinematographers: string;
+      }>;
+      deliverables: string[];
+    }>;
   };
 }
 
@@ -27,6 +38,19 @@ export function EstimateDetails({ estimate }: EstimateDetailsProps) {
   };
 
   const statusClass = statusClasses[estimate.status] || statusClasses.pending;
+
+  // Check if we have packages data (multiple estimate options)
+  const hasPackages = estimate.packages && estimate.packages.length > 0;
+  
+  // If we don't have packages, use the legacy format (services and deliverables directly on estimate)
+  const legacyPackage = {
+    amount: estimate.amount,
+    services: estimate.services || [],
+    deliverables: estimate.deliverables || []
+  };
+  
+  // Use packages if available, otherwise create a single package from the estimate's direct properties
+  const packagesToRender = hasPackages ? estimate.packages : [legacyPackage];
 
   return (
     <div className="border rounded-lg p-6 space-y-6">
@@ -54,47 +78,55 @@ export function EstimateDetails({ estimate }: EstimateDetailsProps) {
         </div>
       </div>
 
-      {estimate.services && estimate.services.length > 0 && (
-        <div>
-          <h3 className="font-medium mb-2">Services</h3>
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="border-b">
-                <th className="text-left py-2">Event</th>
-                <th className="text-left py-2">Date</th>
-                <th className="text-left py-2">Photographers</th>
-                <th className="text-left py-2">Cinematographers</th>
-              </tr>
-            </thead>
-            <tbody>
-              {estimate.services.map((service, index) => (
-                <tr key={index} className="border-b">
-                  <td className="py-2">{service.event}</td>
-                  <td className="py-2">{new Date(service.date).toLocaleDateString()}</td>
-                  <td className="py-2">{service.photographers}</td>
-                  <td className="py-2">{service.cinematographers}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      {packagesToRender.map((pkg, packageIndex) => (
+        <div key={packageIndex} className="border p-4 rounded-md mb-6">
+          <h2 className="text-xl font-medium mb-4">
+            {hasPackages ? `Package Option ${packageIndex + 1}${pkg.name ? `: ${pkg.name}` : ''}` : 'Package Details'}
+          </h2>
+          
+          {pkg.services && pkg.services.length > 0 && (
+            <div className="mb-4">
+              <h3 className="font-medium mb-2">Services</h3>
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left py-2">Event</th>
+                    <th className="text-left py-2">Date</th>
+                    <th className="text-left py-2">Photographers</th>
+                    <th className="text-left py-2">Cinematographers</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pkg.services.map((service, index) => (
+                    <tr key={index} className="border-b">
+                      <td className="py-2">{service.event}</td>
+                      <td className="py-2">{new Date(service.date).toLocaleDateString()}</td>
+                      <td className="py-2">{service.photographers}</td>
+                      <td className="py-2">{service.cinematographers}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
 
-      {estimate.deliverables && estimate.deliverables.length > 0 && (
-        <div>
-          <h3 className="font-medium mb-2">Deliverables</h3>
-          <ul className="list-disc ml-5 space-y-1">
-            {estimate.deliverables.map((deliverable, index) => (
-              <li key={index}>{deliverable}</li>
-            ))}
-          </ul>
-        </div>
-      )}
+          {pkg.deliverables && pkg.deliverables.length > 0 && (
+            <div className="mb-4">
+              <h3 className="font-medium mb-2">Deliverables</h3>
+              <ul className="list-disc ml-5 space-y-1">
+                {pkg.deliverables.map((deliverable, index) => (
+                  <li key={index}>{deliverable}</li>
+                ))}
+              </ul>
+            </div>
+          )}
 
-      <div className="border-t pt-4 text-right">
-        <span className="font-medium">Total Amount: </span>
-        <span className="text-xl font-semibold">{estimate.amount}</span>
-      </div>
+          <div className="text-right pt-2 border-t">
+            <span className="font-medium">Package Total: </span>
+            <span className="text-xl font-semibold">{pkg.amount}</span>
+          </div>
+        </div>
+      ))}
 
       <div className="border-t pt-4 text-sm text-muted-foreground">
         <p>Terms & Conditions</p>

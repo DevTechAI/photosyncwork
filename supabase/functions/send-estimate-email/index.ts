@@ -20,6 +20,17 @@ interface EmailRequest {
     cinematographers: string;
   }>;
   deliverables?: string[];
+  packages?: Array<{
+    name?: string;
+    amount: string;
+    services: Array<{
+      event: string;
+      date: string;
+      photographers: string;
+      cinematographers: string;
+    }>;
+    deliverables: string[];
+  }>;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -32,7 +43,7 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     // Handle sending estimate email
-    const { to, clientName, estimateId, amount, services, deliverables }: EmailRequest = await req.json();
+    const { to, clientName, estimateId, amount, services, deliverables, packages }: EmailRequest = await req.json();
 
     if (!to) {
       throw new Error("Email recipient is required");
@@ -46,10 +57,11 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("RESEND_API_KEY is not set in environment variables");
     }
     
-    // Format services and deliverables for email
-    const servicesHTML = services && services.length > 0
-      ? `
-        <h2 style="color: #333; margin-top: 20px;">Services:</h2>
+    // Function to format service table
+    const formatServicesHTML = (services) => {
+      if (!services || services.length === 0) return '<p>No services specified</p>';
+      
+      return `
         <table style="width: 100%; border-collapse: collapse;">
           <tr style="border-bottom: 1px solid #ddd;">
             <th style="text-align: left; padding: 8px;">Event</th>
@@ -66,17 +78,54 @@ const handler = async (req: Request): Promise<Response> => {
             </tr>
           `).join('')}
         </table>
-      `
-      : '<p>No services specified</p>';
+      `;
+    };
     
-    const deliverablesHTML = deliverables && deliverables.length > 0
-      ? `
-        <h2 style="color: #333; margin-top: 20px;">Deliverables:</h2>
+    // Function to format deliverables list
+    const formatDeliverablesHTML = (deliverables) => {
+      if (!deliverables || deliverables.length === 0) return '<p>No deliverables specified</p>';
+      
+      return `
         <ul>
           ${deliverables.map(item => `<li>${item}</li>`).join('')}
         </ul>
-      `
-      : '<p>No deliverables specified</p>';
+      `;
+    };
+    
+    // Check if we have packages
+    const hasPackages = packages && packages.length > 0;
+    
+    // If no packages, create one using the direct estimate properties for backwards compatibility
+    const packagesToRender = hasPackages ? packages : [{
+      name: "Package",
+      amount: amount,
+      services: services || [],
+      deliverables: deliverables || []
+    }];
+    
+    // Generate all package HTML sections
+    const packagesHTML = packagesToRender.map((pkg, index) => `
+      <div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+        <h2 style="color: #333; margin-top: 0; font-size: 18px; border-bottom: 1px solid #e5e7eb; padding-bottom: 10px;">
+          ${hasPackages ? `Package Option ${index + 1}${pkg.name ? `: ${pkg.name}` : ''}` : 'Package Details'}
+        </h2>
+        
+        <div style="margin-bottom: 15px;">
+          <h3 style="color: #333; font-size: 16px; margin-bottom: 10px;">Services:</h3>
+          ${formatServicesHTML(pkg.services)}
+        </div>
+        
+        <div style="margin-bottom: 15px;">
+          <h3 style="color: #333; font-size: 16px; margin-bottom: 10px;">Deliverables:</h3>
+          ${formatDeliverablesHTML(pkg.deliverables)}
+        </div>
+        
+        <div style="text-align: right; border-top: 1px solid #e5e7eb; padding-top: 10px; margin-top: 10px;">
+          <span style="font-weight: bold;">Package Total: </span>
+          <span style="font-size: 18px; font-weight: bold;">${pkg.amount}</span>
+        </div>
+      </div>
+    `).join('');
 
     // Create email HTML template WITHOUT approve/decline buttons
     const emailHTML = `
@@ -93,7 +142,6 @@ const handler = async (req: Request): Promise<Response> => {
           .header p { color: #7f8c8d; margin: 5px 0 0; }
           .content { background: #f9f9f9; border-radius: 5px; padding: 20px; }
           .footer { margin-top: 30px; font-size: 12px; color: #7f8c8d; text-align: center; }
-          .amount { font-size: 24px; font-weight: bold; margin: 20px 0; text-align: right; }
           .terms { margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; }
           .contact-us {
             margin-top: 20px;
@@ -119,13 +167,7 @@ const handler = async (req: Request): Promise<Response> => {
             
             <p>Thank you for your interest in our photography services. Please find your estimate details below:</p>
             
-            ${servicesHTML}
-            
-            ${deliverablesHTML}
-            
-            <div class="amount">
-              Total Amount: ${amount}
-            </div>
+            ${packagesHTML}
             
             <div class="contact-us">
               <p><strong>Have questions or need to discuss?</strong></p>

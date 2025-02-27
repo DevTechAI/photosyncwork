@@ -22,6 +22,17 @@ interface EmailFormProps {
       cinematographers: string;
     }>;
     deliverables?: string[];
+    packages?: Array<{
+      name?: string;
+      amount: string;
+      services: Array<{
+        event: string;
+        date: string;
+        photographers: string;
+        cinematographers: string;
+      }>;
+      deliverables: string[];
+    }>;
   };
 }
 
@@ -50,7 +61,8 @@ export function EmailForm({ onClose, estimate }: EmailFormProps) {
           estimateId: estimate.id,
           amount: estimate.amount,
           services: estimate.services,
-          deliverables: estimate.deliverables
+          deliverables: estimate.deliverables,
+          packages: estimate.packages
         }
       });
       
