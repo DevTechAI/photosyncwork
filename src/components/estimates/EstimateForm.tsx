@@ -1,5 +1,5 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { WelcomePage } from "./pages/WelcomePage";
 import { ServicesPage } from "./pages/ServicesPage";
 import { EstimateDetailsPage } from "./pages/EstimateDetailsPage";
@@ -12,9 +12,10 @@ import { generatePreviewEstimate } from "./utils/estimateHelpers";
 interface EstimateFormProps {
   open: boolean;
   onClose: () => void;
+  editingEstimate?: any;
 }
 
-export function EstimateForm({ open, onClose }: EstimateFormProps) {
+export function EstimateForm({ open, onClose, editingEstimate }: EstimateFormProps) {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(0);
@@ -30,11 +31,50 @@ export function EstimateForm({ open, onClose }: EstimateFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [previewEstimate, setPreviewEstimate] = useState(null);
 
+  useEffect(() => {
+    if (editingEstimate) {
+      const selectedServices = editingEstimate.services?.map(service => service.event) || [];
+      
+      let estimates = [];
+      if (editingEstimate.packages && editingEstimate.packages.length > 0) {
+        estimates = editingEstimate.packages.map(pkg => ({
+          services: pkg.services || [],
+          deliverables: pkg.deliverables || [],
+          total: pkg.amount
+        }));
+      } else {
+        estimates = [{
+          services: editingEstimate.services || [],
+          deliverables: editingEstimate.deliverables || [],
+          total: editingEstimate.amount
+        }];
+      }
+      
+      setFormData({
+        clientName: editingEstimate.clientName || "",
+        selectedServices,
+        estimateDetails: {
+          events: [],
+          estimates,
+          deliverables: []
+        }
+      });
+      
+      setPreviewEstimate(editingEstimate);
+    }
+  }, [editingEstimate]);
+
   const handleGeneratePreview = () => {
     const preview = generatePreviewEstimate(formData, toast);
     if (preview) {
+      if (editingEstimate) {
+        preview.id = editingEstimate.id;
+        preview.status = editingEstimate.status;
+        preview.clientEmail = editingEstimate.clientEmail;
+      }
+      
       setPreviewEstimate(preview);
-      setCurrentPage(3); // Move to preview page
+      setCurrentPage(3);
     }
   };
 
@@ -46,34 +86,39 @@ export function EstimateForm({ open, onClose }: EstimateFormProps) {
     setIsSubmitting(true);
     
     try {
-      // Log the form data to console for debugging
       console.log("Saving estimate:", previewEstimate);
       
-      // Simulate an API call with a timeout
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Show success message
-      toast({
-        title: "Estimate Created",
-        description: `Estimate for ${formData.clientName} has been created successfully.`,
-      });
-      
-      // Get existing estimates from localStorage
       const savedEstimates = localStorage.getItem("estimates");
-      const estimates = savedEstimates ? JSON.parse(savedEstimates) : [];
+      let estimates = savedEstimates ? JSON.parse(savedEstimates) : [];
       
-      // Add new estimate to the list
-      estimates.unshift(previewEstimate);
+      if (editingEstimate) {
+        estimates = estimates.map(est => 
+          est.id === previewEstimate.id ? previewEstimate : est
+        );
+        
+        toast({
+          title: "Estimate Updated",
+          description: `Estimate for ${formData.clientName} has been updated successfully.`,
+        });
+      } else {
+        estimates.unshift(previewEstimate);
+        
+        toast({
+          title: "Estimate Created",
+          description: `Estimate for ${formData.clientName} has been created successfully.`,
+        });
+      }
       
-      // Save updated estimates to localStorage
       localStorage.setItem("estimates", JSON.stringify(estimates));
       
       return Promise.resolve();
     } catch (error) {
-      console.error("Error creating estimate:", error);
+      console.error("Error saving estimate:", error);
       toast({
         title: "Error",
-        description: "There was a problem creating your estimate. Please try again.",
+        description: "There was a problem saving your estimate. Please try again.",
         variant: "destructive",
       });
       return Promise.reject(error);
@@ -83,22 +128,20 @@ export function EstimateForm({ open, onClose }: EstimateFormProps) {
   };
 
   const handleCloseAndReset = () => {
-    // Reset form data
-    setFormData({
-      clientName: "",
-      selectedServices: [],
-      estimateDetails: {
-        events: [],
-        estimates: [],
-        deliverables: []
-      }
-    });
-    setPreviewEstimate(null);
+    if (!editingEstimate) {
+      setFormData({
+        clientName: "",
+        selectedServices: [],
+        estimateDetails: {
+          events: [],
+          estimates: [],
+          deliverables: []
+        }
+      });
+      setPreviewEstimate(null);
+    }
     
-    // Reset to first page for next time
     setCurrentPage(0);
-    
-    // Close the dialog
     onClose();
   };
 
@@ -110,8 +153,6 @@ export function EstimateForm({ open, onClose }: EstimateFormProps) {
     if (currentPage === 2) {
       handleGeneratePreview();
     } else if (currentPage === 3) {
-      // We don't need this anymore as the save happens when sharing
-      // keepting it empty
     } else {
       setCurrentPage(prev => prev + 1);
     }
@@ -146,7 +187,7 @@ export function EstimateForm({ open, onClose }: EstimateFormProps) {
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {currentPage === 3 ? "Preview Estimate" : "Create New Estimate"}
+            {editingEstimate ? "Edit Estimate" : currentPage === 3 ? "Preview Estimate" : "Create New Estimate"}
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-6">
