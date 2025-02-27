@@ -1,21 +1,14 @@
 
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useState } from "react";
 import { WelcomePage } from "./pages/WelcomePage";
 import { ServicesPage } from "./pages/ServicesPage";
 import { EstimateDetailsPage } from "./pages/EstimateDetailsPage";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
-import { EstimateDetails } from "./preview/EstimateDetails";
-import { Mail, Share2 } from "lucide-react";
-import { EmailForm } from "./preview/EmailForm";
-import { WhatsAppForm } from "./preview/WhatsAppForm";
+import { PreviewStep } from "./components/PreviewStep";
+import { FormNavigation } from "./components/FormNavigation";
+import { generatePreviewEstimate } from "./utils/estimateHelpers";
 
 interface EstimateFormProps {
   open: boolean;
@@ -26,8 +19,6 @@ export function EstimateForm({ open, onClose }: EstimateFormProps) {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(0);
-  const [showEmailForm, setShowEmailForm] = useState(false);
-  const [showWhatsAppForm, setShowWhatsAppForm] = useState(false);
   const [formData, setFormData] = useState({
     clientName: "",
     selectedServices: [],
@@ -40,39 +31,8 @@ export function EstimateForm({ open, onClose }: EstimateFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [previewEstimate, setPreviewEstimate] = useState(null);
 
-  const generatePreviewEstimate = () => {
-    // Get the first estimate for preview (typically there's just one)
-    const firstEstimate = formData.estimateDetails.estimates[0];
-    
-    if (!firstEstimate) {
-      toast({
-        title: "Missing Information",
-        description: "Please add at least one estimate option with services.",
-        variant: "destructive",
-      });
-      return null;
-    }
-    
-    const previewData = {
-      id: Math.floor(Math.random() * 10000).toString(),
-      clientName: formData.clientName,
-      date: new Date().toISOString(),
-      amount: firstEstimate.total,
-      status: "pending",
-      services: firstEstimate.services.map(service => ({
-        event: service.event,
-        date: service.date,
-        photographers: service.photographers,
-        cinematographers: service.cinematographers
-      })),
-      deliverables: firstEstimate.deliverables
-    };
-    
-    return previewData;
-  };
-
   const handleGeneratePreview = () => {
-    const preview = generatePreviewEstimate();
+    const preview = generatePreviewEstimate(formData, toast);
     if (preview) {
       setPreviewEstimate(preview);
       setCurrentPage(3); // Move to preview page
@@ -132,6 +92,20 @@ export function EstimateForm({ open, onClose }: EstimateFormProps) {
     }
   };
 
+  const handlePrevious = () => {
+    setCurrentPage(prev => prev - 1);
+  };
+
+  const handleNext = () => {
+    if (currentPage === 2) {
+      handleGeneratePreview();
+    } else if (currentPage === 3) {
+      handleSubmit();
+    } else {
+      setCurrentPage(prev => prev + 1);
+    }
+  };
+
   const pages = [
     <WelcomePage 
       key="welcome" 
@@ -168,71 +142,15 @@ export function EstimateForm({ open, onClose }: EstimateFormProps) {
           {currentPage < 3 && pages[currentPage]}
           
           {currentPage === 3 && previewEstimate && (
-            <div className="space-y-6">
-              {showEmailForm && (
-                <EmailForm 
-                  onClose={() => setShowEmailForm(false)} 
-                  estimate={previewEstimate} 
-                />
-              )}
-              
-              {showWhatsAppForm && (
-                <WhatsAppForm 
-                  onClose={() => setShowWhatsAppForm(false)} 
-                  estimate={previewEstimate}
-                />
-              )}
-              
-              {!showEmailForm && !showWhatsAppForm && (
-                <div className="flex justify-center space-x-4 mb-4">
-                  <Button onClick={() => setShowEmailForm(true)} variant="outline">
-                    <Mail className="mr-2 h-4 w-4" />
-                    Send via Email
-                  </Button>
-                  <Button onClick={() => setShowWhatsAppForm(true)} variant="outline">
-                    <Share2 className="mr-2 h-4 w-4" />
-                    Share via WhatsApp
-                  </Button>
-                </div>
-              )}
-              
-              <EstimateDetails estimate={previewEstimate} />
-            </div>
+            <PreviewStep estimate={previewEstimate} />
           )}
           
-          <div className="flex justify-between pt-6 border-t">
-            <Button
-              variant="outline"
-              onClick={() => {
-                if (currentPage === 3) {
-                  setShowEmailForm(false);
-                  setShowWhatsAppForm(false);
-                }
-                setCurrentPage(prev => prev - 1);
-              }}
-              disabled={currentPage === 0}
-            >
-              Previous
-            </Button>
-            <Button
-              onClick={() => {
-                if (currentPage === 2) {
-                  handleGeneratePreview();
-                } else if (currentPage === 3) {
-                  handleSubmit();
-                } else {
-                  setCurrentPage(prev => prev + 1);
-                }
-              }}
-              disabled={isSubmitting}
-            >
-              {currentPage === 2 
-                ? "Preview Estimate"
-                : currentPage === 3
-                ? (isSubmitting ? "Creating..." : "Create Estimate")
-                : "Next"}
-            </Button>
-          </div>
+          <FormNavigation
+            currentPage={currentPage}
+            isSubmitting={isSubmitting}
+            onPrevious={handlePrevious}
+            onNext={handleNext}
+          />
         </div>
       </DialogContent>
     </Dialog>
