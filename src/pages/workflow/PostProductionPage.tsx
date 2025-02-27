@@ -1,7 +1,7 @@
 
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
-import { Calendar, Edit, Film, Check } from "lucide-react";
+import { Calendar, Edit, Film, Check, Plus } from "lucide-react";
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScheduledEvent, TeamMember } from "@/components/scheduling/types";
