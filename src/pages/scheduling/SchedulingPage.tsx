@@ -1,7 +1,7 @@
 
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, MapPin, Plus, Users } from "lucide-react";
+import { Calendar, Clock, MapPin, Plus, Users, AlertTriangle, CheckCircle } from "lucide-react";
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UpcomingEventsCalendar } from "@/components/scheduling/UpcomingEventsCalendar";
@@ -154,6 +154,46 @@ export default function SchedulingPage() {
     
     setEvents(updatedEvents);
   };
+
+  // Get assignment counts by role and status
+  const getAssignmentCounts = (event: ScheduledEvent) => {
+    const acceptedPhotographers = event.assignments.filter(
+      a => {
+        const member = teamMembers.find(m => m.id === a.teamMemberId);
+        return member?.role === "photographer" && a.status === "accepted";
+      }
+    ).length;
+
+    const acceptedVideographers = event.assignments.filter(
+      a => {
+        const member = teamMembers.find(m => m.id === a.teamMemberId);
+        return member?.role === "videographer" && a.status === "accepted";
+      }
+    ).length;
+
+    const pendingPhotographers = event.assignments.filter(
+      a => {
+        const member = teamMembers.find(m => m.id === a.teamMemberId);
+        return member?.role === "photographer" && a.status === "pending";
+      }
+    ).length;
+
+    const pendingVideographers = event.assignments.filter(
+      a => {
+        const member = teamMembers.find(m => m.id === a.teamMemberId);
+        return member?.role === "videographer" && a.status === "pending";
+      }
+    ).length;
+
+    return {
+      acceptedPhotographers,
+      acceptedVideographers,
+      pendingPhotographers,
+      pendingVideographers,
+      totalPhotographers: acceptedPhotographers + pendingPhotographers,
+      totalVideographers: acceptedVideographers + pendingVideographers
+    };
+  };
   
   return (
     <Layout>
@@ -187,61 +227,86 @@ export default function SchedulingPage() {
               
               <TabsContent value="events" className="space-y-4">
                 <div className="space-y-4">
-                  {events.map(event => (
-                    <div key={event.id} className="flex flex-col p-4 border rounded-lg">
-                      <div className="flex justify-between items-start">
-                        <h3 className="font-medium text-lg">{event.name}</h3>
-                        <div className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">
-                          {event.photographersCount} Photographers, {event.videographersCount} Videographers
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Calendar className="h-4 w-4" />
-                          <span>{new Date(event.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Clock className="h-4 w-4" />
-                          <span>{event.startTime} - {event.endTime}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Users className="h-4 w-4" />
-                          <span>{event.clientName}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <MapPin className="h-4 w-4" />
-                          <span>{event.location}</span>
-                        </div>
-                      </div>
-                      <div className="mt-4 pt-4 border-t">
-                        <h4 className="font-medium text-sm mb-2">Team Assignments</h4>
-                        {event.assignments.length > 0 ? (
-                          <div className="space-y-2">
-                            {event.assignments.map((assignment, index) => {
-                              const member = teamMembers.find(tm => tm.id === assignment.teamMemberId);
-                              return (
-                                <div key={index} className="flex justify-between items-center">
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-sm">{member?.name}</span>
-                                    <span className="text-xs text-muted-foreground capitalize">({member?.role})</span>
-                                  </div>
-                                  <div className={`px-2 py-1 rounded text-xs ${
-                                    assignment.status === 'accepted' ? 'bg-green-100 text-green-800' : 
-                                    assignment.status === 'declined' ? 'bg-red-100 text-red-800' : 
-                                    'bg-yellow-100 text-yellow-800'
-                                  }`}>
-                                    {assignment.status}
-                                  </div>
-                                </div>
-                              );
-                            })}
+                  {events.map(event => {
+                    const counts = getAssignmentCounts(event);
+                    const photographersMatch = counts.totalPhotographers === event.photographersCount;
+                    const videographersMatch = counts.totalVideographers === event.videographersCount;
+                    
+                    return (
+                      <div key={event.id} className="flex flex-col p-4 border rounded-lg">
+                        <div className="flex justify-between items-start">
+                          <h3 className="font-medium text-lg">{event.name}</h3>
+                          <div className="flex items-center gap-2">
+                            <div className={`px-2 py-1 rounded text-xs flex items-center gap-1 ${
+                              photographersMatch ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'
+                            }`}>
+                              {photographersMatch ? (
+                                <CheckCircle className="h-3 w-3" />
+                              ) : (
+                                <AlertTriangle className="h-3 w-3" />
+                              )}
+                              <span>{counts.totalPhotographers}/{event.photographersCount} Photographers</span>
+                            </div>
+                            <div className={`px-2 py-1 rounded text-xs flex items-center gap-1 ${
+                              videographersMatch ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'
+                            }`}>
+                              {videographersMatch ? (
+                                <CheckCircle className="h-3 w-3" />
+                              ) : (
+                                <AlertTriangle className="h-3 w-3" />
+                              )}
+                              <span>{counts.totalVideographers}/{event.videographersCount} Videographers</span>
+                            </div>
                           </div>
-                        ) : (
-                          <p className="text-sm text-muted-foreground">No team members assigned yet</p>
-                        )}
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Calendar className="h-4 w-4" />
+                            <span>{new Date(event.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Clock className="h-4 w-4" />
+                            <span>{event.startTime} - {event.endTime}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Users className="h-4 w-4" />
+                            <span>{event.clientName}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <MapPin className="h-4 w-4" />
+                            <span>{event.location}</span>
+                          </div>
+                        </div>
+                        <div className="mt-4 pt-4 border-t">
+                          <h4 className="font-medium text-sm mb-2">Team Assignments</h4>
+                          {event.assignments.length > 0 ? (
+                            <div className="space-y-2">
+                              {event.assignments.map((assignment, index) => {
+                                const member = teamMembers.find(tm => tm.id === assignment.teamMemberId);
+                                return (
+                                  <div key={index} className="flex justify-between items-center">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-sm">{member?.name}</span>
+                                      <span className="text-xs text-muted-foreground capitalize">({member?.role})</span>
+                                    </div>
+                                    <div className={`px-2 py-1 rounded text-xs ${
+                                      assignment.status === 'accepted' ? 'bg-green-100 text-green-800' : 
+                                      assignment.status === 'declined' ? 'bg-red-100 text-red-800' : 
+                                      'bg-yellow-100 text-yellow-800'
+                                    }`}>
+                                      {assignment.status}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          ) : (
+                            <p className="text-sm text-muted-foreground">No team members assigned yet</p>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </TabsContent>
               
@@ -251,6 +316,7 @@ export default function SchedulingPage() {
                   teamMembers={teamMembers} 
                   onAssign={handleAssignTeamMember}
                   onUpdateStatus={handleUpdateAssignmentStatus}
+                  getAssignmentCounts={getAssignmentCounts}
                 />
               </TabsContent>
               

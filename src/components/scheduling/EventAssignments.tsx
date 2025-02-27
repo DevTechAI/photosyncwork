@@ -17,15 +17,25 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Calendar, MapPin, Users } from "lucide-react";
+import { AlertTriangle, Calendar, CheckCircle, MapPin, Users } from "lucide-react";
 import { useState } from "react";
 import { ScheduledEvent, TeamMember } from "./types";
+
+interface AssignmentCounts {
+  acceptedPhotographers: number;
+  acceptedVideographers: number;
+  pendingPhotographers: number;
+  pendingVideographers: number;
+  totalPhotographers: number;
+  totalVideographers: number;
+}
 
 interface EventAssignmentsProps {
   events: ScheduledEvent[];
   teamMembers: TeamMember[];
   onAssign: (eventId: string, teamMemberId: string, role: string) => void;
   onUpdateStatus: (eventId: string, teamMemberId: string, status: "accepted" | "declined") => void;
+  getAssignmentCounts: (event: ScheduledEvent) => AssignmentCounts;
 }
 
 export function EventAssignments({
@@ -33,6 +43,7 @@ export function EventAssignments({
   teamMembers,
   onAssign,
   onUpdateStatus,
+  getAssignmentCounts,
 }: EventAssignmentsProps) {
   const { toast } = useToast();
   const [showAssignDialog, setShowAssignDialog] = useState(false);
@@ -100,81 +111,120 @@ export function EventAssignments({
       <h3 className="font-medium">Event Assignments</h3>
 
       <div className="space-y-4">
-        {events.map((event) => (
-          <Card key={event.id} className="p-4">
-            <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
-              <div className="space-y-2">
-                <h4 className="font-medium">{event.name}</h4>
-                <div className="flex flex-wrap gap-4">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Calendar className="h-4 w-4" />
-                    <span>{new Date(event.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <MapPin className="h-4 w-4" />
-                    <span>{event.location}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Users className="h-4 w-4" />
-                    <span>{event.photographersCount} Photographers, {event.videographersCount} Videographers</span>
-                  </div>
-                </div>
-              </div>
-              <Button onClick={() => handleOpenAssignDialog(event)}>
-                Assign Team
-              </Button>
-            </div>
-
-            {event.assignments.length > 0 && (
-              <div className="mt-4 pt-4 border-t">
-                <h5 className="text-sm font-medium mb-2">Assigned Team Members</h5>
+        {events.map((event) => {
+          const counts = getAssignmentCounts(event);
+          const photographersMatch = counts.totalPhotographers === event.photographersCount;
+          const videographersMatch = counts.totalVideographers === event.videographersCount;
+          const allAssigned = photographersMatch && videographersMatch;
+          
+          // Calculate pending status
+          const pendingAssignments = counts.pendingPhotographers + counts.pendingVideographers > 0;
+          
+          return (
+            <Card key={event.id} className="p-4">
+              <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
                 <div className="space-y-2">
-                  {event.assignments.map((assignment, index) => {
-                    const member = teamMembers.find(tm => tm.id === assignment.teamMemberId);
-                    return (
-                      <div key={index} className="flex justify-between items-center p-2 rounded-md bg-gray-50">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium">{member?.name}</span>
-                          <span className="text-xs text-muted-foreground capitalize">({member?.role})</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className={`px-2 py-1 rounded text-xs ${
-                            assignment.status === 'accepted' ? 'bg-green-100 text-green-800' : 
-                            assignment.status === 'declined' ? 'bg-red-100 text-red-800' : 
-                            'bg-yellow-100 text-yellow-800'
-                          }`}>
-                            {assignment.status}
-                          </div>
-                          
-                          {assignment.status === 'pending' && (
-                            <div className="flex gap-1">
-                              <Button 
-                                variant="ghost" 
-                                size="sm"
-                                className="h-6 text-xs text-green-600 hover:text-green-700 hover:bg-green-50"
-                                onClick={() => handleStatusUpdate(event.id, assignment.teamMemberId, "accepted")}
-                              >
-                                Accept
-                              </Button>
-                              <Button 
-                                variant="ghost" 
-                                size="sm"
-                                className="h-6 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
-                                onClick={() => handleStatusUpdate(event.id, assignment.teamMemberId, "declined")}
-                              >
-                                Decline
-                              </Button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
+                  <div className="flex items-center gap-2">
+                    <h4 className="font-medium">{event.name}</h4>
+                    {allAssigned ? (
+                      <span className="inline-flex items-center px-2 py-1 rounded text-xs bg-green-100 text-green-800">
+                        <CheckCircle className="h-3 w-3 mr-1" />
+                        Fully Assigned
+                      </span>
+                    ) : pendingAssignments ? (
+                      <span className="inline-flex items-center px-2 py-1 rounded text-xs bg-yellow-100 text-yellow-800">
+                        <AlertTriangle className="h-3 w-3 mr-1" />
+                        Pending Responses
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center px-2 py-1 rounded text-xs bg-amber-100 text-amber-800">
+                        <AlertTriangle className="h-3 w-3 mr-1" />
+                        Needs Assignment
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-4">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Calendar className="h-4 w-4" />
+                      <span>{new Date(event.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <MapPin className="h-4 w-4" />
+                      <span>{event.location}</span>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    <div className={`inline-flex items-center px-2 py-1 rounded text-xs ${
+                      photographersMatch ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'
+                    }`}>
+                      {counts.totalPhotographers}/{event.photographersCount} Photographers
+                    </div>
+                    <div className={`inline-flex items-center px-2 py-1 rounded text-xs ${
+                      videographersMatch ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'
+                    }`}>
+                      {counts.totalVideographers}/{event.videographersCount} Videographers
+                    </div>
+                  </div>
                 </div>
+                <Button 
+                  onClick={() => handleOpenAssignDialog(event)}
+                  disabled={photographersMatch && videographersMatch}
+                >
+                  Assign Team
+                </Button>
               </div>
-            )}
-          </Card>
-        ))}
+
+              {event.assignments.length > 0 && (
+                <div className="mt-4 pt-4 border-t">
+                  <h5 className="text-sm font-medium mb-2">Assigned Team Members</h5>
+                  <div className="space-y-2">
+                    {event.assignments.map((assignment, index) => {
+                      const member = teamMembers.find(tm => tm.id === assignment.teamMemberId);
+                      return (
+                        <div key={index} className="flex justify-between items-center p-2 rounded-md bg-gray-50">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium">{member?.name}</span>
+                            <span className="text-xs text-muted-foreground capitalize">({member?.role})</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className={`px-2 py-1 rounded text-xs ${
+                              assignment.status === 'accepted' ? 'bg-green-100 text-green-800' : 
+                              assignment.status === 'declined' ? 'bg-red-100 text-red-800' : 
+                              'bg-yellow-100 text-yellow-800'
+                            }`}>
+                              {assignment.status}
+                            </div>
+                            
+                            {assignment.status === 'pending' && (
+                              <div className="flex gap-1">
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm"
+                                  className="h-6 text-xs text-green-600 hover:text-green-700 hover:bg-green-50"
+                                  onClick={() => handleStatusUpdate(event.id, assignment.teamMemberId, "accepted")}
+                                >
+                                  Accept
+                                </Button>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm"
+                                  className="h-6 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                                  onClick={() => handleStatusUpdate(event.id, assignment.teamMemberId, "declined")}
+                                >
+                                  Decline
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </Card>
+          );
+        })}
       </div>
 
       {/* Assign Team Dialog */}
@@ -189,6 +239,34 @@ export function EventAssignments({
               <p className="text-sm text-muted-foreground">
                 {currentEvent?.date} at {currentEvent?.location}
               </p>
+              
+              {currentEvent && (
+                <div className="mt-2 pt-2 border-t">
+                  <p className="text-sm font-medium">Required Team:</p>
+                  <div className="flex gap-2 mt-1">
+                    <span className="text-xs px-2 py-1 bg-gray-100 rounded">
+                      {currentEvent.photographersCount} Photographers
+                    </span>
+                    <span className="text-xs px-2 py-1 bg-gray-100 rounded">
+                      {currentEvent.videographersCount} Videographers
+                    </span>
+                  </div>
+                  
+                  {currentEvent && (
+                    <div className="mt-2">
+                      <p className="text-sm font-medium">Current Assignments:</p>
+                      <div className="flex gap-2 mt-1">
+                        <span className="text-xs px-2 py-1 bg-gray-100 rounded">
+                          {getAssignmentCounts(currentEvent).totalPhotographers}/{currentEvent.photographersCount} Photographers
+                        </span>
+                        <span className="text-xs px-2 py-1 bg-gray-100 rounded">
+                          {getAssignmentCounts(currentEvent).totalVideographers}/{currentEvent.videographersCount} Videographers
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
