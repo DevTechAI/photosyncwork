@@ -57,7 +57,19 @@ export default {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      safelist: [
+        'border-blue-500',
+        'border-green-500',
+        'border-purple-500',
+        'border-indigo-500'
+      ]
     },
   },
   plugins: [require("tailwindcss-animate")],
+  safelist: [
+    'border-blue-500',
+    'border-green-500',
+    'border-purple-500',
+    'border-indigo-500'
+  ]
 } satisfies Config;
