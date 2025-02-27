@@ -6,32 +6,35 @@ interface FormNavigationProps {
   isSubmitting: boolean;
   onPrevious: () => void;
   onNext: () => void;
+  hidePrevious?: boolean;
 }
 
-export function FormNavigation({
-  currentPage,
-  isSubmitting,
-  onPrevious,
-  onNext
+export function FormNavigation({ 
+  currentPage, 
+  isSubmitting, 
+  onPrevious, 
+  onNext,
+  hidePrevious = false
 }: FormNavigationProps) {
   return (
-    <div className="flex justify-between pt-6 border-t">
+    <div className="flex justify-between">
+      {!hidePrevious && (
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onPrevious}
+          disabled={currentPage === 0 || isSubmitting}
+        >
+          Previous
+        </Button>
+      )}
+      <div className="flex-1"></div>
       <Button
-        variant="outline"
-        onClick={onPrevious}
-        disabled={currentPage === 0}
-      >
-        Previous
-      </Button>
-      <Button
+        type="button"
         onClick={onNext}
         disabled={isSubmitting}
       >
-        {currentPage === 2 
-          ? "Preview Estimate"
-          : currentPage === 3
-          ? ""
-          : "Next"}
+        {currentPage === 2 ? "Preview" : "Next"}
       </Button>
     </div>
   );

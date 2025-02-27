@@ -5,9 +5,10 @@ import { Label } from "@/components/ui/label";
 interface WelcomePageProps {
   clientName: string;
   onClientNameChange: (name: string) => void;
+  isReadOnly?: boolean;
 }
 
-export function WelcomePage({ clientName, onClientNameChange }: WelcomePageProps) {
+export function WelcomePage({ clientName, onClientNameChange, isReadOnly = false }: WelcomePageProps) {
   return (
     <div className="space-y-8">
       <div className="text-center space-y-4">
@@ -25,6 +26,8 @@ export function WelcomePage({ clientName, onClientNameChange }: WelcomePageProps
             value={clientName}
             onChange={(e) => onClientNameChange(e.target.value)}
             placeholder="Enter client name"
+            readOnly={isReadOnly}
+            className={isReadOnly ? "bg-gray-100" : ""}
           />
         </div>
       </div>

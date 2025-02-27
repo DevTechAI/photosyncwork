@@ -42,9 +42,10 @@ const services: Record<string, Service> = {
 interface ServicesPageProps {
   selectedServices: string[];
   onServicesChange: (services: string[]) => void;
+  isReadOnly?: boolean;
 }
 
-export function ServicesPage({ selectedServices, onServicesChange }: ServicesPageProps) {
+export function ServicesPage({ selectedServices, onServicesChange, isReadOnly = false }: ServicesPageProps) {
   return (
     <div className="space-y-8">
       <h2 className="text-3xl font-light text-center">SERVICES</h2>

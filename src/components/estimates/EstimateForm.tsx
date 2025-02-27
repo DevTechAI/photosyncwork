@@ -22,7 +22,7 @@ export function EstimateForm({ open, onClose, editingEstimate }: EstimateFormPro
   const [currentPage, setCurrentPage] = useState(0);
   const [formData, setFormData] = useState({
     clientName: "",
-    clientEmail: "", // Add clientEmail to formData
+    clientEmail: "",
     selectedServices: [],
     estimateDetails: {
       events: [],
@@ -54,7 +54,7 @@ export function EstimateForm({ open, onClose, editingEstimate }: EstimateFormPro
       
       setFormData({
         clientName: editingEstimate.clientName || "",
-        clientEmail: editingEstimate.clientEmail || "", // Include clientEmail from editing estimate
+        clientEmail: editingEstimate.clientEmail || "",
         selectedServices,
         estimateDetails: {
           events: [],
@@ -64,6 +64,9 @@ export function EstimateForm({ open, onClose, editingEstimate }: EstimateFormPro
       });
       
       setPreviewEstimate(editingEstimate);
+      
+      // If editing, start directly on the estimate details page
+      setCurrentPage(2);
     }
   }, [editingEstimate]);
 
@@ -73,11 +76,9 @@ export function EstimateForm({ open, onClose, editingEstimate }: EstimateFormPro
       if (editingEstimate) {
         preview.id = editingEstimate.id;
         preview.status = editingEstimate.status;
-        
-        // Use the clientEmail from formData or existing estimate
         preview.clientEmail = formData.clientEmail || editingEstimate.clientEmail || "";
+        preview.clientName = editingEstimate.clientName; // Keep original client name when editing
       } else {
-        // Set clientEmail from formData for new estimates
         preview.clientEmail = formData.clientEmail || "";
       }
       
@@ -108,7 +109,7 @@ export function EstimateForm({ open, onClose, editingEstimate }: EstimateFormPro
         
         toast({
           title: "Estimate Updated",
-          description: `Estimate for ${formData.clientName} has been updated successfully.`,
+          description: `Estimate for ${previewEstimate.clientName} has been updated successfully.`,
         });
       } else {
         estimates.unshift(previewEstimate);
@@ -139,7 +140,7 @@ export function EstimateForm({ open, onClose, editingEstimate }: EstimateFormPro
     if (!editingEstimate) {
       setFormData({
         clientName: "",
-        clientEmail: "", // Reset clientEmail
+        clientEmail: "",
         selectedServices: [],
         estimateDetails: {
           events: [],
@@ -150,11 +151,15 @@ export function EstimateForm({ open, onClose, editingEstimate }: EstimateFormPro
       setPreviewEstimate(null);
     }
     
-    setCurrentPage(0);
+    setCurrentPage(editingEstimate ? 2 : 0);
     onClose();
   };
 
   const handlePrevious = () => {
+    // When editing, don't allow going back from the estimate details page
+    if (editingEstimate && currentPage === 2) {
+      return;
+    }
     setCurrentPage(prev => prev - 1);
   };
 
@@ -162,6 +167,7 @@ export function EstimateForm({ open, onClose, editingEstimate }: EstimateFormPro
     if (currentPage === 2) {
       handleGeneratePreview();
     } else if (currentPage === 3) {
+      // We don't need this anymore as the save happens when sharing
     } else {
       setCurrentPage(prev => prev + 1);
     }
@@ -174,6 +180,7 @@ export function EstimateForm({ open, onClose, editingEstimate }: EstimateFormPro
       onClientNameChange={(name) => 
         setFormData(prev => ({ ...prev, clientName: name }))
       }
+      isReadOnly={!!editingEstimate} // Make client name read-only when editing
     />,
     <ServicesPage 
       key="services"
@@ -181,6 +188,7 @@ export function EstimateForm({ open, onClose, editingEstimate }: EstimateFormPro
       onServicesChange={(services) =>
         setFormData(prev => ({ ...prev, selectedServices: services }))
       }
+      isReadOnly={!!editingEstimate} // Make services read-only when editing
     />,
     <EstimateDetailsPage 
       key="details"
@@ -196,7 +204,7 @@ export function EstimateForm({ open, onClose, editingEstimate }: EstimateFormPro
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {editingEstimate ? "Edit Estimate" : currentPage === 3 ? "Preview Estimate" : "Create New Estimate"}
+            {editingEstimate ? "Edit Estimate Details" : currentPage === 3 ? "Preview Estimate" : "Create New Estimate"}
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-6">
@@ -215,6 +223,7 @@ export function EstimateForm({ open, onClose, editingEstimate }: EstimateFormPro
               isSubmitting={isSubmitting}
               onPrevious={handlePrevious}
               onNext={handleNext}
+              hidePrevious={editingEstimate && currentPage === 2} // Hide Previous button when editing estimate details
             />
           )}
         </div>
