@@ -4,6 +4,7 @@ import { ScheduledEvent } from "./types";
 import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { format, addDays, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, parseISO } from "date-fns";
+import { Slider } from "@/components/ui/slider";
 
 interface UpcomingEventsCalendarProps {
   events: ScheduledEvent[];
@@ -12,6 +13,7 @@ interface UpcomingEventsCalendarProps {
 export function UpcomingEventsCalendar({ events }: UpcomingEventsCalendarProps) {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [weekDays, setWeekDays] = useState<Date[]>([]);
+  const [hourRange, setHourRange] = useState<[number, number]>([8, 18]); // Default 8am-6pm
   
   // Update week days when selected date changes
   useEffect(() => {
@@ -30,8 +32,21 @@ export function UpcomingEventsCalendar({ events }: UpcomingEventsCalendarProps) 
     setSelectedDate(prev => addDays(prev, 7));
   };
   
-  // Time slots for the day view
-  const timeSlots = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'];
+  // Generate time slots based on hour range
+  const generateTimeSlots = (start: number, end: number) => {
+    const slots = [];
+    for (let hour = start; hour <= end; hour++) {
+      slots.push(`${hour.toString().padStart(2, '0')}:00`);
+    }
+    return slots;
+  };
+  
+  const timeSlots = generateTimeSlots(hourRange[0], hourRange[1]);
+  
+  // Handle hour range change
+  const handleHourRangeChange = (values: number[]) => {
+    setHourRange([values[0], values[1]]);
+  };
   
   // Filter events for the selected day
   const dayEvents = events.filter(event => 
@@ -46,8 +61,14 @@ export function UpcomingEventsCalendar({ events }: UpcomingEventsCalendarProps) 
     const endHour = parseInt(event.endTime.split(':')[0]);
     const endMinute = parseInt(event.endTime.split(':')[1]);
     
-    const startPosition = (startHour - 8) * 60 + startMinute; // 8:00 is our first timeslot
-    const duration = (endHour - startHour) * 60 + (endMinute - startMinute);
+    // If event is outside our hour range, don't render it
+    if (startHour > hourRange[1] || endHour < hourRange[0]) return null;
+    
+    // Calculate positions relative to our hour range
+    const startPosition = Math.max(0, (startHour - hourRange[0]) * 60 + startMinute);
+    const duration = (Math.min(hourRange[1], endHour) - Math.max(hourRange[0], startHour)) * 60 + 
+                     (endHour <= hourRange[1] ? endMinute : 0) - 
+                     (startHour >= hourRange[0] ? startMinute : 0);
     
     // Find which day column it belongs to
     const eventDate = parseISO(event.date);
@@ -59,8 +80,14 @@ export function UpcomingEventsCalendar({ events }: UpcomingEventsCalendarProps) 
     // Calculate left position based on day and top position based on time
     const leftPosition = `calc(${(dayIndex / 7) * 100}% + 1rem)`;
     const width = `calc(${(1 / 7) * 100}% - 1.5rem)`;
-    const topPosition = `${startPosition + 60}px`;
-    const height = `${Math.max(duration, 60)}px`;
+    
+    // Scale the position based on our visible hour range
+    const hourHeight = 60; // 60px per hour
+    const visibleHours = hourRange[1] - hourRange[0];
+    const scaledHourHeight = 14 * 60 / visibleHours; // 14 is the default height of each hour slot
+    
+    const topPosition = `${startPosition * (scaledHourHeight / 60)}px`;
+    const height = `${Math.max(duration * (scaledHourHeight / 60), 30)}px`;
     
     // Randomly choose a color for the event
     const colors = ['blue', 'green', 'purple', 'indigo'];
@@ -125,8 +152,25 @@ export function UpcomingEventsCalendar({ events }: UpcomingEventsCalendarProps) 
           })}
         </div>
         
+        {/* Hour Range Slider */}
+        <div className="mt-4 mb-8 px-6">
+          <div className="flex justify-between items-center text-sm text-gray-500 mb-2">
+            <span>Hour Range</span>
+            <span>{hourRange[0]}:00 - {hourRange[1]}:00</span>
+          </div>
+          <Slider 
+            defaultValue={[8, 18]} 
+            min={0} 
+            max={24} 
+            step={1}
+            value={[hourRange[0], hourRange[1]]}
+            onValueChange={handleHourRangeChange}
+            className="py-2"
+          />
+        </div>
+        
         {/* Time grid */}
-        <div className="relative mt-8" style={{ height: '700px' }}>
+        <div className="relative mt-8" style={{ height: `${timeSlots.length * 14 * 3}px` }}>
           {/* Time labels */}
           <div className="absolute left-0 top-0 z-10 w-16">
             {timeSlots.map((time, index) => (
