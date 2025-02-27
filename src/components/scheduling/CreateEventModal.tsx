@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { ScheduledEvent } from "./types";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getApprovedEstimates, createEventFromEstimate } from "./utils/estimatesHelpers";
+import { EstimateSelector } from "./components/EstimateSelector";
+import { EventBasicDetailsForm } from "./components/EventBasicDetailsForm";
+import { ClientDetailsForm } from "./components/ClientDetailsForm";
+import { TeamRequirementsForm } from "./components/TeamRequirementsForm";
 
 interface CreateEventModalProps {
   open: boolean;
@@ -149,139 +150,26 @@ export function CreateEventModal({
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Estimate Selection */}
-          <div className="space-y-2">
-            <Label htmlFor="estimate-select">Based on Approved Estimate</Label>
-            <Select
-              value={selectedEstimateId}
-              onValueChange={handleEstimateChange}
-            >
-              <SelectTrigger id="estimate-select">
-                <SelectValue placeholder="Select an approved estimate (optional)" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">None (Manual Entry)</SelectItem>
-                {approvedEstimates.map((estimate) => (
-                  <SelectItem key={estimate.id} value={estimate.id}>
-                    {estimate.clientName} - {estimate.id}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {selectedEstimateId && (
-              <p className="text-xs text-muted-foreground">
-                Event details will be populated from the selected estimate
-              </p>
-            )}
-          </div>
+          <EstimateSelector 
+            selectedEstimateId={selectedEstimateId}
+            approvedEstimates={approvedEstimates}
+            onEstimateChange={handleEstimateChange}
+          />
           
-          <div className="space-y-2">
-            <Label htmlFor="event-name">Event Name</Label>
-            <Input
-              id="event-name"
-              value={eventData.name}
-              onChange={(e) => setEventData({ ...eventData, name: e.target.value })}
-              placeholder="Enter event name"
-            />
-          </div>
+          <EventBasicDetailsForm 
+            eventData={eventData}
+            setEventData={setEventData}
+          />
           
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="event-date">Date</Label>
-              <Input
-                id="event-date"
-                type="date"
-                value={eventData.date}
-                onChange={(e) => setEventData({ ...eventData, date: e.target.value })}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="event-location">Location</Label>
-              <Input
-                id="event-location"
-                value={eventData.location}
-                onChange={(e) => setEventData({ ...eventData, location: e.target.value })}
-                placeholder="Event venue"
-              />
-            </div>
-          </div>
+          <ClientDetailsForm 
+            eventData={eventData}
+            setEventData={setEventData}
+          />
           
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="event-start">Start Time</Label>
-              <Input
-                id="event-start"
-                type="time"
-                value={eventData.startTime}
-                onChange={(e) => setEventData({ ...eventData, startTime: e.target.value })}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="event-end">End Time</Label>
-              <Input
-                id="event-end"
-                type="time"
-                value={eventData.endTime}
-                onChange={(e) => setEventData({ ...eventData, endTime: e.target.value })}
-              />
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="client-name">Client Name</Label>
-            <Input
-              id="client-name"
-              value={eventData.clientName}
-              onChange={(e) => setEventData({ ...eventData, clientName: e.target.value })}
-              placeholder="Enter client name"
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="client-phone">Client Phone</Label>
-            <Input
-              id="client-phone"
-              value={eventData.clientPhone}
-              onChange={(e) => setEventData({ ...eventData, clientPhone: e.target.value })}
-              placeholder="Enter client phone number"
-            />
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="photographers">Number of Photographers</Label>
-              <Input
-                id="photographers"
-                type="number"
-                min="0"
-                value={eventData.photographersCount}
-                onChange={(e) => setEventData({ ...eventData, photographersCount: parseInt(e.target.value) || 0 })}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="videographers">Number of Videographers</Label>
-              <Input
-                id="videographers"
-                type="number"
-                min="0"
-                value={eventData.videographersCount}
-                onChange={(e) => setEventData({ ...eventData, videographersCount: parseInt(e.target.value) || 0 })}
-              />
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="client-requirements">Client Requirements</Label>
-            <Input
-              id="client-requirements"
-              value={eventData.clientRequirements}
-              onChange={(e) => setEventData({ ...eventData, clientRequirements: e.target.value })}
-              placeholder="Special requests or requirements"
-            />
-          </div>
+          <TeamRequirementsForm 
+            eventData={eventData}
+            setEventData={setEventData}
+          />
           
           <DialogFooter>
             <Button type="submit">Create Event</Button>

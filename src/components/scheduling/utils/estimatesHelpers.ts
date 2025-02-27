@@ -78,6 +78,17 @@ export function createEventFromEstimate(estimate: Estimate): Partial<ScheduledEv
     return total + (parseInt(service.cinematographers) || 0);
   }, 0);
   
+  // Create and map deliverables properly
+  const processDeliverables = () => {
+    const rawDeliverables = estimate.deliverables || 
+      (estimate.packages && estimate.packages.length > 0 ? estimate.packages[0].deliverables : []);
+      
+    return rawDeliverables.map(d => ({ 
+      type: determineDeliverableType(d), 
+      status: "pending" as const
+    }));
+  };
+  
   // Create event object
   return {
     estimateId: estimate.id,
@@ -90,10 +101,7 @@ export function createEventFromEstimate(estimate: Estimate): Partial<ScheduledEv
     videographersCount: videographersCount > 0 ? videographersCount : 1,
     stage: "pre-production",
     clientRequirements: services.map(s => s.event).join(", "),
-    // Include services as part of the requirements
-    deliverables: estimate.deliverables || 
-      (estimate.packages && estimate.packages.length > 0 ? estimate.packages[0].deliverables : [])
-        .map(d => ({ type: determineDeliverableType(d), status: "pending" }))
+    deliverables: processDeliverables()
   };
 }
 
