@@ -2,94 +2,125 @@
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { FileText, Plus, ArrowRight, Eye } from "lucide-react";
+import { FileText, Plus, ArrowRight, Eye, Edit } from "lucide-react";
 import { useState, useEffect } from "react";
 import { EstimateForm } from "@/components/estimates/EstimateForm";
 import { EstimatePreview } from "@/components/estimates/EstimatePreview";
 import { useNavigate } from "react-router-dom";
-
-// Mock data for estimates
-const initialEstimates = [
-  {
-    id: "est-1",
-    clientName: "Raj & Simran Wedding",
-    date: "2023-11-15",
-    amount: "₹250,000",
-    status: "pending",
-    services: [
-      {
-        event: "Wedding",
-        date: "2023-12-15",
-        photographers: "2",
-        cinematographers: "1"
-      },
-      {
-        event: "Reception",
-        date: "2023-12-16",
-        photographers: "1",
-        cinematographers: "1"
-      }
-    ],
-    deliverables: [
-      "Curated online Gallery with 400+ images",
-      "Wedding film 8-12mins (with live audio & Audio bytes)",
-      "Customised 35 Sheet Album - 2 Copies"
-    ]
-  }
-];
+import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function EstimatesPage() {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [showNewEstimateForm, setShowNewEstimateForm] = useState(false);
   const [selectedEstimate, setSelectedEstimate] = useState(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [estimates, setEstimates] = useState(() => {
-    // Try to get estimates from localStorage
     const savedEstimates = localStorage.getItem("estimates");
-    return savedEstimates ? JSON.parse(savedEstimates) : initialEstimates;
+    return savedEstimates ? JSON.parse(savedEstimates) : [];
   });
 
-  // Save estimates to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem("estimates", JSON.stringify(estimates));
   }, [estimates]);
 
-  // Function to handle navigating to pre-production
-  const handleContinueToPreProduction = (estimateId: string) => {
-    // Get the estimate data to pass to pre-production
+  const handleContinueToPreProduction = async (estimateId: string) => {
     const estimate = estimates.find(est => est.id === estimateId);
     
     if (estimate && estimate.status === "approved") {
-      // Store the selected estimate in localStorage for pre-production
-      localStorage.setItem("selectedEstimate", JSON.stringify(estimate));
-      navigate(`/pre-production?estimateId=${estimateId}`);
+      try {
+        // Send onboarding email
+        const { error } = await supabase.functions.invoke('send-onboarding-email', {
+          body: {
+            to: estimate.clientEmail, // Make sure to capture client email during estimate creation
+            clientName: estimate.clientName,
+            estimateId: estimate.id
+          }
+        });
+
+        if (error) throw error;
+
+        // Store the selected estimate in localStorage for pre-production
+        localStorage.setItem("selectedEstimate", JSON.stringify(estimate));
+        
+        // Navigate to pre-production
+        navigate(`/pre-production?estimateId=${estimateId}`);
+        
+        toast({
+          title: "Success",
+          description: "Onboarding email sent and proceeding to pre-production.",
+        });
+      } catch (error) {
+        console.error("Error:", error);
+        toast({
+          title: "Error",
+          description: "Failed to proceed. Please try again.",
+          variant: "destructive",
+        });
+      }
     } else {
-      // Show error if the estimate is not approved
-      alert("Estimate must be approved by the client before proceeding to pre-production.");
+      toast({
+        title: "Not Approved",
+        description: "Estimate must be approved by the client before proceeding to pre-production.",
+        variant: "destructive",
+      });
     }
   };
 
-  // Function to handle opening estimate preview
+  const handleEditEstimate = (estimate) => {
+    setSelectedEstimate(estimate);
+    setIsEditing(true);
+    setShowNewEstimateForm(true);
+  };
+
   const handleOpenPreview = (estimate) => {
     setSelectedEstimate(estimate);
     setShowPreview(true);
   };
 
-  // Function to handle estimate status change
   const handleStatusChange = (estimateId: string, newStatus: string, negotiatedAmount?: string) => {
     const updatedEstimates = estimates.map(est => {
       if (est.id === estimateId) {
-        return {
+        const updatedEstimate = {
           ...est,
           status: newStatus,
-          amount: negotiatedAmount || est.amount
         };
+        
+        // If there's a negotiated amount, update all package amounts proportionally
+        if (negotiatedAmount) {
+          const ratio = parseFloat(negotiatedAmount) / parseFloat(est.amount);
+          updatedEstimate.amount = negotiatedAmount;
+          if (updatedEstimate.packages) {
+            updatedEstimate.packages = updatedEstimate.packages.map(pkg => ({
+              ...pkg,
+              amount: (parseFloat(pkg.amount) * ratio).toFixed(2)
+            }));
+          }
+        }
+        
+        return updatedEstimate;
       }
       return est;
     });
     
     setEstimates(updatedEstimates);
     setSelectedEstimate(updatedEstimates.find(est => est.id === estimateId));
+    
+    // Show appropriate toast message based on status
+    const toastMessages = {
+      approved: "Estimate has been approved! Proceeding to next steps.",
+      declined: "Estimate has been declined.",
+      negotiating: "Estimate status updated to negotiating.",
+      pending: "Estimate status updated to pending."
+    };
+    
+    toast({
+      title: "Status Updated",
+      description: toastMessages[newStatus] || "Estimate status has been updated.",
+      variant: newStatus === "declined" ? "destructive" : "default"
+    });
   };
 
   return (
@@ -102,7 +133,11 @@ export default function EstimatesPage() {
               Create and manage your photography service estimates.
             </p>
           </div>
-          <Button onClick={() => setShowNewEstimateForm(true)}>
+          <Button onClick={() => {
+            setIsEditing(false);
+            setSelectedEstimate(null);
+            setShowNewEstimateForm(true);
+          }}>
             <Plus className="h-4 w-4 mr-2" />
             New Estimate
           </Button>
@@ -129,6 +164,13 @@ export default function EstimatesPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
+                    <Button 
+                      variant="outline"
+                      onClick={() => handleEditEstimate(estimate)}
+                    >
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit
+                    </Button>
                     <Button 
                       variant="outline"
                       onClick={() => handleOpenPreview(estimate)}
@@ -166,7 +208,12 @@ export default function EstimatesPage() {
 
         <EstimateForm
           open={showNewEstimateForm}
-          onClose={() => setShowNewEstimateForm(false)}
+          onClose={() => {
+            setShowNewEstimateForm(false);
+            setIsEditing(false);
+            setSelectedEstimate(null);
+          }}
+          editingEstimate={isEditing ? selectedEstimate : null}
         />
 
         {selectedEstimate && (
