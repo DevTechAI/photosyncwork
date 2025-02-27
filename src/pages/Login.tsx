@@ -22,7 +22,7 @@ export default function Login() {
     if (success) {
       toast({
         title: "Login successful",
-        description: "Welcome to Studio Sync",
+        description: "Welcome to StudioSync",
       });
       navigate("/");
     } else {
@@ -38,7 +38,7 @@ export default function Login() {
     <div className="flex min-h-screen items-center justify-center bg-gray-50">
       <Card className="w-full max-w-md p-8">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-semibold">Studio Sync</h1>
+          <h1 className="text-3xl font-semibold">StudioSync</h1>
           <p className="text-muted-foreground mt-2">Photography Financial Suite</p>
         </div>
         
