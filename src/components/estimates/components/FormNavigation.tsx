@@ -30,7 +30,7 @@ export function FormNavigation({
         {currentPage === 2 
           ? "Preview Estimate"
           : currentPage === 3
-          ? (isSubmitting ? "Creating..." : "Create Estimate")
+          ? ""
           : "Next"}
       </Button>
     </div>

@@ -1,4 +1,3 @@
-
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useState } from "react";
 import { WelcomePage } from "./pages/WelcomePage";
@@ -39,9 +38,8 @@ export function EstimateForm({ open, onClose }: EstimateFormProps) {
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSaveEstimate = async () => {
     if (!previewEstimate) {
-      handleGeneratePreview();
       return;
     }
     
@@ -49,7 +47,7 @@ export function EstimateForm({ open, onClose }: EstimateFormProps) {
     
     try {
       // Log the form data to console for debugging
-      console.log("Submitting estimate:", previewEstimate);
+      console.log("Saving estimate:", previewEstimate);
       
       // Simulate an API call with a timeout
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -60,26 +58,17 @@ export function EstimateForm({ open, onClose }: EstimateFormProps) {
         description: `Estimate for ${formData.clientName} has been created successfully.`,
       });
       
-      // Close the dialog
-      onClose();
+      // Get existing estimates from localStorage
+      const savedEstimates = localStorage.getItem("estimates");
+      const estimates = savedEstimates ? JSON.parse(savedEstimates) : [];
       
-      // Reset form data
-      setFormData({
-        clientName: "",
-        selectedServices: [],
-        estimateDetails: {
-          events: [],
-          estimates: [],
-          deliverables: []
-        }
-      });
-      setPreviewEstimate(null);
+      // Add new estimate to the list
+      estimates.unshift(previewEstimate);
       
-      // Reset to first page for next time
-      setCurrentPage(0);
+      // Save updated estimates to localStorage
+      localStorage.setItem("estimates", JSON.stringify(estimates));
       
-      // Redirect to pre-production page to continue the workflow
-      navigate("/pre-production");
+      return Promise.resolve();
     } catch (error) {
       console.error("Error creating estimate:", error);
       toast({
@@ -87,9 +76,30 @@ export function EstimateForm({ open, onClose }: EstimateFormProps) {
         description: "There was a problem creating your estimate. Please try again.",
         variant: "destructive",
       });
+      return Promise.reject(error);
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleCloseAndReset = () => {
+    // Reset form data
+    setFormData({
+      clientName: "",
+      selectedServices: [],
+      estimateDetails: {
+        events: [],
+        estimates: [],
+        deliverables: []
+      }
+    });
+    setPreviewEstimate(null);
+    
+    // Reset to first page for next time
+    setCurrentPage(0);
+    
+    // Close the dialog
+    onClose();
   };
 
   const handlePrevious = () => {
@@ -100,7 +110,8 @@ export function EstimateForm({ open, onClose }: EstimateFormProps) {
     if (currentPage === 2) {
       handleGeneratePreview();
     } else if (currentPage === 3) {
-      handleSubmit();
+      // We don't need this anymore as the save happens when sharing
+      // keepting it empty
     } else {
       setCurrentPage(prev => prev + 1);
     }
@@ -131,7 +142,7 @@ export function EstimateForm({ open, onClose }: EstimateFormProps) {
   ];
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={handleCloseAndReset}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
@@ -142,15 +153,20 @@ export function EstimateForm({ open, onClose }: EstimateFormProps) {
           {currentPage < 3 && pages[currentPage]}
           
           {currentPage === 3 && previewEstimate && (
-            <PreviewStep estimate={previewEstimate} />
+            <PreviewStep 
+              estimate={previewEstimate} 
+              onSave={handleSaveEstimate}
+            />
           )}
           
-          <FormNavigation
-            currentPage={currentPage}
-            isSubmitting={isSubmitting}
-            onPrevious={handlePrevious}
-            onNext={handleNext}
-          />
+          {(currentPage < 3 || !previewEstimate) && (
+            <FormNavigation
+              currentPage={currentPage}
+              isSubmitting={isSubmitting}
+              onPrevious={handlePrevious}
+              onNext={handleNext}
+            />
+          )}
         </div>
       </DialogContent>
     </Dialog>
