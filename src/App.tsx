@@ -9,6 +9,7 @@ import NotFound from "./pages/NotFound";
 import InvoicesPage from "./pages/invoices/InvoicesPage";
 import EstimatesPage from "./pages/estimates/EstimatesPage";
 import FinancesPage from "./pages/finances/FinancesPage";
+import SchedulingPage from "./pages/scheduling/SchedulingPage";
 
 const queryClient = new QueryClient();
 
@@ -22,6 +23,7 @@ function App() {
             <Route path="/estimates" element={<EstimatesPage />} />
             <Route path="/invoices" element={<InvoicesPage />} />
             <Route path="/finances" element={<FinancesPage />} />
+            <Route path="/scheduling" element={<SchedulingPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

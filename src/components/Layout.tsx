@@ -8,6 +8,7 @@ import {
   Home,
   Menu,
   X,
+  Calendar,
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { useEffect, useState } from "react";
@@ -17,6 +18,7 @@ const navItems = [
   { path: "/estimates", label: "Estimates", icon: FileText },
   { path: "/invoices", label: "Invoices", icon: Receipt },
   { path: "/finances", label: "Finances", icon: LineChart },
+  { path: "/scheduling", label: "Scheduling", icon: Calendar },
 ];
 
 export default function Layout({ children }: { children: React.ReactNode }) {
