@@ -21,22 +21,31 @@ export function UpcomingEventsCalendar({ events }: UpcomingEventsCalendarProps) 
   
   return (
     <div className="space-y-6">
-      <Card className="p-4">
+      <Card className="p-4 shadow-sm">
         <Calendar
           mode="single"
           selected={date}
           onSelect={setDate}
-          className="rounded-md mx-auto"
+          className="mx-auto"
           modifiers={{
             booked: datesWithEvents
           }}
           modifiersClassNames={{
-            booked: 'border border-blue-500 bg-blue-50'
+            booked: 'font-medium text-blue-600 bg-blue-50/70'
+          }}
+          styles={{
+            month: { width: '100%' },
+            caption_label: { textTransform: 'uppercase', fontSize: '0.875rem', fontWeight: 500 },
+            table: { width: '100%', borderSpacing: '0.5rem', borderCollapse: 'separate' },
+            head_cell: { textTransform: 'uppercase', fontSize: '0.75rem', fontWeight: 500, opacity: 0.6 },
+            cell: { width: '2.5rem', height: '2.5rem', borderRadius: '0.5rem' },
+            day: { width: '2.5rem', height: '2.5rem', fontSize: '0.875rem', borderRadius: '0.5rem' },
+            day_today: { fontWeight: 'bold' }
           }}
         />
       </Card>
       
-      <Card className="p-4">
+      <Card className="p-4 shadow-sm">
         <h3 className="font-medium mb-4">
           {date ? date.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Select a date'}
         </h3>
@@ -44,13 +53,13 @@ export function UpcomingEventsCalendar({ events }: UpcomingEventsCalendarProps) 
         <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
           {selectedDateEvents.length > 0 ? (
             selectedDateEvents.map(event => (
-              <div key={event.id} className="p-3 border rounded-md">
+              <div key={event.id} className="p-3 border border-gray-100 rounded-md hover:bg-gray-50 transition-colors duration-200">
                 <div className="flex justify-between items-start">
                   <div>
                     <h4 className="font-medium">{event.name}</h4>
                     <p className="text-sm text-muted-foreground">{event.startTime} - {event.endTime}</p>
                   </div>
-                  <div className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                  <div className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
                     {event.photographersCount} P, {event.videographersCount} V
                   </div>
                 </div>
