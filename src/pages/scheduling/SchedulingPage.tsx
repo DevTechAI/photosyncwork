@@ -8,7 +8,7 @@ import { UpcomingEventsCalendar } from "@/components/scheduling/UpcomingEventsCa
 import { TeamManagement } from "@/components/scheduling/TeamManagement";
 import { EventAssignments } from "@/components/scheduling/EventAssignments";
 import { CreateEventModal } from "@/components/scheduling/CreateEventModal";
-import { ScheduledEvent, TeamMember } from "@/components/scheduling/types";
+import { ScheduledEvent, TeamMember, EventAssignment } from "@/components/scheduling/types";
 
 // Mock data for demonstration
 const mockEvents: ScheduledEvent[] = [
