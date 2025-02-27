@@ -1,4 +1,3 @@
-
 import { Card } from "@/components/ui/card";
 import { ScheduledEvent } from "./types";
 import { useState, useEffect } from "react";
@@ -30,22 +29,6 @@ export function UpcomingEventsCalendar({ events }: UpcomingEventsCalendarProps) 
   
   const navigateNextWeek = () => {
     setSelectedDate(prev => addDays(prev, 7));
-  };
-  
-  // Generate time slots based on hour range
-  const generateTimeSlots = (start: number, end: number) => {
-    const slots = [];
-    for (let hour = start; hour <= end; hour++) {
-      slots.push(`${hour.toString().padStart(2, '0')}:00`);
-    }
-    return slots;
-  };
-  
-  const timeSlots = generateTimeSlots(hourRange[0], hourRange[1]);
-  
-  // Handle hour range change
-  const handleHourRangeChange = (values: number[]) => {
-    setHourRange([values[0], values[1]]);
   };
   
   // Filter events for the selected day
@@ -152,7 +135,7 @@ export function UpcomingEventsCalendar({ events }: UpcomingEventsCalendarProps) 
           })}
         </div>
         
-        {/* Hour Range Slider */}
+        {/* Hour Range Slider - keeping this for filtering events by time range */}
         <div className="mt-4 mb-8 px-6">
           <div className="flex justify-between items-center text-sm text-gray-500 mb-2">
             <span>Hour Range</span>
@@ -164,63 +147,54 @@ export function UpcomingEventsCalendar({ events }: UpcomingEventsCalendarProps) 
             max={24} 
             step={1}
             value={[hourRange[0], hourRange[1]]}
-            onValueChange={handleHourRangeChange}
+            onValueChange={(values) => setHourRange([values[0], values[1]])}
             className="py-2"
           />
         </div>
         
-        {/* Time grid */}
-        <div className="relative mt-8" style={{ height: `${timeSlots.length * 14 * 3}px` }}>
-          {/* Time labels */}
-          <div className="absolute left-0 top-0 z-10 w-16">
-            {timeSlots.map((time, index) => (
-              <div 
-                key={index} 
-                className="text-xs text-gray-500 h-14 -mt-2"
+        {/* Event cards instead of time grid */}
+        <div className="space-y-4 mt-6">
+          {dayEvents.map((event, eventIndex) => {
+            const eventDate = parseISO(event.date);
+            const dayIndex = weekDays.findIndex(day => isSameDay(day, eventDate));
+            
+            if (dayIndex === -1) return null; // Skip if not in current week
+            
+            // Check if event time is within the selected hour range
+            const startHour = parseInt(event.startTime.split(':')[0]);
+            const endHour = parseInt(event.endTime.split(':')[0]);
+            
+            if (startHour > hourRange[1] || endHour < hourRange[0]) return null;
+            
+            // Calculate which day column it belongs to
+            const leftPosition = `${(dayIndex / 7) * 100}%`;
+            
+            // Randomly choose a color for the event
+            const colors = ['blue', 'green', 'purple', 'indigo'];
+            const colorIndex = Math.floor(event.id.charCodeAt(0) % colors.length);
+            const borderColor = `border-${colors[colorIndex]}-500`;
+            
+            return (
+              <div
+                key={eventIndex}
+                className={`p-3 rounded-md shadow-sm bg-white border-l-4 ${borderColor} mb-2`}
+                style={{
+                  marginLeft: leftPosition,
+                  width: 'calc(100% / 7 - 8px)'
+                }}
               >
-                {time}
+                <div className="font-medium text-sm truncate">{event.name}</div>
+                <div className="text-xs text-gray-500">{event.startTime} - {event.endTime}</div>
+                <div className="text-xs text-gray-500 truncate">{event.location}</div>
               </div>
-            ))}
-          </div>
+            );
+          })}
           
-          {/* Grid lines */}
-          <div className="absolute left-16 right-0 top-0 bottom-0">
-            {timeSlots.map((_, index) => (
-              <div 
-                key={index} 
-                className="border-t border-gray-100 h-14 w-full"
-              />
-            ))}
-            
-            {/* Vertical day separators */}
-            <div className="grid grid-cols-7 h-full absolute top-0 left-0 right-0">
-              {weekDays.map((_, index) => (
-                <div key={index} className="border-r border-gray-100 h-full last:border-r-0" />
-              ))}
+          {dayEvents.length === 0 && (
+            <div className="text-center p-4 text-gray-500">
+              No events scheduled for this week
             </div>
-            
-            {/* Events */}
-            {dayEvents.map((event, index) => {
-              const style = getEventStyle(event);
-              if (!style) return null;
-              
-              return (
-                <div
-                  key={index}
-                  className={`absolute rounded-md p-2 shadow-sm bg-white border-l-4 border-${style.color}-500 overflow-hidden`}
-                  style={{
-                    left: style.left,
-                    width: style.width,
-                    top: style.top,
-                    height: style.height
-                  }}
-                >
-                  <div className="font-medium text-sm truncate">{event.name}</div>
-                  <div className="text-xs text-gray-500 truncate">{event.location}</div>
-                </div>
-              );
-            })}
-          </div>
+          )}
         </div>
       </Card>
       
