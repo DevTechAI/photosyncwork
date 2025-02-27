@@ -1,6 +1,8 @@
 
 export type TeamMemberRole = "photographer" | "videographer" | "editor" | "production";
 
+export type WorkflowStage = "pre-production" | "production" | "post-production";
+
 export interface TeamMember {
   id: string;
   name: string;
@@ -37,4 +39,18 @@ export interface ScheduledEvent {
   videographersCount: number;
   assignments: EventAssignment[];
   notes?: string;
+  stage: WorkflowStage;
+  clientRequirements?: string;
+  references?: string[];
+  timeTracking?: {
+    teamMemberId: string;
+    hoursLogged: number;
+    date: string;
+  }[];
+  deliverables?: {
+    type: "photos" | "videos" | "album";
+    status: "pending" | "in-progress" | "delivered" | "revision-requested" | "completed";
+    assignedTo?: string;
+    deliveryDate?: string;
+  }[];
 }
