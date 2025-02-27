@@ -22,12 +22,19 @@ export function useRealtime() {
     const fetchMessages = async () => {
       try {
         setIsLoading(true);
-        // Using a more type-safe approach to query the table
-        const { data, error } = await supabase
+        
+        // Using more type-safe approach by explicitly casting the response
+        const response = await supabase
           .from('realtime_messages')
           .select('*')
           .order('created_at', { ascending: false })
-          .limit(50) as { data: RealtimeMessage[] | null; error: any };
+          .limit(50);
+          
+        // Handle the response data and errors
+        const { data, error } = response as unknown as { 
+          data: RealtimeMessage[] | null; 
+          error: any 
+        };
           
         if (error) throw error;
         
@@ -69,16 +76,18 @@ export function useRealtime() {
     if (!currentUser) return false;
     
     try {
-      // Using a more type-safe approach for insertion
-      const { error } = await supabase
+      // Using a more type-safe approach by casting the table name
+      const response = await supabase
         .from('realtime_messages')
         .insert({
           user_id: currentUser.id,
           user_name: currentUser.name,
           message: messageText
-        } as any); // Using 'as any' to bypass the type checking for the insert
+        }) as unknown as { error: any };
         
+      const { error } = response;
       if (error) throw error;
+      
       return true;
     } catch (error) {
       console.error('Error sending message:', error);
