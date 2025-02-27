@@ -1,5 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { Resend } from "npm:resend@1.0.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -36,36 +37,120 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`Sending estimate email to ${to} for client ${clientName}`);
     
-    // In a real implementation, you would use a service like Resend, SendGrid, or other email providers
-    // For now, we'll just simulate a successful email send
+    // Initialize Resend with API key
+    const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
     
-    // Mock email sending - we're simulating sending the email
-    // In a production environment, you would integrate with an email service
-    const emailContent = `
-      <h1>Estimate #${estimateId} for ${clientName}</h1>
-      <p>Amount: ${amount}</p>
-      
-      <h2>Services:</h2>
-      <ul>
-        ${services?.map(service => `
-          <li>
-            ${service.event} on ${new Date(service.date).toLocaleDateString()} - 
-            ${service.photographers} photographer(s), 
-            ${service.cinematographers} cinematographer(s)
-          </li>
-        `).join('') || 'No services specified'}
-      </ul>
-      
-      <h2>Deliverables:</h2>
-      <ul>
-        ${deliverables?.map(item => `<li>${item}</li>`).join('') || 'No deliverables specified'}
-      </ul>
-      
-      <p>Thank you for considering our services!</p>
+    if (!Deno.env.get("RESEND_API_KEY")) {
+      throw new Error("RESEND_API_KEY is not set in environment variables");
+    }
+    
+    // Format services for email
+    const servicesHTML = services && services.length > 0
+      ? `
+        <h2 style="color: #333; margin-top: 20px;">Services:</h2>
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr style="border-bottom: 1px solid #ddd;">
+            <th style="text-align: left; padding: 8px;">Event</th>
+            <th style="text-align: left; padding: 8px;">Date</th>
+            <th style="text-align: left; padding: 8px;">Photographers</th>
+            <th style="text-align: left; padding: 8px;">Cinematographers</th>
+          </tr>
+          ${services.map(service => `
+            <tr style="border-bottom: 1px solid #ddd;">
+              <td style="padding: 8px;">${service.event}</td>
+              <td style="padding: 8px;">${new Date(service.date).toLocaleDateString()}</td>
+              <td style="padding: 8px;">${service.photographers}</td>
+              <td style="padding: 8px;">${service.cinematographers}</td>
+            </tr>
+          `).join('')}
+        </table>
+      `
+      : '<p>No services specified</p>';
+    
+    // Format deliverables for email
+    const deliverablesHTML = deliverables && deliverables.length > 0
+      ? `
+        <h2 style="color: #333; margin-top: 20px;">Deliverables:</h2>
+        <ul>
+          ${deliverables.map(item => `<li>${item}</li>`).join('')}
+        </ul>
+      `
+      : '<p>No deliverables specified</p>';
+    
+    // Create HTML email content
+    const emailHTML = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Estimate for ${clientName}</title>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { text-align: center; margin-bottom: 30px; }
+          .header h1 { color: #2c3e50; margin: 0; }
+          .header p { color: #7f8c8d; margin: 5px 0 0; }
+          .content { background: #f9f9f9; border-radius: 5px; padding: 20px; }
+          .footer { margin-top: 30px; font-size: 12px; color: #7f8c8d; text-align: center; }
+          .amount { font-size: 24px; font-weight: bold; margin: 20px 0; text-align: right; }
+          .terms { margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>ESTIMATE #${estimateId}</h1>
+            <p>StudioSync Photography Services</p>
+          </div>
+          
+          <div class="content">
+            <p>Dear ${clientName},</p>
+            
+            <p>Thank you for your interest in our photography services. Please find your estimate details below:</p>
+            
+            ${servicesHTML}
+            
+            ${deliverablesHTML}
+            
+            <div class="amount">
+              Total Amount: ${amount}
+            </div>
+            
+            <div class="terms">
+              <p><strong>Terms & Conditions:</strong></p>
+              <ul>
+                <li>This estimate is valid for 30 days from the date of issue.</li>
+                <li>A 50% advance payment is required to confirm the booking.</li>
+                <li>The balance payment is due before the event date.</li>
+              </ul>
+            </div>
+          </div>
+          
+          <div class="footer">
+            <p>For any queries, please don't hesitate to contact us.</p>
+            <p>© ${new Date().getFullYear()} StudioSync Photography</p>
+          </div>
+        </div>
+      </body>
+      </html>
     `;
     
-    console.log("Email content prepared:", emailContent.substring(0, 100) + "...");
-    console.log("Email would be sent in a production environment");
+    console.log("Sending email with Resend...");
+    
+    // Send email using Resend
+    const { data, error: resendError } = await resend.emails.send({
+      from: "StudioSync Estimates <onboarding@resend.dev>",
+      to: [to],
+      subject: `Estimate #${estimateId} for ${clientName}`,
+      html: emailHTML,
+    });
+    
+    if (resendError) {
+      console.error("Resend API error:", resendError);
+      throw new Error(`Failed to send email: ${resendError.message || "Unknown error"}`);
+    }
+    
+    console.log("Email sent successfully:", data);
 
     // Return success response
     return new Response(
@@ -73,6 +158,7 @@ const handler = async (req: Request): Promise<Response> => {
         success: true, 
         message: "Email sent successfully",
         to,
+        emailId: data?.id,
         timestamp: new Date().toISOString()
       }),
       {
