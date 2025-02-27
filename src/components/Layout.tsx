@@ -1,5 +1,5 @@
 
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
   FileText,
@@ -12,29 +12,61 @@ import {
   Camera,
   Film,
   FileCheck,
+  LogOut,
+  User,
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { useEffect, useState } from "react";
+import { useUser } from "@/contexts/UserContext";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
 
+// Define navigation items with access control
 const navItems = [
-  { path: "/", label: "Dashboard", icon: Home },
-  { path: "/estimates", label: "Estimates", icon: FileText },
-  { path: "/invoices", label: "Invoices", icon: Receipt },
-  { path: "/finances", label: "Finances", icon: LineChart },
-  { path: "/pre-production", label: "Pre-Production", icon: Calendar },
-  { path: "/production", label: "Production", icon: Camera },
-  { path: "/post-production", label: "Post-Production", icon: Film },
+  { path: "/", label: "Dashboard", icon: Home, access: ["all"] },
+  { path: "/estimates", label: "Estimates", icon: FileText, access: ["manager", "crm"] },
+  { path: "/invoices", label: "Invoices", icon: Receipt, access: ["manager", "accounts"] },
+  { path: "/finances", label: "Finances", icon: LineChart, access: ["manager", "accounts"] },
+  { path: "/pre-production", label: "Pre-Production", icon: Calendar, access: ["manager", "crm"] },
+  { path: "/production", label: "Production", icon: Camera, access: ["manager", "crm", "photographer", "videographer"] },
+  { path: "/post-production", label: "Post-Production", icon: Film, access: ["manager", "crm", "editor"] },
 ];
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { currentUser, logout, hasAccess } = useUser();
+  
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!currentUser && location.pathname !== "/login") {
+      navigate("/login");
+    }
+  }, [currentUser, location.pathname, navigate]);
   
   // Close mobile menu when route changes
   useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [location]);
-
+  
+  // If user not authenticated, don't render the layout
+  if (!currentUser) {
+    return null;
+  }
+  
+  // Handle logout
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
+  
+  // Filter navigation items based on user role
+  const filteredNavItems = navItems.filter(item => {
+    if (item.access.includes("all")) return true;
+    if (currentUser.role === "manager") return true;
+    return item.access.includes(currentUser.role);
+  });
+  
   return (
     <div className="min-h-screen bg-background">
       {/* Mobile Menu Button */}
@@ -65,7 +97,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </div>
           
           <div className="space-y-1">
-            {navItems.map((item) => {
+            {filteredNavItems.map((item) => {
               const Icon = item.icon;
               return (
                 <Link
@@ -84,13 +116,51 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               );
             })}
           </div>
+          
+          <div className="mt-auto border-t pt-4">
+            <div className="px-4 py-2 mb-2">
+              <div className="font-medium">{currentUser.name}</div>
+              <div className="text-xs text-muted-foreground capitalize">{currentUser.role}</div>
+            </div>
+            <Button 
+              variant="ghost" 
+              className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50"
+              onClick={handleLogout}
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              Logout
+            </Button>
+          </div>
         </div>
       </nav>
+
+      {/* Top bar for mobile navigation (only visible on mobile) */}
+      <header className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-background border-b z-30 flex items-center px-4">
+        <div className="flex-1">
+          <h1 className="text-xl font-semibold">PhotoFin</h1>
+        </div>
+        <div className="flex items-center gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <User className="h-5 w-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem className="cursor-pointer" onClick={handleLogout}>
+                <LogOut className="h-4 w-4 mr-2" />
+                <span>Logout</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </header>
 
       {/* Main Content */}
       <main className={cn(
         "min-h-screen transition-all duration-300 ease-in-out",
-        "lg:pl-64 p-6"
+        "lg:pl-64 p-6",
+        "lg:pt-6 pt-20" // Add top padding on mobile for the header
       )}>
         <div className="max-w-6xl mx-auto">
           {children}
