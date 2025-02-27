@@ -4,6 +4,7 @@ import { OverviewTab } from "./tabs/OverviewTab";
 import { TeamTab } from "./tabs/TeamTab";
 import { ProjectsTab } from "./tabs/ProjectsTab";
 import { FinancesTab } from "./tabs/FinancesTab";
+import { ClientsTab } from "./tabs/ClientsTab";
 
 export function ManagerDashboard() {
   return (
@@ -18,6 +19,7 @@ export function ManagerDashboard() {
       <Tabs defaultValue="overview" className="space-y-6">
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="clients">Clients</TabsTrigger>
           <TabsTrigger value="team">Team</TabsTrigger>
           <TabsTrigger value="projects">Projects</TabsTrigger>
           <TabsTrigger value="finances">Finances</TabsTrigger>
@@ -25,6 +27,10 @@ export function ManagerDashboard() {
 
         <TabsContent value="overview">
           <OverviewTab />
+        </TabsContent>
+
+        <TabsContent value="clients">
+          <ClientsTab />
         </TabsContent>
 
         <TabsContent value="team">
