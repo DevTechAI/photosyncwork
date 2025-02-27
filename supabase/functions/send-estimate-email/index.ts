@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@1.0.0";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
@@ -30,53 +31,74 @@ const handler = async (req: Request): Promise<Response> => {
   const baseUrl = `${url.protocol}//${url.host}`;
 
   try {
-    if (url.searchParams.has('accept')) {
+    // Handle estimate acceptance or rejection
+    if (url.searchParams.has('action')) {
+      const action = url.searchParams.get('action');
       const estimateId = url.searchParams.get('estimateId');
       const token = url.searchParams.get('token');
       
-      if (!estimateId || !token) {
-        throw new Error("Invalid acceptance link");
+      if (!estimateId || !token || !['approve', 'decline'].includes(action as string)) {
+        throw new Error("Invalid request parameters");
       }
 
+      // Create Supabase client with service role for admin access
       const supabase = createClient(
         Deno.env.get('SUPABASE_URL') ?? '',
         Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
         { auth: { persistSession: false } }
       );
 
+      // Update estimate status based on action
+      const newStatus = action === 'approve' ? 'approved' : 'declined';
       const { data, error } = await supabase
         .from('estimates')
-        .update({ status: 'approved' })
+        .update({ status: newStatus })
         .eq('id', estimateId)
         .select();
 
       if (error) throw error;
 
-      const successHtml = `
+      // Return appropriate response page
+      const statusColor = action === 'approve' ? '#0f766e' : '#b91c1c';
+      const statusIcon = action === 'approve' ? '✓' : '✗';
+      const statusTitle = action === 'approve' ? 'Estimate Accepted' : 'Estimate Declined';
+      const statusMessage = action === 'approve' 
+        ? 'Thank you for accepting the estimate. We will be in touch shortly to discuss the next steps.'
+        : 'Thank you for your response. We understand this estimate doesn\'t work for you. Please contact us to discuss your requirements further.';
+
+      const htmlResponse = `
         <!DOCTYPE html>
         <html>
           <head>
-            <title>Estimate Accepted</title>
+            <title>${statusTitle}</title>
             <style>
               body { font-family: Arial, sans-serif; line-height: 1.6; text-align: center; margin-top: 50px; }
-              .success { color: #0f766e; font-size: 24px; margin-bottom: 20px; }
+              .status { color: ${statusColor}; font-size: 24px; margin-bottom: 20px; }
               .message { color: #334155; margin-bottom: 20px; }
+              .contact { margin-top: 30px; padding: 15px; background-color: #f8fafc; border-radius: 8px; display: inline-block; }
+              .contact p { margin: 5px 0; }
             </style>
           </head>
           <body>
-            <div class="success">✓ Estimate Accepted Successfully</div>
+            <div class="status">${statusIcon} ${statusTitle}</div>
             <div class="message">
-              Thank you for accepting the estimate. We will be in touch shortly to discuss the next steps.
+              ${statusMessage}
+            </div>
+            <div class="contact">
+              <p><strong>Need to discuss?</strong></p>
+              <p>Call us: <a href="tel:+1234567890">+1 (234) 567-890</a></p>
+              <p>Email: <a href="mailto:contact@studiosync.com">contact@studiosync.com</a></p>
             </div>
           </body>
         </html>
       `;
 
-      return new Response(successHtml, {
+      return new Response(htmlResponse, {
         headers: { ...corsHeaders, "Content-Type": "text/html" },
       });
     }
 
+    // Handle sending estimate email
     const { to, clientName, estimateId, amount, services, deliverables }: EmailRequest = await req.json();
 
     if (!to) {
@@ -91,9 +113,12 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("RESEND_API_KEY is not set in environment variables");
     }
 
-    const acceptanceToken = crypto.randomUUID();
-    const acceptanceLink = `${baseUrl}?accept=true&estimateId=${estimateId}&token=${acceptanceToken}`;
+    // Generate a secure token for acceptance/rejection links
+    const token = crypto.randomUUID();
+    const approveLink = `${baseUrl}?action=approve&estimateId=${estimateId}&token=${token}`;
+    const declineLink = `${baseUrl}?action=decline&estimateId=${estimateId}&token=${token}`;
     
+    // Format services and deliverables for email
     const servicesHTML = services && services.length > 0
       ? `
         <h2 style="color: #333; margin-top: 20px;">Services:</h2>
@@ -125,6 +150,7 @@ const handler = async (req: Request): Promise<Response> => {
       `
       : '<p>No deliverables specified</p>';
 
+    // Create email HTML template with approve/decline buttons and contact info
     const emailHTML = `
       <!DOCTYPE html>
       <html>
@@ -141,20 +167,32 @@ const handler = async (req: Request): Promise<Response> => {
           .footer { margin-top: 30px; font-size: 12px; color: #7f8c8d; text-align: center; }
           .amount { font-size: 24px; font-weight: bold; margin: 20px 0; text-align: right; }
           .terms { margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; }
-          .accept-button {
-            display: block;
-            width: 200px;
-            margin: 30px auto;
-            padding: 15px 25px;
+          .button-container { display: flex; justify-content: center; gap: 20px; margin: 30px 0; }
+          .button {
+            display: inline-block;
+            padding: 12px 24px;
+            text-decoration: none;
+            font-weight: bold;
+            border-radius: 5px;
+            text-align: center;
+          }
+          .approve-button {
             background-color: #0f766e;
             color: white;
-            text-align: center;
-            text-decoration: none;
-            border-radius: 5px;
-            font-weight: bold;
           }
-          .accept-button:hover {
-            background-color: #0d6d64;
+          .decline-button {
+            background-color: #ef4444;
+            color: white;
+          }
+          .contact-us {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8fafc;
+            border-radius: 5px;
+            text-align: center;
+          }
+          .contact-us p {
+            margin: 5px 0;
           }
         </style>
       </head>
@@ -178,9 +216,16 @@ const handler = async (req: Request): Promise<Response> => {
               Total Amount: ${amount}
             </div>
             
-            <a href="${acceptanceLink}" class="accept-button">
-              Accept Estimate
-            </a>
+            <div class="button-container">
+              <a href="${approveLink}" class="button approve-button">Accept Estimate</a>
+              <a href="${declineLink}" class="button decline-button">Decline Estimate</a>
+            </div>
+            
+            <div class="contact-us">
+              <p><strong>Have questions or need to discuss?</strong></p>
+              <p>Call us: <a href="tel:+1234567890">+1 (234) 567-890</a></p>
+              <p>Email: <a href="mailto:contact@studiosync.com">contact@studiosync.com</a></p>
+            </div>
             
             <div class="terms">
               <p><strong>Terms & Conditions:</strong></p>
@@ -204,6 +249,7 @@ const handler = async (req: Request): Promise<Response> => {
     
     console.log("Sending email with Resend...");
     
+    // Send the email using Resend
     const { data, error: resendError } = await resend.emails.send({
       from: "StudioSync Estimates <onboarding@resend.dev>",
       to: [to],
@@ -218,6 +264,7 @@ const handler = async (req: Request): Promise<Response> => {
     
     console.log("Email sent successfully:", data);
 
+    // Return success response
     return new Response(
       JSON.stringify({ 
         success: true, 

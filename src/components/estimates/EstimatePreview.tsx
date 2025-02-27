@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -47,7 +48,7 @@ export function EstimatePreview({ open, onClose, estimate, onStatusChange }: Est
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    let intervalId: number | undefined;
+    let intervalId: ReturnType<typeof setTimeout>;
     
     if (showEmailForm && estimate?.status === 'pending') {
       intervalId = setInterval(async () => {
@@ -60,7 +61,7 @@ export function EstimatePreview({ open, onClose, estimate, onStatusChange }: Est
             
           if (error) throw error;
           
-          if (data.status === 'approved' && onStatusChange) {
+          if (data && data.status === 'approved' && onStatusChange) {
             onStatusChange(estimate.id, 'approved');
             toast({
               title: "Estimate Approved!",
@@ -77,7 +78,7 @@ export function EstimatePreview({ open, onClose, estimate, onStatusChange }: Est
     return () => {
       if (intervalId) clearInterval(intervalId);
     };
-  }, [showEmailForm, estimate?.id, estimate?.status]);
+  }, [showEmailForm, estimate?.id, estimate?.status, onStatusChange, toast]);
 
   const handleSendEmail = async () => {
     if (!emailInput) {
