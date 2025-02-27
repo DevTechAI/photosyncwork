@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -47,6 +46,39 @@ export function EstimatePreview({ open, onClose, estimate, onStatusChange }: Est
   const [negotiatedAmount, setNegotiatedAmount] = useState(estimate?.amount || "");
   const [isLoading, setIsLoading] = useState(false);
 
+  useEffect(() => {
+    let intervalId: number | undefined;
+    
+    if (showEmailForm && estimate?.status === 'pending') {
+      intervalId = setInterval(async () => {
+        try {
+          const { data, error } = await supabase
+            .from('estimates')
+            .select('status')
+            .eq('id', estimate.id)
+            .single();
+            
+          if (error) throw error;
+          
+          if (data.status === 'approved' && onStatusChange) {
+            onStatusChange(estimate.id, 'approved');
+            toast({
+              title: "Estimate Approved!",
+              description: "The client has approved the estimate.",
+            });
+            clearInterval(intervalId);
+          }
+        } catch (error) {
+          console.error('Error checking estimate status:', error);
+        }
+      }, 5000); // Check every 5 seconds
+    }
+    
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [showEmailForm, estimate?.id, estimate?.status]);
+
   const handleSendEmail = async () => {
     if (!emailInput) {
       toast({
@@ -60,7 +92,6 @@ export function EstimatePreview({ open, onClose, estimate, onStatusChange }: Est
     setIsLoading(true);
 
     try {
-      // Call our Supabase edge function to send the email
       const { data, error } = await supabase.functions.invoke("send-estimate-email", {
         body: {
           to: emailInput,
@@ -107,15 +138,12 @@ export function EstimatePreview({ open, onClose, estimate, onStatusChange }: Est
       return;
     }
 
-    // Format phone number (remove spaces, dashes, etc.)
     const formattedPhone = phoneInput.replace(/\D/g, "");
     
-    // Create WhatsApp message with estimate details
     const message = encodeURIComponent(
       `*Estimate for ${estimate.clientName}*\n\nAmount: ${estimate.amount}\nDate: ${new Date(estimate.date).toLocaleDateString()}\n\nThank you for considering our services!`
     );
     
-    // Open WhatsApp with the message
     window.open(`https://wa.me/${formattedPhone}?text=${message}`, "_blank");
     
     toast({
@@ -215,7 +243,6 @@ export function EstimatePreview({ open, onClose, estimate, onStatusChange }: Est
           </div>
         </DialogHeader>
 
-        {/* Email form */}
         {showEmailForm && (
           <Card className="mb-4">
             <CardContent className="pt-6">
@@ -249,7 +276,6 @@ export function EstimatePreview({ open, onClose, estimate, onStatusChange }: Est
           </Card>
         )}
 
-        {/* WhatsApp form */}
         {showWhatsAppForm && (
           <Card className="mb-4">
             <CardContent className="pt-6">
@@ -280,7 +306,6 @@ export function EstimatePreview({ open, onClose, estimate, onStatusChange }: Est
           </Card>
         )}
 
-        {/* Approval form */}
         {showApprovalForm && (
           <Card className="mb-4">
             <CardContent className="pt-6">
@@ -330,7 +355,6 @@ export function EstimatePreview({ open, onClose, estimate, onStatusChange }: Est
           </Card>
         )}
 
-        {/* Estimate Preview */}
         <div className="border rounded-lg p-6 space-y-6">
           <div className="text-center space-y-2">
             <h1 className="text-2xl font-semibold">ESTIMATE</h1>

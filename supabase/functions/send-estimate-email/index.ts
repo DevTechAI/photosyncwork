@@ -1,11 +1,10 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@1.0.0";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 interface EmailRequest {
@@ -23,12 +22,61 @@ interface EmailRequest {
 }
 
 const handler = async (req: Request): Promise<Response> => {
-  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const url = new URL(req.url);
+  const baseUrl = `${url.protocol}//${url.host}`;
+
   try {
+    if (url.searchParams.has('accept')) {
+      const estimateId = url.searchParams.get('estimateId');
+      const token = url.searchParams.get('token');
+      
+      if (!estimateId || !token) {
+        throw new Error("Invalid acceptance link");
+      }
+
+      const supabase = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+        { auth: { persistSession: false } }
+      );
+
+      const { data, error } = await supabase
+        .from('estimates')
+        .update({ status: 'approved' })
+        .eq('id', estimateId)
+        .select();
+
+      if (error) throw error;
+
+      const successHtml = `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>Estimate Accepted</title>
+            <style>
+              body { font-family: Arial, sans-serif; line-height: 1.6; text-align: center; margin-top: 50px; }
+              .success { color: #0f766e; font-size: 24px; margin-bottom: 20px; }
+              .message { color: #334155; margin-bottom: 20px; }
+            </style>
+          </head>
+          <body>
+            <div class="success">✓ Estimate Accepted Successfully</div>
+            <div class="message">
+              Thank you for accepting the estimate. We will be in touch shortly to discuss the next steps.
+            </div>
+          </body>
+        </html>
+      `;
+
+      return new Response(successHtml, {
+        headers: { ...corsHeaders, "Content-Type": "text/html" },
+      });
+    }
+
     const { to, clientName, estimateId, amount, services, deliverables }: EmailRequest = await req.json();
 
     if (!to) {
@@ -37,14 +85,15 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`Sending estimate email to ${to} for client ${clientName}`);
     
-    // Initialize Resend with API key
     const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
     
     if (!Deno.env.get("RESEND_API_KEY")) {
       throw new Error("RESEND_API_KEY is not set in environment variables");
     }
+
+    const acceptanceToken = crypto.randomUUID();
+    const acceptanceLink = `${baseUrl}?accept=true&estimateId=${estimateId}&token=${acceptanceToken}`;
     
-    // Format services for email
     const servicesHTML = services && services.length > 0
       ? `
         <h2 style="color: #333; margin-top: 20px;">Services:</h2>
@@ -67,7 +116,6 @@ const handler = async (req: Request): Promise<Response> => {
       `
       : '<p>No services specified</p>';
     
-    // Format deliverables for email
     const deliverablesHTML = deliverables && deliverables.length > 0
       ? `
         <h2 style="color: #333; margin-top: 20px;">Deliverables:</h2>
@@ -76,8 +124,7 @@ const handler = async (req: Request): Promise<Response> => {
         </ul>
       `
       : '<p>No deliverables specified</p>';
-    
-    // Create HTML email content
+
     const emailHTML = `
       <!DOCTYPE html>
       <html>
@@ -94,6 +141,21 @@ const handler = async (req: Request): Promise<Response> => {
           .footer { margin-top: 30px; font-size: 12px; color: #7f8c8d; text-align: center; }
           .amount { font-size: 24px; font-weight: bold; margin: 20px 0; text-align: right; }
           .terms { margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; }
+          .accept-button {
+            display: block;
+            width: 200px;
+            margin: 30px auto;
+            padding: 15px 25px;
+            background-color: #0f766e;
+            color: white;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+          }
+          .accept-button:hover {
+            background-color: #0d6d64;
+          }
         </style>
       </head>
       <body>
@@ -116,12 +178,17 @@ const handler = async (req: Request): Promise<Response> => {
               Total Amount: ${amount}
             </div>
             
+            <a href="${acceptanceLink}" class="accept-button">
+              Accept Estimate
+            </a>
+            
             <div class="terms">
               <p><strong>Terms & Conditions:</strong></p>
               <ul>
                 <li>This estimate is valid for 30 days from the date of issue.</li>
                 <li>A 50% advance payment is required to confirm the booking.</li>
                 <li>The balance payment is due before the event date.</li>
+                <li>By accepting this estimate, you agree to our terms and conditions.</li>
               </ul>
             </div>
           </div>
@@ -137,7 +204,6 @@ const handler = async (req: Request): Promise<Response> => {
     
     console.log("Sending email with Resend...");
     
-    // Send email using Resend
     const { data, error: resendError } = await resend.emails.send({
       from: "StudioSync Estimates <onboarding@resend.dev>",
       to: [to],
@@ -152,7 +218,6 @@ const handler = async (req: Request): Promise<Response> => {
     
     console.log("Email sent successfully:", data);
 
-    // Return success response
     return new Response(
       JSON.stringify({ 
         success: true, 
@@ -162,12 +227,11 @@ const handler = async (req: Request): Promise<Response> => {
         timestamp: new Date().toISOString()
       }),
       {
-        status: 200,
         headers: { "Content-Type": "application/json", ...corsHeaders },
       }
     );
   } catch (error) {
-    console.error("Error sending email:", error);
+    console.error("Error:", error);
     
     return new Response(
       JSON.stringify({ 
