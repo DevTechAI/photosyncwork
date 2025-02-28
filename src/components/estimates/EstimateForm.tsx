@@ -1,14 +1,9 @@
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useState, useEffect } from "react";
-import { WelcomePage } from "./pages/WelcomePage";
-import { ServicesPage } from "./pages/ServicesPage";
-import { EstimateDetailsPage } from "./pages/EstimateDetailsPage";
-import { useToast } from "@/components/ui/use-toast";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { PreviewStep } from "./components/PreviewStep";
-import { FormNavigation } from "./components/FormNavigation";
-import { generatePreviewEstimate } from "./utils/estimateHelpers";
+import { FormWrapper } from "./form/FormWrapper";
+import { EstimateFormPages } from "./form/EstimateFormPages";
+import { useEstimateForm } from "./form/hooks/useEstimateForm";
 
 interface EstimateFormProps {
   open: boolean;
@@ -17,217 +12,60 @@ interface EstimateFormProps {
 }
 
 export function EstimateForm({ open, onClose, editingEstimate }: EstimateFormProps) {
-  const { toast } = useToast();
   const navigate = useNavigate();
-  const [currentPage, setCurrentPage] = useState(0);
-  const [formData, setFormData] = useState({
-    clientName: "",
-    clientEmail: "",
-    selectedServices: [],
-    estimateDetails: {
-      events: [],
-      estimates: [],
-      deliverables: []
-    }
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [previewEstimate, setPreviewEstimate] = useState(null);
-
-  useEffect(() => {
-    if (editingEstimate) {
-      const selectedServices = editingEstimate.services?.map(service => service.event) || [];
-      
-      let estimates = [];
-      if (editingEstimate.packages && editingEstimate.packages.length > 0) {
-        estimates = editingEstimate.packages.map(pkg => ({
-          services: pkg.services || [],
-          deliverables: pkg.deliverables || [],
-          total: pkg.amount
-        }));
-      } else {
-        estimates = [{
-          services: editingEstimate.services || [],
-          deliverables: editingEstimate.deliverables || [],
-          total: editingEstimate.amount
-        }];
-      }
-      
-      setFormData({
-        clientName: editingEstimate.clientName || "",
-        clientEmail: editingEstimate.clientEmail || "",
-        selectedServices,
-        estimateDetails: {
-          events: [],
-          estimates,
-          deliverables: []
-        }
-      });
-      
-      setPreviewEstimate(editingEstimate);
-      
-      // If editing, start directly on the estimate details page
-      setCurrentPage(2);
-    }
-  }, [editingEstimate]);
-
-  const handleGeneratePreview = () => {
-    const preview = generatePreviewEstimate(formData, toast);
-    if (preview) {
-      if (editingEstimate) {
-        preview.id = editingEstimate.id;
-        preview.status = editingEstimate.status;
-        preview.clientEmail = formData.clientEmail || editingEstimate.clientEmail || "";
-        preview.clientName = editingEstimate.clientName; // Keep original client name when editing
-      } else {
-        preview.clientEmail = formData.clientEmail || "";
-      }
-      
-      setPreviewEstimate(preview);
-      setCurrentPage(3);
-    }
-  };
-
-  const handleSaveEstimate = async () => {
-    if (!previewEstimate) {
-      return;
-    }
-    
-    setIsSubmitting(true);
-    
-    try {
-      console.log("Saving estimate:", previewEstimate);
-      
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const savedEstimates = localStorage.getItem("estimates");
-      let estimates = savedEstimates ? JSON.parse(savedEstimates) : [];
-      
-      if (editingEstimate) {
-        estimates = estimates.map(est => 
-          est.id === previewEstimate.id ? previewEstimate : est
-        );
-        
-        toast({
-          title: "Estimate Updated",
-          description: `Estimate for ${previewEstimate.clientName} has been updated successfully.`,
-        });
-      } else {
-        estimates.unshift(previewEstimate);
-        
-        toast({
-          title: "Estimate Created",
-          description: `Estimate for ${formData.clientName} has been created successfully.`,
-        });
-      }
-      
-      localStorage.setItem("estimates", JSON.stringify(estimates));
-      
-      return Promise.resolve();
-    } catch (error) {
-      console.error("Error saving estimate:", error);
-      toast({
-        title: "Error",
-        description: "There was a problem saving your estimate. Please try again.",
-        variant: "destructive",
-      });
-      return Promise.reject(error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  const {
+    currentPage,
+    formData,
+    isSubmitting,
+    previewEstimate,
+    setCurrentPage,
+    handleNextPage,
+    handlePreviousPage,
+    handleUpdateFormData,
+    handleSaveEstimate,
+  } = useEstimateForm(editingEstimate);
 
   const handleCloseAndReset = () => {
     if (!editingEstimate) {
-      setFormData({
-        clientName: "",
-        clientEmail: "",
-        selectedServices: [],
-        estimateDetails: {
-          events: [],
-          estimates: [],
-          deliverables: []
-        }
+      // Reset form data only when creating a new estimate
+      handleUpdateFormData("clientName", "");
+      handleUpdateFormData("clientEmail", "");
+      handleUpdateFormData("selectedServices", []);
+      handleUpdateFormData("estimateDetails", {
+        events: [],
+        estimates: [],
+        deliverables: []
       });
-      setPreviewEstimate(null);
     }
     
     setCurrentPage(editingEstimate ? 2 : 0);
     onClose();
   };
 
-  const handlePrevious = () => {
-    // When editing, don't allow going back from the estimate details page
-    if (editingEstimate && currentPage === 2) {
-      return;
+  const getDialogTitle = () => {
+    if (editingEstimate) {
+      return "Edit Estimate Details";
     }
-    setCurrentPage(prev => prev - 1);
+    return currentPage === 3 ? "Preview Estimate" : "Create New Estimate";
   };
-
-  const handleNext = () => {
-    if (currentPage === 2) {
-      handleGeneratePreview();
-    } else if (currentPage === 3) {
-      // We don't need this anymore as the save happens when sharing
-    } else {
-      setCurrentPage(prev => prev + 1);
-    }
-  };
-
-  const pages = [
-    <WelcomePage 
-      key="welcome" 
-      clientName={formData.clientName}
-      onClientNameChange={(name) => 
-        setFormData(prev => ({ ...prev, clientName: name }))
-      }
-      isReadOnly={!!editingEstimate} // Make client name read-only when editing
-    />,
-    <ServicesPage 
-      key="services"
-      selectedServices={formData.selectedServices}
-      onServicesChange={(services) =>
-        setFormData(prev => ({ ...prev, selectedServices: services }))
-      }
-      isReadOnly={!!editingEstimate} // Make services read-only when editing
-    />,
-    <EstimateDetailsPage 
-      key="details"
-      estimateDetails={formData.estimateDetails}
-      onDetailsChange={(details) =>
-        setFormData(prev => ({ ...prev, estimateDetails: details }))
-      }
-    />
-  ];
 
   return (
-    <Dialog open={open} onOpenChange={handleCloseAndReset}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>
-            {editingEstimate ? "Edit Estimate Details" : currentPage === 3 ? "Preview Estimate" : "Create New Estimate"}
-          </DialogTitle>
-        </DialogHeader>
-        <div className="space-y-6">
-          {currentPage < 3 && pages[currentPage]}
-          
-          {currentPage === 3 && previewEstimate && (
-            <PreviewStep 
-              estimate={previewEstimate} 
-              onSave={handleSaveEstimate}
-            />
-          )}
-          
-          {(currentPage < 3 || !previewEstimate) && (
-            <FormNavigation
-              currentPage={currentPage}
-              isSubmitting={isSubmitting}
-              onPrevious={handlePrevious}
-              onNext={handleNext}
-              hidePrevious={editingEstimate && currentPage === 2} // Hide Previous button when editing estimate details
-            />
-          )}
-        </div>
-      </DialogContent>
-    </Dialog>
+    <FormWrapper 
+      open={open} 
+      onClose={handleCloseAndReset}
+      title={getDialogTitle()}
+    >
+      <EstimateFormPages 
+        currentPage={currentPage}
+        formData={formData}
+        previewEstimate={previewEstimate}
+        isSubmitting={isSubmitting}
+        isEditing={!!editingEstimate}
+        onUpdateFormData={handleUpdateFormData}
+        onPrevious={handlePreviousPage}
+        onNext={handleNextPage}
+        onSave={handleSaveEstimate}
+      />
+    </FormWrapper>
   );
 }
