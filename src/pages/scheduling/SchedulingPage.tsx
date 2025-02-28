@@ -76,6 +76,7 @@ const mockEvents: ScheduledEvent[] = [
     assignments: [],
     deliverables: [
       {
+        id: "del-1", // Added the required id property
         type: "photos",
         status: "in-progress",
         assignedTo: "tm-3"
