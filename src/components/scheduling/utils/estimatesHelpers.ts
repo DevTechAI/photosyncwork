@@ -1,118 +1,91 @@
 
-import { Client } from "@/components/clients/mockClients";
-import { ScheduledEvent } from "../types";
-
-interface Estimate {
-  id: string;
-  clientName: string;
-  clientEmail?: string;
-  date: string;
-  amount: string;
-  status: string;
-  services?: Array<{
-    event: string;
-    date: string;
-    photographers: string;
-    cinematographers: string;
-  }>;
-  deliverables?: string[];
-  packages?: Array<{
-    name?: string;
-    amount: string;
-    services: Array<{
-      event: string;
-      date: string;
-      photographers: string;
-      cinematographers: string;
-    }>;
-    deliverables: string[];
-  }>;
-}
-
-export function getApprovedEstimates(): Estimate[] {
+// Get approved estimates from localStorage
+export function getApprovedEstimates() {
   const savedEstimates = localStorage.getItem("estimates");
   if (!savedEstimates) return [];
+
+  const estimates = JSON.parse(savedEstimates);
+  return estimates.filter((estimate: any) => estimate.status === "approved");
+}
+
+// Process deliverables from an estimate
+export function processDeliverables(estimate: any) {
+  const deliverables = [] as const;
   
-  try {
-    const allEstimates = JSON.parse(savedEstimates);
-    return allEstimates.filter((estimate: Estimate) => estimate.status === "approved");
-  } catch (error) {
-    console.error("Error parsing saved estimates:", error);
-    return [];
+  if (!estimate.deliverables && !estimate.packages) {
+    return deliverables;
   }
-}
-
-export function getClientByName(clientName: string): Client | null {
-  // This would typically be a database call in a real app
-  // For now, we'll import from our mock data
-  const { clients } = require("@/components/clients/mockClients");
   
-  return clients.find((client: Client) => client.name === clientName) || null;
-}
-
-export function createEventFromEstimate(estimate: Estimate): Partial<ScheduledEvent> {
-  // Determine which services to use (from direct services or first package)
-  const services = estimate.services || 
-    (estimate.packages && estimate.packages.length > 0 ? estimate.packages[0].services : []);
+  // If estimate has packages, use the deliverables from the selected package
+  // or first package by default
+  if (estimate.packages && estimate.packages.length > 0) {
+    const firstPackage = estimate.packages[0];
     
-  // Find the earliest event date to use as the project start date
-  let earliestDate = new Date();
-  if (services && services.length > 0) {
-    services.forEach(service => {
-      const serviceDate = new Date(service.date);
-      if (serviceDate < earliestDate) {
-        earliestDate = serviceDate;
-      }
-    });
+    if (firstPackage.deliverables && firstPackage.deliverables.length > 0) {
+      return firstPackage.deliverables.map((deliverable: string, index: number) => ({
+        id: `del-${index}-${Date.now()}`,
+        type: deliverable.toLowerCase().includes("photo") ? "photos" :
+              deliverable.toLowerCase().includes("video") || deliverable.toLowerCase().includes("film") ? "videos" :
+              deliverable.toLowerCase().includes("album") ? "album" : "photos",
+        status: "pending",
+        deliveryDate: new Date(new Date().getTime() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] // 14 days from now
+      }));
+    }
   }
   
-  // Get client contact information
-  const client = getClientByName(estimate.clientName);
-  
-  // Count total photographers and videographers
-  const photographersCount = services.reduce((total, service) => {
-    return total + (parseInt(service.photographers) || 0);
-  }, 0);
-  
-  const videographersCount = services.reduce((total, service) => {
-    return total + (parseInt(service.cinematographers) || 0);
-  }, 0);
-  
-  // Create and map deliverables properly
-  const processDeliverables = () => {
-    const rawDeliverables = estimate.deliverables || 
-      (estimate.packages && estimate.packages.length > 0 ? estimate.packages[0].deliverables : []);
-      
-    return rawDeliverables.map(d => ({ 
-      type: determineDeliverableType(d), 
-      status: "pending" as const
+  // Fallback to direct deliverables
+  if (estimate.deliverables && estimate.deliverables.length > 0) {
+    return estimate.deliverables.map((deliverable: string, index: number) => ({
+      id: `del-${index}-${Date.now()}`,
+      type: deliverable.toLowerCase().includes("photo") ? "photos" :
+            deliverable.toLowerCase().includes("video") || deliverable.toLowerCase().includes("film") ? "videos" :
+            deliverable.toLowerCase().includes("album") ? "album" : "photos",
+      status: "pending",
+      deliveryDate: new Date(new Date().getTime() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] // 14 days from now
     }));
-  };
+  }
   
-  // Create event object
-  return {
-    estimateId: estimate.id,
-    name: `${estimate.clientName} Project`,
-    date: earliestDate.toISOString().split('T')[0],
-    location: "",
-    clientName: estimate.clientName,
-    clientPhone: client?.contact.phone || "",
-    photographersCount: photographersCount > 0 ? photographersCount : 1,
-    videographersCount: videographersCount > 0 ? videographersCount : 1,
-    stage: "pre-production",
-    clientRequirements: services.map(s => s.event).join(", "),
-    deliverables: processDeliverables()
-  };
+  return deliverables;
 }
 
-function determineDeliverableType(deliverable: string): "photos" | "videos" | "album" {
-  const deliverableLower = deliverable.toLowerCase();
-  if (deliverableLower.includes("video") || deliverableLower.includes("film")) {
-    return "videos";
-  } else if (deliverableLower.includes("album")) {
-    return "album";
-  } else {
-    // Default to photos for anything else
-    return "photos";
+// Create event data from an approved estimate
+export function createEventFromEstimate(estimate: any) {
+  // Find the first event service in the estimate
+  let eventService = null;
+  
+  // Check if estimate has packages
+  if (estimate.packages && estimate.packages.length > 0) {
+    // Use the first package by default
+    const firstPackage = estimate.packages[0];
+    if (firstPackage.services && firstPackage.services.length > 0) {
+      eventService = firstPackage.services[0];
+    }
+  } else if (estimate.services && estimate.services.length > 0) {
+    // Fallback to direct services
+    eventService = estimate.services[0];
   }
+  
+  // Get photographers and videographers count
+  let photographersCount = 1;
+  let videographersCount = 1;
+  
+  if (eventService) {
+    photographersCount = eventService.photographers ? parseInt(eventService.photographers) || 1 : 1;
+    videographersCount = eventService.cinematographers ? parseInt(eventService.cinematographers) || 1 : 1;
+  }
+  
+  // Process deliverables
+  const deliverables = processDeliverables(estimate);
+  
+  return {
+    name: eventService ? eventService.event : "Event",
+    date: eventService ? eventService.date : new Date().toISOString().split('T')[0],
+    clientName: estimate.clientName,
+    clientEmail: estimate.clientEmail || "",
+    photographersCount,
+    videographersCount,
+    estimateId: estimate.id,
+    deliverables,
+    estimatePackage: estimate.packages && estimate.packages.length > 0 ? `Option 1: ${estimate.packages[0].amount}` : `Standard: ${estimate.amount}`
+  };
 }

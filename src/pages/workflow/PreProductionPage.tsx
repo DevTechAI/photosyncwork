@@ -1,45 +1,27 @@
 
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
-import { Calendar, FileText, Plus } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { UpcomingEventsCalendar } from "@/components/scheduling/UpcomingEventsCalendar";
-import { EventAssignments } from "@/components/scheduling/EventAssignments";
-import { CreateEventModal } from "@/components/scheduling/CreateEventModal";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { 
+  Calendar, 
+  Clock, 
+  MapPin, 
+  Users,
+  Info,
+  Camera,
+  UserCheck,
+  Send
+} from "lucide-react";
+import { useState, useEffect } from "react";
+import { useToast } from "@/components/ui/use-toast";
 import { ScheduledEvent, TeamMember, EventAssignment } from "@/components/scheduling/types";
-import { useLocation } from "react-router-dom";
+import { useTeamNotifications } from "@/components/scheduling/utils/notificationHelpers";
 
 // Mock data for demonstration
-const mockEvents: ScheduledEvent[] = [
-  {
-    id: "evt-1",
-    estimateId: "est-001",
-    name: "Sharma Wedding - Engagement",
-    date: "2024-05-15",
-    startTime: "10:00",
-    endTime: "14:00",
-    location: "Taj Hotel, Mumbai",
-    clientName: "Rahul Sharma",
-    clientPhone: "+91 98765 43210",
-    photographersCount: 2,
-    videographersCount: 1,
-    stage: "pre-production",
-    assignments: [
-      {
-        eventId: "evt-1",
-        eventName: "Sharma Wedding - Engagement",
-        date: "2024-05-15",
-        location: "Taj Hotel, Mumbai",
-        teamMemberId: "tm-1",
-        status: "accepted",
-        notes: "Lead photographer"
-      }
-    ],
-    clientRequirements: "Client wants candid shots of the couple. Traditional style engagement photos."
-  }
-];
-
 const mockTeamMembers: TeamMember[] = [
   {
     id: "tm-1",
@@ -49,9 +31,9 @@ const mockTeamMembers: TeamMember[] = [
     phone: "+91 98765 00001",
     whatsapp: "+91 98765 00001",
     availability: {
-      "2024-05-15": "busy",
-      "2024-05-16": "available",
-      "2024-05-17": "available"
+      "2023-05-20": "busy",
+      "2023-05-21": "available",
+      "2023-05-22": "available"
     }
   },
   {
@@ -61,190 +43,225 @@ const mockTeamMembers: TeamMember[] = [
     email: "priya@example.com",
     phone: "+91 98765 00002",
     availability: {
-      "2024-05-15": "available",
-      "2024-05-16": "busy",
-      "2024-05-17": "busy"
+      "2023-05-20": "busy",
+      "2023-05-21": "busy",
+      "2023-05-22": "available"
     }
+  },
+  {
+    id: "tm-3",
+    name: "Raj Kumar",
+    role: "photographer",
+    email: "raj@example.com",
+    phone: "+91 98765 00003",
+    availability: {
+      "2023-05-20": "available",
+      "2023-05-21": "available",
+      "2023-05-22": "available"
+    },
+    isFreelancer: true
   }
 ];
 
 export default function PreProductionPage() {
-  const location = useLocation();
-  const [events, setEvents] = useState<ScheduledEvent[]>(() => {
-    // Try to get events from localStorage
-    const savedEvents = localStorage.getItem("events");
-    return savedEvents ? JSON.parse(savedEvents) : mockEvents;
-  });
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>(mockTeamMembers);
-  const [showCreateEventModal, setShowCreateEventModal] = useState(false);
-  const [activeTab, setActiveTab] = useState("scheduling");
-  const [defaultEventValues, setDefaultEventValues] = useState<Partial<ScheduledEvent> | undefined>(undefined);
+  const { toast } = useToast();
+  const { sendAssignmentNotification } = useTeamNotifications();
   
-  // Use query parameters and localStorage to get estimate details
+  const [events, setEvents] = useState<ScheduledEvent[]>([]);
+  const [teamMembers] = useState<TeamMember[]>(mockTeamMembers);
+  const [selectedEvent, setSelectedEvent] = useState<ScheduledEvent | null>(null);
+  const [clientRequirements, setClientRequirements] = useState("");
+  const [loading, setLoading] = useState(false);
+  
+  // Load events from localStorage on mount
   useEffect(() => {
-    const queryParams = new URLSearchParams(location.search);
-    const estimateId = queryParams.get('estimateId');
-    
-    if (estimateId) {
-      // Try to get the selected estimate from localStorage
-      const selectedEstimateStr = localStorage.getItem("selectedEstimate");
-      if (selectedEstimateStr) {
-        try {
-          const selectedEstimate = JSON.parse(selectedEstimateStr);
-          if (selectedEstimate.id === estimateId) {
-            console.log("Found selected estimate:", selectedEstimate);
-            
-            // Only set default values if no events exist for this estimate
-            const existingEvent = events.find(e => e.estimateId === estimateId);
-            if (!existingEvent) {
-              // Extract values from the estimate to pre-populate event form
-              const eventDefaults: Partial<ScheduledEvent> = {
-                estimateId: estimateId,
-                name: `${selectedEstimate.clientName} Event`,
-                clientName: selectedEstimate.clientName,
-                // Extract first event info if available
-                ...(selectedEstimate.services && selectedEstimate.services.length > 0 ? {
-                  date: selectedEstimate.services[0].date,
-                  photographersCount: parseInt(selectedEstimate.services[0].photographers) || 1,
-                  videographersCount: parseInt(selectedEstimate.services[0].cinematographers) || 1,
-                } : {})
-              };
-              
-              setDefaultEventValues(eventDefaults);
-              // Automatically open the event creation modal if coming directly from estimates
-              setShowCreateEventModal(true);
-            }
-          }
-        } catch (error) {
-          console.error("Error parsing selected estimate:", error);
-        }
-      }
+    const savedEvents = localStorage.getItem("scheduledEvents");
+    if (savedEvents) {
+      const parsedEvents = JSON.parse(savedEvents);
+      // Filter only pre-production events
+      const preProductionEvents = parsedEvents.filter(
+        (event: ScheduledEvent) => event.stage === "pre-production"
+      );
+      setEvents(preProductionEvents);
     }
-  }, [location, events]);
+  }, []);
   
   // Save events to localStorage whenever they change
   useEffect(() => {
-    localStorage.setItem("events", JSON.stringify(events));
+    if (events.length > 0) {
+      // Get all existing events first
+      const savedEvents = localStorage.getItem("scheduledEvents");
+      let allEvents: ScheduledEvent[] = [];
+      
+      if (savedEvents) {
+        const parsedEvents = JSON.parse(savedEvents);
+        // Filter out pre-production events that are already in our state
+        allEvents = parsedEvents.filter(
+          (event: ScheduledEvent) => 
+            event.stage !== "pre-production" || 
+            !events.some(e => e.id === event.id)
+        );
+      }
+      
+      // Add our pre-production events
+      localStorage.setItem("scheduledEvents", JSON.stringify([...allEvents, ...events]));
+    }
   }, [events]);
   
-  const handleCreateEvent = (newEvent: ScheduledEvent) => {
-    // Add deliverables from the estimate if available
-    const selectedEstimateStr = localStorage.getItem("selectedEstimate");
-    if (selectedEstimateStr) {
-      try {
-        const selectedEstimate = JSON.parse(selectedEstimateStr);
-        if (selectedEstimate.id === newEvent.estimateId && selectedEstimate.deliverables) {
-          newEvent.deliverables = selectedEstimate.deliverables.map(item => ({
-            type: item.toLowerCase().includes('photo') ? 'photos' : 
-                  item.toLowerCase().includes('video') || item.toLowerCase().includes('film') ? 'videos' : 'album',
-            status: 'pending',
-            deliveryDate: new Date(new Date(newEvent.date).getTime() + 14*24*60*60*1000).toISOString().split('T')[0]
-          }));
-        }
-      } catch (error) {
-        console.error("Error adding deliverables from estimate:", error);
-      }
+  // Update selected event when client requirements change
+  useEffect(() => {
+    if (selectedEvent) {
+      setClientRequirements(selectedEvent.clientRequirements || "");
+    } else {
+      setClientRequirements("");
     }
-
-    setEvents(prev => [...prev, newEvent]);
-    setShowCreateEventModal(false);
+  }, [selectedEvent]);
+  
+  const handleSaveRequirements = () => {
+    if (!selectedEvent) return;
+    
+    setEvents(prev => 
+      prev.map(event => 
+        event.id === selectedEvent.id 
+          ? { ...event, clientRequirements } 
+          : event
+      )
+    );
+    
+    setSelectedEvent(prev => 
+      prev ? { ...prev, clientRequirements } : null
+    );
+    
+    toast({
+      title: "Requirements Saved",
+      description: "Client requirements have been updated successfully."
+    });
   };
   
-  const handleAssignTeamMember = (eventId: string, teamMemberId: string, role: string) => {
-    const event = events.find(e => e.id === eventId);
-    const teamMember = teamMembers.find(t => t.id === teamMemberId);
+  const handleAssignTeamMember = async (teamMemberId: string, role: "photographer" | "videographer") => {
+    if (!selectedEvent) return;
     
-    if (event && teamMember) {
+    setLoading(true);
+    
+    try {
+      const teamMember = teamMembers.find(tm => tm.id === teamMemberId);
+      if (!teamMember) throw new Error("Team member not found");
+      
+      // Create a new assignment
       const newAssignment: EventAssignment = {
-        eventId,
-        eventName: event.name,
-        date: event.date,
-        location: event.location,
+        eventId: selectedEvent.id,
+        eventName: selectedEvent.name,
+        date: selectedEvent.date,
+        location: selectedEvent.location,
         teamMemberId,
         status: "pending",
-        notes: `Assigned as ${role}`
+        reportingTime: selectedEvent.startTime
       };
       
-      const updatedEvents = events.map(e => {
-        if (e.id === eventId) {
-          return {
-            ...e,
-            assignments: [...e.assignments, newAssignment]
-          };
-        }
-        return e;
-      });
+      // Add assignment to the event
+      const updatedEvent = {
+        ...selectedEvent,
+        assignments: [...selectedEvent.assignments, newAssignment]
+      };
       
-      setEvents(updatedEvents);
+      // Update events state
+      setEvents(prev => 
+        prev.map(event => 
+          event.id === selectedEvent.id ? updatedEvent : event
+        )
+      );
+      
+      setSelectedEvent(updatedEvent);
+      
+      // Send notification to team member
+      await sendAssignmentNotification(updatedEvent, newAssignment, teamMember);
+      
+      toast({
+        title: "Team Member Assigned",
+        description: `${teamMember.name} has been assigned to the event and notified.`
+      });
+    } catch (error) {
+      console.error("Error assigning team member:", error);
+      toast({
+        title: "Assignment Failed",
+        description: "There was an error assigning the team member.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
     }
   };
   
-  const handleUpdateAssignmentStatus = (eventId: string, teamMemberId: string, status: "accepted" | "declined") => {
-    const updatedEvents = events.map(event => {
-      if (event.id === eventId) {
-        const updatedAssignments = event.assignments.map(assignment => {
-          if (assignment.teamMemberId === teamMemberId) {
-            return {
-              ...assignment,
-              status
-            };
-          }
-          return assignment;
-        });
-        
-        return {
-          ...event,
-          assignments: updatedAssignments
-        };
-      }
-      return event;
-    });
+  const handleMoveToProduction = () => {
+    if (!selectedEvent) return;
     
-    setEvents(updatedEvents);
-  };
-
-  // Get assignment counts by role and status
-  const getAssignmentCounts = (event: ScheduledEvent) => {
-    const acceptedPhotographers = event.assignments.filter(
-      a => {
-        const member = teamMembers.find(m => m.id === a.teamMemberId);
-        return member?.role === "photographer" && a.status === "accepted";
-      }
+    // Check if there are enough team members assigned
+    const photographersAssigned = selectedEvent.assignments.filter(
+      a => teamMembers.find(tm => tm.id === a.teamMemberId)?.role === "photographer"
     ).length;
-
-    const acceptedVideographers = event.assignments.filter(
-      a => {
-        const member = teamMembers.find(m => m.id === a.teamMemberId);
-        return member?.role === "videographer" && a.status === "accepted";
-      }
+    
+    const videographersAssigned = selectedEvent.assignments.filter(
+      a => teamMembers.find(tm => tm.id === a.teamMemberId)?.role === "videographer"
     ).length;
-
-    const pendingPhotographers = event.assignments.filter(
-      a => {
-        const member = teamMembers.find(m => m.id === a.teamMemberId);
-        return member?.role === "photographer" && a.status === "pending";
-      }
-    ).length;
-
-    const pendingVideographers = event.assignments.filter(
-      a => {
-        const member = teamMembers.find(m => m.id === a.teamMemberId);
-        return member?.role === "videographer" && a.status === "pending";
-      }
-    ).length;
-
-    return {
-      acceptedPhotographers,
-      acceptedVideographers,
-      pendingPhotographers,
-      pendingVideographers,
-      totalPhotographers: acceptedPhotographers + pendingPhotographers,
-      totalVideographers: acceptedVideographers + pendingVideographers
+    
+    if (
+      photographersAssigned < selectedEvent.photographersCount ||
+      videographersAssigned < selectedEvent.videographersCount
+    ) {
+      toast({
+        title: "Insufficient Team Members",
+        description: "Please assign the required number of team members before moving to production.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Update event stage to production
+    const updatedEvent = {
+      ...selectedEvent,
+      stage: "production" as const
     };
+    
+    // Update events state
+    setEvents(prev => prev.filter(event => event.id !== selectedEvent.id));
+    
+    // Update all events in localStorage
+    const savedEvents = localStorage.getItem("scheduledEvents");
+    if (savedEvents) {
+      const parsedEvents = JSON.parse(savedEvents);
+      const updatedEvents = parsedEvents.map((event: ScheduledEvent) =>
+        event.id === selectedEvent.id ? updatedEvent : event
+      );
+      localStorage.setItem("scheduledEvents", JSON.stringify(updatedEvents));
+    }
+    
+    setSelectedEvent(null);
+    
+    toast({
+      title: "Event Moved to Production",
+      description: "The event has been moved to the production stage."
+    });
   };
-
-  // Filter events to only show pre-production events
-  const preProductionEvents = events.filter(event => event.stage === "pre-production");
+  
+  const availablePhotographers = teamMembers.filter(
+    tm => tm.role === "photographer" && 
+    (!selectedEvent || !selectedEvent.assignments.some(a => a.teamMemberId === tm.id))
+  );
+  
+  const availableVideographers = teamMembers.filter(
+    tm => tm.role === "videographer" && 
+    (!selectedEvent || !selectedEvent.assignments.some(a => a.teamMemberId === tm.id))
+  );
+  
+  const assignedTeamMembers = selectedEvent
+    ? selectedEvent.assignments.map(assignment => {
+        const teamMember = teamMembers.find(tm => tm.id === assignment.teamMemberId);
+        return { 
+          ...assignment, 
+          teamMember 
+        };
+      })
+    : [];
   
   return (
     <Layout>
@@ -253,166 +270,322 @@ export default function PreProductionPage() {
           <div>
             <h1 className="text-2xl font-semibold">Pre-Production</h1>
             <p className="text-sm text-muted-foreground">
-              Plan and schedule your upcoming events
+              Prepare for upcoming events and assign team members
             </p>
           </div>
-          <Button onClick={() => {
-            setDefaultEventValues(undefined);
-            setShowCreateEventModal(true);
-          }}>
-            <Plus className="h-4 w-4 mr-2" />
-            New Event
-          </Button>
         </div>
         
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-          <div className="lg:col-span-3">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="w-full justify-start mb-4">
-                <TabsTrigger value="scheduling">Scheduling</TabsTrigger>
-                <TabsTrigger value="requirements">Client Requirements</TabsTrigger>
-              </TabsList>
-              
-              {/* Scheduling Tab */}
-              <TabsContent value="scheduling" className="space-y-4">
-                <UpcomingEventsCalendar events={preProductionEvents} />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {/* Event List */}
+          <div className="lg:col-span-1 space-y-4">
+            <h2 className="text-lg font-medium">Upcoming Events</h2>
+            
+            {events.length > 0 ? (
+              events.map(event => (
+                <Card
+                  key={event.id}
+                  className={`p-4 cursor-pointer hover:border-primary transition-colors ${
+                    selectedEvent?.id === event.id ? "border-primary" : ""
+                  }`}
+                  onClick={() => setSelectedEvent(event)}
+                >
+                  <h3 className="font-medium">{event.name}</h3>
+                  <div className="mt-2 space-y-1 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4" />
+                      <span>{new Date(event.date).toLocaleDateString()}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4" />
+                      <span>{event.startTime} - {event.endTime}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4" />
+                      <span>{event.location}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4" />
+                      <span>
+                        {event.photographersCount} Photographer{event.photographersCount !== 1 ? "s" : ""}, 
+                        {event.videographersCount} Videographer{event.videographersCount !== 1 ? "s" : ""}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  {event.estimateId && (
+                    <div className="mt-2 text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-sm inline-block">
+                      From Estimate #{event.estimateId.substring(0, 8)}
+                    </div>
+                  )}
+                  
+                  {event.estimatePackage && (
+                    <div className="mt-1 text-xs bg-green-50 text-green-700 px-2 py-1 rounded-sm inline-block">
+                      {event.estimatePackage}
+                    </div>
+                  )}
+                  
+                  <div className="mt-2">
+                    <span className="text-xs font-medium">
+                      Team Assigned: {event.assignments.length} / {event.photographersCount + event.videographersCount}
+                    </span>
+                  </div>
+                </Card>
+              ))
+            ) : (
+              <div className="text-center p-8 border rounded-md">
+                <p className="text-muted-foreground">No upcoming events in pre-production</p>
+              </div>
+            )}
+          </div>
+          
+          {/* Event Details and Team Assignment */}
+          <div className="lg:col-span-2">
+            {selectedEvent ? (
+              <Tabs defaultValue="details">
+                <TabsList className="w-full">
+                  <TabsTrigger value="details">Event Details</TabsTrigger>
+                  <TabsTrigger value="requirements">Client Requirements</TabsTrigger>
+                  <TabsTrigger value="team">Team Assignment</TabsTrigger>
+                </TabsList>
                 
-                <div className="mt-8">
-                  <h3 className="font-medium text-lg mb-4">Team Assignments</h3>
-                  <EventAssignments 
-                    events={preProductionEvents}
-                    teamMembers={teamMembers} 
-                    onAssign={handleAssignTeamMember}
-                    onUpdateStatus={handleUpdateAssignmentStatus}
-                    getAssignmentCounts={getAssignmentCounts}
-                  />
-                </div>
-              </TabsContent>
-              
-              {/* Client Requirements Tab */}
-              <TabsContent value="requirements" className="space-y-4">
-                <h3 className="font-medium text-lg">Client Requirements & References</h3>
-                
-                {preProductionEvents.length > 0 ? (
-                  preProductionEvents.map(event => (
-                    <div key={event.id} className="border rounded-lg p-4 shadow-sm">
-                      <div className="flex justify-between items-start">
-                        <h4 className="font-medium">{event.name}</h4>
-                        <div className="text-xs bg-indigo-50 text-indigo-700 px-2 py-1 rounded">
-                          {new Date(event.date).toLocaleDateString()}
+                {/* Event Details Tab */}
+                <TabsContent value="details" className="space-y-4">
+                  <Card className="p-6">
+                    <h2 className="text-xl font-semibold mb-4">{selectedEvent.name}</h2>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <h3 className="text-sm font-medium text-muted-foreground mb-2">Event Information</h3>
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <Calendar className="h-4 w-4 text-muted-foreground" />
+                            <span>{new Date(selectedEvent.date).toLocaleDateString()}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Clock className="h-4 w-4 text-muted-foreground" />
+                            <span>{selectedEvent.startTime} - {selectedEvent.endTime}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <MapPin className="h-4 w-4 text-muted-foreground" />
+                            <span>{selectedEvent.location}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Users className="h-4 w-4 text-muted-foreground" />
+                            <span>Approx. {selectedEvent.guestCount || "Unknown"} guests</span>
+                          </div>
                         </div>
                       </div>
-                      <div className="mt-4 space-y-3">
-                        <div>
-                          <h5 className="text-sm font-medium">Client Details</h5>
-                          <p className="text-sm">{event.clientName} • {event.clientPhone}</p>
+                      
+                      <div>
+                        <h3 className="text-sm font-medium text-muted-foreground mb-2">Client Information</h3>
+                        <div className="space-y-2">
+                          <p><span className="font-medium">Name:</span> {selectedEvent.clientName}</p>
+                          <p><span className="font-medium">Phone:</span> {selectedEvent.clientPhone}</p>
+                          <p><span className="font-medium">Email:</span> {selectedEvent.clientEmail || "Not provided"}</p>
                         </div>
-                        <div>
-                          <h5 className="text-sm font-medium">Requirements</h5>
-                          <p className="text-sm">{event.clientRequirements || "No requirements added yet"}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-6">
+                      <h3 className="text-sm font-medium text-muted-foreground mb-2">Team Requirements</h3>
+                      <div className="flex gap-4">
+                        <div className="px-3 py-2 bg-gray-50 rounded-md text-center">
+                          <p className="text-sm font-medium">{selectedEvent.photographersCount}</p>
+                          <p className="text-xs text-muted-foreground">Photographers</p>
                         </div>
-                        <div>
-                          <h5 className="text-sm font-medium">References</h5>
-                          {event.references && event.references.length > 0 ? (
-                            <div className="grid grid-cols-3 gap-2 mt-2">
-                              {event.references.map((ref, index) => (
-                                <div key={index} className="h-20 bg-gray-100 rounded flex items-center justify-center">
-                                  <span className="text-xs text-gray-500">Reference {index + 1}</span>
-                                </div>
-                              ))}
-                            </div>
-                          ) : (
-                            <p className="text-sm text-muted-foreground">No references added</p>
-                          )}
+                        <div className="px-3 py-2 bg-gray-50 rounded-md text-center">
+                          <p className="text-sm font-medium">{selectedEvent.videographersCount}</p>
+                          <p className="text-xs text-muted-foreground">Videographers</p>
                         </div>
-                        {event.deliverables && event.deliverables.length > 0 && (
+                      </div>
+                    </div>
+                    
+                    {selectedEvent.estimateId && (
+                      <div className="mt-6 p-3 bg-blue-50 rounded-md">
+                        <div className="flex items-start gap-2">
+                          <Info className="h-5 w-5 text-blue-600 mt-0.5" />
                           <div>
-                            <h5 className="text-sm font-medium">Deliverables (From Estimate)</h5>
-                            <div className="space-y-2 mt-2">
-                              {event.deliverables.map((deliverable, index) => (
-                                <div key={index} className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                                  <span className="text-sm">{deliverable.type.charAt(0).toUpperCase() + deliverable.type.slice(1)}</span>
-                                  <span className="text-xs px-2 py-1 rounded bg-yellow-100 text-yellow-800">
-                                    {deliverable.status}
-                                  </span>
-                                </div>
-                              ))}
+                            <p className="text-sm font-medium text-blue-800">Based on Approved Estimate</p>
+                            <p className="text-xs text-blue-600">Estimate #{selectedEvent.estimateId}</p>
+                            {selectedEvent.estimatePackage && (
+                              <p className="text-xs text-blue-600 mt-1">Package: {selectedEvent.estimatePackage}</p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {selectedEvent.deliverables && selectedEvent.deliverables.length > 0 && (
+                      <div className="mt-6">
+                        <h3 className="text-sm font-medium text-muted-foreground mb-2">Deliverables</h3>
+                        <ul className="list-disc list-inside text-sm space-y-1">
+                          {selectedEvent.deliverables.map((deliverable, index) => (
+                            <li key={index} className="text-muted-foreground">
+                              {deliverable.type === "photos" ? "Photography" : 
+                               deliverable.type === "videos" ? "Videography" : 
+                               deliverable.type === "album" ? "Wedding Album" : deliverable.type}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </Card>
+                </TabsContent>
+                
+                {/* Client Requirements Tab */}
+                <TabsContent value="requirements" className="space-y-4">
+                  <Card className="p-6">
+                    <h2 className="text-lg font-medium mb-4">Client Requirements</h2>
+                    <div className="space-y-4">
+                      <Textarea
+                        placeholder="Enter client requirements, expectations, and any special instructions..."
+                        value={clientRequirements}
+                        onChange={(e) => setClientRequirements(e.target.value)}
+                        rows={8}
+                      />
+                      <Button onClick={handleSaveRequirements}>Save Requirements</Button>
+                    </div>
+                  </Card>
+                </TabsContent>
+                
+                {/* Team Assignment Tab */}
+                <TabsContent value="team" className="space-y-4">
+                  <Card className="p-6">
+                    <h2 className="text-lg font-medium mb-4">Assigned Team Members</h2>
+                    {assignedTeamMembers.length > 0 ? (
+                      <div className="space-y-3">
+                        {assignedTeamMembers.map((assignment, index) => (
+                          <div 
+                            key={index} 
+                            className="flex justify-between items-center p-3 border rounded-md"
+                          >
+                            <div>
+                              <p className="font-medium">{assignment.teamMember?.name}</p>
+                              <p className="text-sm text-muted-foreground capitalize">{assignment.teamMember?.role}</p>
+                              {assignment.teamMember?.isFreelancer && (
+                                <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full">
+                                  Freelancer
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-sm">
+                              <span className={`px-2 py-1 rounded-full text-xs ${
+                                assignment.status === 'accepted' ? 'bg-green-100 text-green-800' :
+                                assignment.status === 'declined' ? 'bg-red-100 text-red-800' :
+                                assignment.status === 'reassigned' ? 'bg-purple-100 text-purple-800' :
+                                'bg-yellow-100 text-yellow-800'
+                              }`}>
+                                {assignment.status.charAt(0).toUpperCase() + assignment.status.slice(1)}
+                              </span>
                             </div>
                           </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-muted-foreground">No team members assigned yet</p>
+                    )}
+                  </Card>
+                  
+                  <Card className="p-6">
+                    <h2 className="text-lg font-medium mb-4">Assign Team Members</h2>
+                    
+                    <div className="space-y-6">
+                      <div>
+                        <h3 className="text-sm font-medium mb-2">Photographers ({assignedTeamMembers.filter(a => a.teamMember?.role === "photographer").length} / {selectedEvent.photographersCount})</h3>
+                        {availablePhotographers.length > 0 ? (
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {availablePhotographers.map(photographer => (
+                              <div 
+                                key={photographer.id} 
+                                className="p-3 border rounded-md flex justify-between items-center"
+                              >
+                                <div>
+                                  <p className="font-medium">{photographer.name}</p>
+                                  <p className="text-xs text-muted-foreground">{photographer.phone}</p>
+                                  {photographer.isFreelancer && (
+                                    <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full">
+                                      Freelancer
+                                    </span>
+                                  )}
+                                </div>
+                                <Button 
+                                  size="sm" 
+                                  onClick={() => handleAssignTeamMember(photographer.id, "photographer")}
+                                  disabled={loading}
+                                >
+                                  <UserCheck className="h-4 w-4 mr-1" />
+                                  Assign
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-muted-foreground">No more available photographers</p>
+                        )}
+                      </div>
+                      
+                      <div>
+                        <h3 className="text-sm font-medium mb-2">Videographers ({assignedTeamMembers.filter(a => a.teamMember?.role === "videographer").length} / {selectedEvent.videographersCount})</h3>
+                        {availableVideographers.length > 0 ? (
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {availableVideographers.map(videographer => (
+                              <div 
+                                key={videographer.id} 
+                                className="p-3 border rounded-md flex justify-between items-center"
+                              >
+                                <div>
+                                  <p className="font-medium">{videographer.name}</p>
+                                  <p className="text-xs text-muted-foreground">{videographer.phone}</p>
+                                  {videographer.isFreelancer && (
+                                    <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full">
+                                      Freelancer
+                                    </span>
+                                  )}
+                                </div>
+                                <Button 
+                                  size="sm" 
+                                  onClick={() => handleAssignTeamMember(videographer.id, "videographer")}
+                                  disabled={loading}
+                                >
+                                  <UserCheck className="h-4 w-4 mr-1" />
+                                  Assign
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-muted-foreground">No more available videographers</p>
                         )}
                       </div>
                     </div>
-                  ))
-                ) : (
-                  <div className="text-center p-8 border rounded-lg">
-                    <p className="text-muted-foreground">No pre-production events found</p>
+                  </Card>
+                  
+                  <div className="flex justify-end">
+                    <Button 
+                      onClick={handleMoveToProduction}
+                      disabled={
+                        assignedTeamMembers.filter(a => a.teamMember?.role === "photographer").length < selectedEvent.photographersCount ||
+                        assignedTeamMembers.filter(a => a.teamMember?.role === "videographer").length < selectedEvent.videographersCount
+                      }
+                    >
+                      <Send className="h-4 w-4 mr-2" />
+                      Move to Production
+                    </Button>
                   </div>
-                )}
-              </TabsContent>
-            </Tabs>
-          </div>
-          
-          <div className="space-y-4">
-            <div className="p-4 border rounded-lg">
-              <h3 className="font-medium mb-4">Event Overview</h3>
-              <div className="space-y-1">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">Total Events</span>
-                  <span className="font-medium">{preProductionEvents.length}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">This Week</span>
-                  <span className="font-medium">
-                    {preProductionEvents.filter(e => {
-                      const eventDate = new Date(e.date);
-                      const now = new Date();
-                      const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
-                      const endOfWeek = new Date(now.setDate(now.getDate() - now.getDay() + 6));
-                      return eventDate >= startOfWeek && eventDate <= endOfWeek;
-                    }).length}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">Team Assigned</span>
-                  <span className="font-medium">
-                    {preProductionEvents.filter(e => e.assignments.length > 0).length}
-                  </span>
-                </div>
+                </TabsContent>
+              </Tabs>
+            ) : (
+              <div className="border rounded-lg p-12 text-center">
+                <Camera className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-lg font-medium">Select an Event</h3>
+                <p className="text-muted-foreground mt-1">
+                  Select an event from the list to view details and assign team members
+                </p>
               </div>
-            </div>
-            
-            <div className="p-4 border rounded-lg">
-              <h3 className="font-medium mb-4">Upcoming Events</h3>
-              <div className="space-y-4">
-                {preProductionEvents
-                  .filter(event => new Date(event.date) >= new Date())
-                  .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-                  .slice(0, 3)
-                  .map(event => (
-                    <div key={event.id} className="space-y-2 pb-2 border-b last:border-b-0">
-                      <p className="font-medium text-sm">{event.name}</p>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <Calendar className="h-3 w-3" />
-                        <span>{new Date(event.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>
-                      </div>
-                    </div>
-                  ))}
-                
-                {preProductionEvents.filter(event => new Date(event.date) >= new Date()).length === 0 && (
-                  <p className="text-sm text-muted-foreground">No upcoming events</p>
-                )}
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
-      
-      <CreateEventModal 
-        open={showCreateEventModal}
-        onClose={() => setShowCreateEventModal(false)}
-        onCreateEvent={handleCreateEvent}
-        defaultValues={defaultEventValues}
-      />
     </Layout>
   );
 }
