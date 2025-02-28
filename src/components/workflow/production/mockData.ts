@@ -22,12 +22,20 @@ export const mockEvents: ScheduledEvent[] = [
       {
         teamMemberId: "tm-1",
         status: "accepted",
-        notes: "Will handle all photography"
+        notes: "Will handle all photography",
+        eventId: "evt-2",
+        eventName: "Corporate Event - Annual Meeting",
+        date: "2024-05-20",
+        location: "Hyatt Regency, Delhi",
       },
       {
         teamMemberId: "tm-2",
         status: "accepted",
-        notes: "Primary videographer"
+        notes: "Primary videographer",
+        eventId: "evt-2",
+        eventName: "Corporate Event - Annual Meeting",
+        date: "2024-05-20",
+        location: "Hyatt Regency, Delhi",
       }
     ],
     timeTracking: [
@@ -56,7 +64,11 @@ export const mockEvents: ScheduledEvent[] = [
       {
         teamMemberId: "tm-1",
         status: "accepted",
-        notes: "Product shots and stage photos"
+        notes: "Product shots and stage photos",
+        eventId: "evt-3",
+        eventName: "Product Launch - Smartphone XYZ",
+        date: new Date().toISOString().split('T')[0], // Today's date
+        location: "Grand Hotel, Mumbai",
       }
     ],
     timeTracking: []
