@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,7 @@ export function CreateEventModal({
     location: "",
     clientName: "",
     clientPhone: "",
+    clientEmail: "",
     photographersCount: 1,
     videographersCount: 1,
     stage: "pre-production"
@@ -41,8 +43,10 @@ export function CreateEventModal({
   
   // Load approved estimates
   useEffect(() => {
-    const estimates = getApprovedEstimates();
-    setApprovedEstimates(estimates);
+    if (open) {
+      const estimates = getApprovedEstimates();
+      setApprovedEstimates(estimates);
+    }
   }, [open]);
 
   // Load default values if provided
@@ -69,9 +73,11 @@ export function CreateEventModal({
         ...prev,
         clientName: "",
         clientPhone: "",
+        clientEmail: "",
         photographersCount: 1,
         videographersCount: 1,
-        clientRequirements: ""
+        clientRequirements: "",
+        deliverables: []
       }));
       return;
     }
@@ -79,9 +85,13 @@ export function CreateEventModal({
     const selectedEstimate = approvedEstimates.find(est => est.id === estimateId);
     if (selectedEstimate) {
       const eventFromEstimate = createEventFromEstimate(selectedEstimate);
+      
+      // Update the event data with estimate information
       setEventData(prev => ({
         ...prev,
-        ...eventFromEstimate
+        ...eventFromEstimate,
+        // Make sure the estimate ID is preserved
+        estimateId: selectedEstimate.id
       }));
     }
   };
@@ -110,12 +120,14 @@ export function CreateEventModal({
       location: eventData.location || "",
       clientName: eventData.clientName || "",
       clientPhone: eventData.clientPhone || "",
+      clientEmail: eventData.clientEmail || "",
       photographersCount: eventData.photographersCount || 1,
       videographersCount: eventData.videographersCount || 1,
       assignments: [],
       stage: "pre-production",
       clientRequirements: eventData.clientRequirements || "",
-      deliverables: eventData.deliverables || []
+      deliverables: eventData.deliverables || [],
+      estimatePackage: eventData.estimatePackage || ""
     };
     
     onCreateEvent(newEvent);
@@ -133,6 +145,7 @@ export function CreateEventModal({
       location: "",
       clientName: "",
       clientPhone: "",
+      clientEmail: "",
       photographersCount: 1,
       videographersCount: 1,
       stage: "pre-production"

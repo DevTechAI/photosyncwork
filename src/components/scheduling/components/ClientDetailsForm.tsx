@@ -15,41 +15,42 @@ export function ClientDetailsForm({ eventData, setEventData }: ClientDetailsForm
         <Label htmlFor="client-name">Client Name</Label>
         <Input
           id="client-name"
-          value={eventData.clientName}
+          value={eventData.clientName || ""}
           onChange={(e) => setEventData({ ...eventData, clientName: e.target.value })}
           placeholder="Enter client name"
         />
       </div>
       
-      <div className="space-y-2">
-        <Label htmlFor="client-email">Client Email</Label>
-        <Input
-          id="client-email"
-          value={eventData.clientEmail}
-          onChange={(e) => setEventData({ ...eventData, clientEmail: e.target.value })}
-          placeholder="Enter client email"
-          type="email"
-        />
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="client-phone">Phone</Label>
+          <Input
+            id="client-phone"
+            value={eventData.clientPhone || ""}
+            onChange={(e) => setEventData({ ...eventData, clientPhone: e.target.value })}
+            placeholder="Client phone number"
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="client-email">Email</Label>
+          <Input
+            id="client-email"
+            type="email"
+            value={eventData.clientEmail || ""}
+            onChange={(e) => setEventData({ ...eventData, clientEmail: e.target.value })}
+            placeholder="Client email address"
+          />
+        </div>
       </div>
       
       <div className="space-y-2">
-        <Label htmlFor="client-phone">Client Phone</Label>
+        <Label htmlFor="event-guests">Estimated Guest Count</Label>
         <Input
-          id="client-phone"
-          value={eventData.clientPhone}
-          onChange={(e) => setEventData({ ...eventData, clientPhone: e.target.value })}
-          placeholder="Enter client phone number"
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="guest-count">Approximate Guest Count</Label>
-        <Input
-          id="guest-count"
-          value={eventData.guestCount}
+          id="event-guests"
+          value={eventData.guestCount || ""}
           onChange={(e) => setEventData({ ...eventData, guestCount: e.target.value })}
-          placeholder="Enter approximate guest count"
-          type="number"
+          placeholder="Approximate number of guests"
         />
       </div>
     </>
