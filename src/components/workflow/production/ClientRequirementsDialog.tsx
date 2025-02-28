@@ -4,51 +4,41 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
+import { Dispatch, SetStateAction } from "react";
 
 interface ClientRequirementsDialogProps {
   isOpen: boolean;
-  onClose: () => void;
-  eventId: string;
-  initialRequirements?: string;
-  onSave: (eventId: string, requirements: string) => void;
+  onOpenChange: Dispatch<SetStateAction<boolean>>;
+  clientRequirements: string;
 }
 
 export function ClientRequirementsDialog({
   isOpen,
-  onClose,
-  eventId,
-  initialRequirements = "",
-  onSave
+  onOpenChange,
+  clientRequirements
 }: ClientRequirementsDialogProps) {
-  const [requirements, setRequirements] = useState(initialRequirements);
   const { toast } = useToast();
   
-  const handleSave = () => {
-    onSave(eventId, requirements);
-    toast({
-      title: "Requirements Saved",
-      description: "Client requirements have been updated successfully.",
-    });
-    onClose();
+  const handleClose = () => {
+    onOpenChange(false);
   };
   
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Client Requirements</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <Textarea
-            placeholder="Enter client requirements, expectations, and any special instructions..."
-            value={requirements}
-            onChange={(e) => setRequirements(e.target.value)}
+            placeholder="Client requirements and special instructions..."
+            value={clientRequirements}
+            readOnly
             className="min-h-[200px]"
           />
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={handleSave}>Save Requirements</Button>
+          <Button onClick={handleClose}>Close</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
