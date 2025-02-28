@@ -36,6 +36,7 @@ export function createEventFromEstimate(estimate) {
       // Use the first service event for the initial event
       const firstService = selectedPackage.services[0];
       
+      // Add the event name and date from the service
       eventData.name = firstService.event || "";
       eventData.date = firstService.date || "";
       eventData.photographersCount = parseInt(firstService.photographers) || 1;
@@ -60,6 +61,7 @@ export function createEventFromEstimate(estimate) {
     // Legacy format - no packages, use services directly
     const firstService = estimate.services[0];
     
+    // Add the event name and date from the service
     eventData.name = firstService.event || "";
     eventData.date = firstService.date || "";
     eventData.photographersCount = parseInt(firstService.photographers) || 1;
