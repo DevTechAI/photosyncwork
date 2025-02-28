@@ -19,6 +19,8 @@ export function createEventFromEstimate(estimate) {
   const eventData = {
     clientName: estimate.clientName || "",
     clientEmail: estimate.clientEmail || "",
+    name: "",
+    date: "",
     // Default values for required fields
     photographersCount: 1,
     videographersCount: 1,
