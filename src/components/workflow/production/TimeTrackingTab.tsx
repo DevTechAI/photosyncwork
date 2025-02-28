@@ -1,7 +1,79 @@
 
+import { useState } from "react";
 import { ScheduledEvent, TeamMember } from "@/components/scheduling/types";
 import { Button } from "@/components/ui/button";
-import { Clock } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Clock, Plus } from "lucide-react";
+import { Card } from "@/components/ui/card";
+
+interface TimeLogInputProps {
+  event: ScheduledEvent;
+  teamMembers: TeamMember[];
+  onLogTime: (eventId: string, teamMemberId: string, hours: number) => void;
+  onCancel: () => void;
+}
+
+function TimeLogInput({ event, teamMembers, onLogTime, onCancel }: TimeLogInputProps) {
+  const [selectedTeamMemberId, setSelectedTeamMemberId] = useState<string>(
+    event.assignments[0]?.teamMemberId || teamMembers[0]?.id || ""
+  );
+  const [hours, setHours] = useState<number>(1);
+
+  const handleLogTime = () => {
+    if (selectedTeamMemberId && hours > 0) {
+      onLogTime(event.id, selectedTeamMemberId, hours);
+      onCancel();
+    }
+  };
+
+  // Get team members assigned to this event or available
+  const availableTeamMembers = event.assignments.length > 0
+    ? teamMembers.filter(m => event.assignments.some(a => a.teamMemberId === m.id))
+    : teamMembers;
+
+  return (
+    <div className="space-y-4 p-4 bg-gray-50 rounded-md">
+      <div className="space-y-2">
+        <Label htmlFor="team-member">Team Member</Label>
+        <select
+          id="team-member"
+          className="w-full p-2 border rounded"
+          value={selectedTeamMemberId}
+          onChange={e => setSelectedTeamMemberId(e.target.value)}
+        >
+          {availableTeamMembers.map(member => (
+            <option key={member.id} value={member.id}>
+              {member.name} ({member.role})
+            </option>
+          ))}
+        </select>
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="hours">Hours</Label>
+        <Input
+          id="hours"
+          type="number"
+          min="0.5"
+          step="0.5"
+          value={hours}
+          onChange={e => setHours(Number(e.target.value))}
+        />
+      </div>
+      
+      <div className="flex justify-end space-x-2">
+        <Button variant="outline" onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button onClick={handleLogTime}>
+          <Clock className="h-4 w-4 mr-2" />
+          Log Time
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 interface TimeTrackingTabProps {
   events: ScheduledEvent[];
@@ -12,6 +84,7 @@ interface TimeTrackingTabProps {
 export function TimeTrackingTab({ events, teamMembers, onLogTime }: TimeTrackingTabProps) {
   // Filter events to only show production events
   const productionEvents = events.filter(event => event.stage === "production");
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   
   return (
     <div className="space-y-4">
@@ -19,7 +92,7 @@ export function TimeTrackingTab({ events, teamMembers, onLogTime }: TimeTracking
       
       {productionEvents.length > 0 ? (
         productionEvents.map(event => (
-          <div key={event.id} className="border rounded-lg p-4 shadow-sm">
+          <Card key={event.id} className="p-4 shadow-sm">
             <div className="flex justify-between items-start">
               <h4 className="font-medium">{event.name}</h4>
               <div className="text-xs bg-amber-50 text-amber-700 px-2 py-1 rounded">
@@ -30,21 +103,29 @@ export function TimeTrackingTab({ events, teamMembers, onLogTime }: TimeTracking
             <div className="mt-4">
               <div className="flex justify-between items-center mb-2">
                 <h5 className="text-sm font-medium">Team Hours Logged</h5>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => {
-                    const teamMemberId = event.assignments[0]?.teamMemberId || teamMembers[0].id;
-                    onLogTime(event.id, teamMemberId, 1);
-                  }}
-                >
-                  <Clock className="h-3 w-3 mr-1" />
-                  Log Hours
-                </Button>
+                {selectedEventId !== event.id && (
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setSelectedEventId(event.id)}
+                  >
+                    <Plus className="h-3 w-3 mr-1" />
+                    Log Hours
+                  </Button>
+                )}
               </div>
               
+              {selectedEventId === event.id && (
+                <TimeLogInput 
+                  event={event}
+                  teamMembers={teamMembers}
+                  onLogTime={onLogTime}
+                  onCancel={() => setSelectedEventId(null)}
+                />
+              )}
+              
               {event.timeTracking && event.timeTracking.length > 0 ? (
-                <div className="space-y-2">
+                <div className="space-y-2 mt-4">
                   {event.timeTracking.map((timeLog, index) => {
                     const member = teamMembers.find(m => m.id === timeLog.teamMemberId);
                     return (
@@ -55,6 +136,9 @@ export function TimeTrackingTab({ events, teamMembers, onLogTime }: TimeTracking
                         </div>
                         <div className="text-sm font-medium">
                           {timeLog.hoursLogged} hours
+                          <div className="text-xs text-muted-foreground">
+                            {new Date(timeLog.date).toLocaleDateString()}
+                          </div>
                         </div>
                       </div>
                     );
@@ -92,7 +176,7 @@ export function TimeTrackingTab({ events, teamMembers, onLogTime }: TimeTracking
                 <p className="text-sm text-muted-foreground">No team members assigned yet</p>
               )}
             </div>
-          </div>
+          </Card>
         ))
       ) : (
         <div className="text-center p-8 border rounded-lg">

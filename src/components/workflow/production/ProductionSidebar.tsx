@@ -1,6 +1,7 @@
 
 import { ScheduledEvent } from "@/components/scheduling/types";
-import { Camera } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Camera, Clock, Calendar, Users } from "lucide-react";
 
 interface ProductionSidebarProps {
   events: ScheduledEvent[];
@@ -16,60 +17,91 @@ export function ProductionSidebar({ events }: ProductionSidebarProps) {
     return total + event.timeTracking.reduce((sum, log) => sum + log.hoursLogged, 0);
   }, 0);
   
+  // Get today's date as a string (YYYY-MM-DD)
+  const today = new Date().toISOString().split('T')[0];
+  
+  // Get this week's events
+  const thisWeekEvents = productionEvents.filter(e => {
+    const eventDate = new Date(e.date);
+    const now = new Date();
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - now.getDay());
+    startOfWeek.setHours(0, 0, 0, 0);
+    
+    const endOfWeek = new Date(now);
+    endOfWeek.setDate(now.getDate() + (6 - now.getDay()));
+    endOfWeek.setHours(23, 59, 59, 999);
+    
+    return eventDate >= startOfWeek && eventDate <= endOfWeek;
+  });
+  
+  // Get today's events
+  const todayEvents = productionEvents.filter(event => event.date === today);
+  
   return (
     <div className="space-y-4">
-      <div className="p-4 border rounded-lg">
-        <h3 className="font-medium mb-4">Event Overview</h3>
-        <div className="space-y-1">
-          <div className="flex justify-between items-center">
-            <span className="text-sm">Total Events</span>
-            <span className="font-medium">{productionEvents.length}</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-sm">This Week</span>
-            <span className="font-medium">
-              {productionEvents.filter(e => {
-                const eventDate = new Date(e.date);
-                const now = new Date();
-                const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
-                const endOfWeek = new Date(now.setDate(now.getDate() - now.getDay() + 6));
-                return eventDate >= startOfWeek && eventDate <= endOfWeek;
-              }).length}
-            </span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-sm">Total Hours Logged</span>
-            <span className="font-medium">{totalHoursLogged}</span>
-          </div>
-        </div>
-      </div>
-      
-      <div className="p-4 border rounded-lg">
-        <h3 className="font-medium mb-4">Today's Shoots</h3>
-        <div className="space-y-4">
-          {productionEvents
-            .filter(event => {
-              const today = new Date().toISOString().split('T')[0];
-              return event.date === today;
-            })
-            .map(event => (
-              <div key={event.id} className="space-y-2 pb-2 border-b last:border-b-0">
-                <p className="font-medium text-sm">{event.name}</p>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <Camera className="h-3 w-3" />
-                  <span>{event.startTime} - {event.endTime}</span>
-                </div>
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg">Event Overview</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <Camera className="h-4 w-4 mr-2 text-primary" />
+                <span className="text-sm">Total Events</span>
               </div>
-            ))}
-          
-          {productionEvents.filter(event => {
-            const today = new Date().toISOString().split('T')[0];
-            return event.date === today;
-          }).length === 0 && (
-            <p className="text-sm text-muted-foreground">No shoots scheduled today</p>
-          )}
-        </div>
-      </div>
+              <span className="font-medium">{productionEvents.length}</span>
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <Calendar className="h-4 w-4 mr-2 text-primary" />
+                <span className="text-sm">This Week</span>
+              </div>
+              <span className="font-medium">{thisWeekEvents.length}</span>
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <Clock className="h-4 w-4 mr-2 text-primary" />
+                <span className="text-sm">Total Hours</span>
+              </div>
+              <span className="font-medium">{totalHoursLogged}</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg">Today's Shoots</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {todayEvents.length > 0 ? (
+              todayEvents.map(event => (
+                <div key={event.id} className="space-y-2 pb-3 border-b last:border-b-0 last:pb-0">
+                  <div className="font-medium text-sm">{event.name}</div>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <Clock className="h-3 w-3" />
+                    <span>{event.startTime} - {event.endTime}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <Users className="h-3 w-3" />
+                    <span>
+                      {event.photographersCount} Photographer{event.photographersCount !== 1 ? "s" : ""}, 
+                      {event.videographersCount} Videographer{event.videographersCount !== 1 ? "s" : ""}
+                    </span>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-muted-foreground">No shoots scheduled today</p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

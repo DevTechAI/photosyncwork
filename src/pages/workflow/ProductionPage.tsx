@@ -1,11 +1,9 @@
 
 import Layout from "@/components/Layout";
 import { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScheduledEvent, TeamMember } from "@/components/scheduling/types";
-import { TimeTrackingTab } from "@/components/workflow/production/TimeTrackingTab";
-import { ProductionNotesTab } from "@/components/workflow/production/ProductionNotesTab";
 import { ProductionSidebar } from "@/components/workflow/production/ProductionSidebar";
+import { ProductionDetailsTabs } from "@/components/workflow/production/ProductionDetailsTabs";
 import { mockEvents, mockTeamMembers } from "@/components/workflow/production/mockData";
 
 export default function ProductionPage() {
@@ -70,26 +68,13 @@ export default function ProductionPage() {
         
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
           <div className="lg:col-span-3">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="w-full justify-start mb-4">
-                <TabsTrigger value="tracking">Time Tracking</TabsTrigger>
-                <TabsTrigger value="notes">Production Notes</TabsTrigger>
-              </TabsList>
-              
-              {/* Time Tracking Tab */}
-              <TabsContent value="tracking">
-                <TimeTrackingTab 
-                  events={events} 
-                  teamMembers={teamMembers} 
-                  onLogTime={handleLogTime} 
-                />
-              </TabsContent>
-              
-              {/* Production Notes Tab */}
-              <TabsContent value="notes">
-                <ProductionNotesTab events={events} />
-              </TabsContent>
-            </Tabs>
+            <ProductionDetailsTabs
+              events={events}
+              teamMembers={teamMembers}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              onLogTime={handleLogTime}
+            />
           </div>
           
           <div>
