@@ -1,4 +1,5 @@
 
+import { useState } from "react";
 import { ScheduledEvent, TeamMember } from "@/components/scheduling/types";
 import { useTeamNotifications } from "@/components/scheduling/utils/notificationHelpers";
 import { useToast } from "@/components/ui/use-toast";
