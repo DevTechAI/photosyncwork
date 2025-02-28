@@ -1,12 +1,12 @@
 
 import Layout from "@/components/Layout";
-import { useState, useEffect } from "react";
-import { useToast } from "@/components/ui/use-toast";
-import { ScheduledEvent, TeamMember } from "@/components/scheduling/types";
-import { useTeamNotifications } from "@/components/scheduling/utils/notificationHelpers";
+import { useState } from "react";
+import { TeamMember } from "@/components/scheduling/types";
 import { PreProductionEventList } from "@/components/workflow/pre-production/PreProductionEventList";
 import { EventDetailsTabs } from "@/components/workflow/pre-production/EventDetailsTabs";
-import { createEventsFromApprovedEstimates, getEventsByStage } from "@/components/scheduling/utils/eventHelpers";
+import { usePreProductionEvents } from "@/hooks/usePreProductionEvents";
+import { useClientRequirements } from "@/hooks/useClientRequirements";
+import { useTeamAssignmentHandlers, getAvailableTeamMembers, getAssignedTeamMembers } from "@/utils/teamAssignmentUtils";
 
 // Mock data for demonstration
 const mockTeamMembers: TeamMember[] = [
@@ -51,208 +51,30 @@ const mockTeamMembers: TeamMember[] = [
 ];
 
 export default function PreProductionPage() {
-  const { toast } = useToast();
-  const { sendAssignmentNotification } = useTeamNotifications();
-  
-  const [events, setEvents] = useState<ScheduledEvent[]>([]);
+  // Team members data
   const [teamMembers] = useState<TeamMember[]>(mockTeamMembers);
-  const [selectedEvent, setSelectedEvent] = useState<ScheduledEvent | null>(null);
-  const [clientRequirements, setClientRequirements] = useState("");
-  const [loading, setLoading] = useState(false);
   
-  // Load events from localStorage on mount and check for approved estimates
-  useEffect(() => {
-    // First, check for any approved estimates that need to be converted to events
-    const newEvents = createEventsFromApprovedEstimates();
-    
-    if (newEvents.length > 0) {
-      toast({
-        title: "New Events Created",
-        description: `${newEvents.length} new event(s) created from approved estimates.`
-      });
-    }
-    
-    // Get all pre-production events
-    const preProductionEvents = getEventsByStage("pre-production");
-    setEvents(preProductionEvents);
-  }, [toast]);
+  // Events management hook
+  const { events, setEvents, selectedEvent, setSelectedEvent } = usePreProductionEvents();
   
-  // Save events to localStorage whenever they change
-  useEffect(() => {
-    if (events.length > 0) {
-      // Get all existing events first
-      const savedEvents = localStorage.getItem("scheduledEvents");
-      let allEvents: ScheduledEvent[] = [];
-      
-      if (savedEvents) {
-        const parsedEvents = JSON.parse(savedEvents);
-        // Filter out pre-production events that are already in our state
-        allEvents = parsedEvents.filter(
-          (event: ScheduledEvent) => 
-            event.stage !== "pre-production" || 
-            !events.some(e => e.id === event.id)
-        );
-      }
-      
-      // Add our pre-production events
-      localStorage.setItem("scheduledEvents", JSON.stringify([...allEvents, ...events]));
-    }
-  }, [events]);
+  // Client requirements hook
+  const { 
+    clientRequirements, 
+    setClientRequirements, 
+    handleSaveRequirements 
+  } = useClientRequirements(selectedEvent, setEvents, setSelectedEvent);
   
-  // Update selected event when client requirements change
-  useEffect(() => {
-    if (selectedEvent) {
-      setClientRequirements(selectedEvent.clientRequirements || "");
-    } else {
-      setClientRequirements("");
-    }
-  }, [selectedEvent]);
+  // Team assignment handlers
+  const { 
+    loading, 
+    handleAssignTeamMember, 
+    handleMoveToProduction 
+  } = useTeamAssignmentHandlers(events, setEvents, selectedEvent, setSelectedEvent, teamMembers);
   
-  const handleSaveRequirements = () => {
-    if (!selectedEvent) return;
-    
-    setEvents(prev => 
-      prev.map(event => 
-        event.id === selectedEvent.id 
-          ? { ...event, clientRequirements } 
-          : event
-      )
-    );
-    
-    setSelectedEvent(prev => 
-      prev ? { ...prev, clientRequirements } : null
-    );
-    
-    toast({
-      title: "Requirements Saved",
-      description: "Client requirements have been updated successfully."
-    });
-  };
-  
-  const handleAssignTeamMember = async (teamMemberId: string, role: "photographer" | "videographer") => {
-    if (!selectedEvent) return;
-    
-    setLoading(true);
-    
-    try {
-      const teamMember = teamMembers.find(tm => tm.id === teamMemberId);
-      if (!teamMember) throw new Error("Team member not found");
-      
-      // Create a new assignment
-      const newAssignment = {
-        eventId: selectedEvent.id,
-        eventName: selectedEvent.name,
-        date: selectedEvent.date,
-        location: selectedEvent.location,
-        teamMemberId,
-        status: "pending" as const,
-        reportingTime: selectedEvent.startTime
-      };
-      
-      // Add assignment to the event
-      const updatedEvent = {
-        ...selectedEvent,
-        assignments: [...selectedEvent.assignments, newAssignment]
-      };
-      
-      // Update events state
-      setEvents(prev => 
-        prev.map(event => 
-          event.id === selectedEvent.id ? updatedEvent : event
-        )
-      );
-      
-      setSelectedEvent(updatedEvent);
-      
-      // Send notification to team member
-      await sendAssignmentNotification(updatedEvent, newAssignment, teamMember);
-      
-      toast({
-        title: "Team Member Assigned",
-        description: `${teamMember.name} has been assigned to the event and notified.`
-      });
-    } catch (error) {
-      console.error("Error assigning team member:", error);
-      toast({
-        title: "Assignment Failed",
-        description: "There was an error assigning the team member.",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  const handleMoveToProduction = () => {
-    if (!selectedEvent) return;
-    
-    // Check if there are enough team members assigned
-    const photographersAssigned = selectedEvent.assignments.filter(
-      a => teamMembers.find(tm => tm.id === a.teamMemberId)?.role === "photographer"
-    ).length;
-    
-    const videographersAssigned = selectedEvent.assignments.filter(
-      a => teamMembers.find(tm => tm.id === a.teamMemberId)?.role === "videographer"
-    ).length;
-    
-    if (
-      photographersAssigned < selectedEvent.photographersCount ||
-      videographersAssigned < selectedEvent.videographersCount
-    ) {
-      toast({
-        title: "Insufficient Team Members",
-        description: "Please assign the required number of team members before moving to production.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    // Update event stage to production
-    const updatedEvent = {
-      ...selectedEvent,
-      stage: "production" as const
-    };
-    
-    // Update events state
-    setEvents(prev => prev.filter(event => event.id !== selectedEvent.id));
-    
-    // Update all events in localStorage
-    const savedEvents = localStorage.getItem("scheduledEvents");
-    if (savedEvents) {
-      const parsedEvents = JSON.parse(savedEvents);
-      const updatedEvents = parsedEvents.map((event: ScheduledEvent) =>
-        event.id === selectedEvent.id ? updatedEvent : event
-      );
-      localStorage.setItem("scheduledEvents", JSON.stringify(updatedEvents));
-    }
-    
-    setSelectedEvent(null);
-    
-    toast({
-      title: "Event Moved to Production",
-      description: "The event has been moved to the production stage."
-    });
-  };
-  
-  const availablePhotographers = teamMembers.filter(
-    tm => tm.role === "photographer" && 
-    (!selectedEvent || !selectedEvent.assignments.some(a => a.teamMemberId === tm.id))
-  );
-  
-  const availableVideographers = teamMembers.filter(
-    tm => tm.role === "videographer" && 
-    (!selectedEvent || !selectedEvent.assignments.some(a => a.teamMemberId === tm.id))
-  );
-  
-  const assignedTeamMembers = selectedEvent
-    ? selectedEvent.assignments.map(assignment => {
-        const teamMember = teamMembers.find(tm => tm.id === assignment.teamMemberId);
-        return { 
-          ...assignment, 
-          teamMember 
-        };
-      })
-    : [];
+  // Filter team members
+  const availablePhotographers = getAvailableTeamMembers(teamMembers, selectedEvent, "photographer");
+  const availableVideographers = getAvailableTeamMembers(teamMembers, selectedEvent, "videographer");
+  const assignedTeamMembers = getAssignedTeamMembers(selectedEvent, teamMembers);
   
   return (
     <Layout>
