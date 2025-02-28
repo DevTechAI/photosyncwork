@@ -85,6 +85,12 @@ const handler = async (req: Request): Promise<Response> => {
     const formatDeliverablesHTML = (deliverables) => {
       if (!deliverables || deliverables.length === 0) return '<p>No deliverables specified</p>';
       
+      // Check if deliverables is an array (it should be)
+      if (!Array.isArray(deliverables)) {
+        console.warn("Deliverables is not an array:", deliverables);
+        return '<p>Deliverables information unavailable</p>';
+      }
+      
       return `
         <ul>
           ${deliverables.map(item => `<li>${item}</li>`).join('')}
@@ -104,28 +110,33 @@ const handler = async (req: Request): Promise<Response> => {
     }];
     
     // Generate all package HTML sections
-    const packagesHTML = packagesToRender.map((pkg, index) => `
-      <div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
-        <h2 style="color: #333; margin-top: 0; font-size: 18px; border-bottom: 1px solid #e5e7eb; padding-bottom: 10px;">
-          ${hasPackages ? `Package Option ${index + 1}${pkg.name ? `: ${pkg.name}` : ''}` : 'Package Details'}
-        </h2>
-        
-        <div style="margin-bottom: 15px;">
-          <h3 style="color: #333; font-size: 16px; margin-bottom: 10px;">Services:</h3>
-          ${formatServicesHTML(pkg.services)}
+    const packagesHTML = packagesToRender.map((pkg, index) => {
+      // Ensure deliverables is properly handled (could be circular reference in JSON)
+      const pkgDeliverables = Array.isArray(pkg.deliverables) ? pkg.deliverables : deliverables || [];
+      
+      return `
+        <div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+          <h2 style="color: #333; margin-top: 0; font-size: 18px; border-bottom: 1px solid #e5e7eb; padding-bottom: 10px;">
+            ${hasPackages ? `Package Option ${index + 1}${pkg.name ? `: ${pkg.name}` : ''}` : 'Package Details'}
+          </h2>
+          
+          <div style="margin-bottom: 15px;">
+            <h3 style="color: #333; font-size: 16px; margin-bottom: 10px;">Services:</h3>
+            ${formatServicesHTML(pkg.services)}
+          </div>
+          
+          <div style="margin-bottom: 15px;">
+            <h3 style="color: #333; font-size: 16px; margin-bottom: 10px;">Deliverables:</h3>
+            ${formatDeliverablesHTML(pkgDeliverables)}
+          </div>
+          
+          <div style="text-align: right; border-top: 1px solid #e5e7eb; padding-top: 10px; margin-top: 10px;">
+            <span style="font-weight: bold;">Package Total: </span>
+            <span style="font-size: 18px; font-weight: bold;">${pkg.amount}</span>
+          </div>
         </div>
-        
-        <div style="margin-bottom: 15px;">
-          <h3 style="color: #333; font-size: 16px; margin-bottom: 10px;">Deliverables:</h3>
-          ${formatDeliverablesHTML(pkg.deliverables)}
-        </div>
-        
-        <div style="text-align: right; border-top: 1px solid #e5e7eb; padding-top: 10px; margin-top: 10px;">
-          <span style="font-weight: bold;">Package Total: </span>
-          <span style="font-size: 18px; font-weight: bold;">${pkg.amount}</span>
-        </div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
 
     // Create email HTML template WITHOUT approve/decline buttons
     const emailHTML = `
