@@ -1,6 +1,7 @@
 
 import { useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
+import { createEventsFromApprovedEstimates } from "@/components/scheduling/utils/eventHelpers";
 
 interface StatusCheckerProps {
   isActive: boolean;
@@ -27,6 +28,17 @@ export function StatusChecker({ isActive, estimate, onStatusChange }: StatusChec
           
           if (updatedEstimate && updatedEstimate.status === 'approved') {
             onStatusChange(estimate.id, 'approved');
+            
+            // Create events from approved estimates
+            const newEvents = createEventsFromApprovedEstimates();
+            
+            if (newEvents.length > 0) {
+              toast({
+                title: "Event Created",
+                description: "This estimate has been converted to an event in pre-production.",
+              });
+            }
+            
             toast({
               title: "Estimate Approved!",
               description: "The client has approved the estimate.",

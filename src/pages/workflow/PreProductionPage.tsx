@@ -6,6 +6,7 @@ import { ScheduledEvent, TeamMember } from "@/components/scheduling/types";
 import { useTeamNotifications } from "@/components/scheduling/utils/notificationHelpers";
 import { PreProductionEventList } from "@/components/workflow/pre-production/PreProductionEventList";
 import { EventDetailsTabs } from "@/components/workflow/pre-production/EventDetailsTabs";
+import { createEventsFromApprovedEstimates, getEventsByStage } from "@/components/scheduling/utils/eventHelpers";
 
 // Mock data for demonstration
 const mockTeamMembers: TeamMember[] = [
@@ -59,18 +60,22 @@ export default function PreProductionPage() {
   const [clientRequirements, setClientRequirements] = useState("");
   const [loading, setLoading] = useState(false);
   
-  // Load events from localStorage on mount
+  // Load events from localStorage on mount and check for approved estimates
   useEffect(() => {
-    const savedEvents = localStorage.getItem("scheduledEvents");
-    if (savedEvents) {
-      const parsedEvents = JSON.parse(savedEvents);
-      // Filter only pre-production events
-      const preProductionEvents = parsedEvents.filter(
-        (event: ScheduledEvent) => event.stage === "pre-production"
-      );
-      setEvents(preProductionEvents);
+    // First, check for any approved estimates that need to be converted to events
+    const newEvents = createEventsFromApprovedEstimates();
+    
+    if (newEvents.length > 0) {
+      toast({
+        title: "New Events Created",
+        description: `${newEvents.length} new event(s) created from approved estimates.`
+      });
     }
-  }, []);
+    
+    // Get all pre-production events
+    const preProductionEvents = getEventsByStage("pre-production");
+    setEvents(preProductionEvents);
+  }, [toast]);
   
   // Save events to localStorage whenever they change
   useEffect(() => {

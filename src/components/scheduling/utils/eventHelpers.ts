@@ -1,5 +1,6 @@
 
 import { ScheduledEvent, TeamMember, EventAssignment } from "../types";
+import { createEventFromEstimate } from "./estimatesHelpers";
 
 // Get all scheduled events from localStorage
 export function getAllEvents(): ScheduledEvent[] {
@@ -66,57 +67,56 @@ export function updateEventStage(eventId: string, newStage: "pre-production" | "
   return null;
 }
 
-// Update assignment status
-export function updateAssignmentStatus(
-  eventId: string, 
-  teamMemberId: string, 
-  status: "pending" | "accepted" | "declined" | "reassigned"
-): ScheduledEvent | null {
-  const allEvents = getAllEvents();
-  const eventIndex = allEvents.findIndex(e => e.id === eventId);
+// Convert approved estimates to events
+export function createEventsFromApprovedEstimates(): ScheduledEvent[] {
+  const savedEstimates = localStorage.getItem("estimates");
+  if (!savedEstimates) return [];
   
-  if (eventIndex >= 0) {
-    const event = allEvents[eventIndex];
-    const assignmentIndex = event.assignments.findIndex(
-      a => a.teamMemberId === teamMemberId && a.eventId === eventId
-    );
+  const allEstimates = JSON.parse(savedEstimates);
+  const approvedEstimates = allEstimates.filter(estimate => estimate.status === "approved");
+  
+  const allEvents = getAllEvents();
+  const newEvents: ScheduledEvent[] = [];
+  
+  // Process each approved estimate
+  approvedEstimates.forEach(estimate => {
+    // Check if this estimate already has an event
+    const existingEvent = allEvents.find(event => event.estimateId === estimate.id);
     
-    if (assignmentIndex >= 0) {
-      const updatedAssignments = [...event.assignments];
-      updatedAssignments[assignmentIndex] = {
-        ...updatedAssignments[assignmentIndex],
-        status
+    if (!existingEvent) {
+      // Create event data from the estimate
+      const eventData = createEventFromEstimate(estimate);
+      
+      // Generate a new event with required fields
+      const newEvent: ScheduledEvent = {
+        id: `evt-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+        estimateId: estimate.id,
+        name: eventData.name || `Event for ${estimate.clientName}`,
+        date: eventData.date || new Date().toISOString().split('T')[0],
+        startTime: "09:00",
+        endTime: "17:00",
+        location: "To be determined",
+        clientName: estimate.clientName,
+        clientPhone: "",
+        clientEmail: estimate.clientEmail || "",
+        photographersCount: eventData.photographersCount || 1,
+        videographersCount: eventData.videographersCount || 1,
+        assignments: [],
+        stage: "pre-production",
+        clientRequirements: "",
+        deliverables: eventData.deliverables || [],
+        estimatePackage: eventData.estimatePackage || ""
       };
       
-      const updatedEvent = {
-        ...event,
-        assignments: updatedAssignments
-      };
-      
-      allEvents[eventIndex] = updatedEvent;
-      localStorage.setItem("scheduledEvents", JSON.stringify(allEvents));
-      
-      return updatedEvent;
+      newEvents.push(newEvent);
     }
+  });
+  
+  // Save new events if any were created
+  if (newEvents.length > 0) {
+    const updatedAllEvents = [...allEvents, ...newEvents];
+    localStorage.setItem("scheduledEvents", JSON.stringify(updatedAllEvents));
   }
   
-  return null;
-}
-
-// Check if all photographers and videographers have accepted their assignments
-export function areAllTeamMembersConfirmed(event: ScheduledEvent, teamMembers: TeamMember[]): boolean {
-  const photographerAssignments = event.assignments.filter(
-    a => teamMembers.find(tm => tm.id === a.teamMemberId)?.role === "photographer"
-  );
-  
-  const videographerAssignments = event.assignments.filter(
-    a => teamMembers.find(tm => tm.id === a.teamMemberId)?.role === "videographer"
-  );
-  
-  return (
-    photographerAssignments.length >= event.photographersCount &&
-    videographerAssignments.length >= event.videographersCount &&
-    photographerAssignments.every(a => a.status === "accepted") &&
-    videographerAssignments.every(a => a.status === "accepted")
-  );
+  return newEvents;
 }
