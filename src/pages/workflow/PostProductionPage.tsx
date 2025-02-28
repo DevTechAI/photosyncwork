@@ -3,19 +3,19 @@ import Layout from "@/components/Layout";
 import { Card } from "@/components/ui/card";
 import { Film } from "lucide-react";
 import { useState, useEffect } from "react";
-import { ScheduledEvent } from "@/components/scheduling/types";
+import { ScheduledEvent, TeamMember } from "@/components/scheduling/types";
 import { PostProductionEventList } from "@/components/workflow/post-production/PostProductionEventList";
 import { PostProductionEventDetails } from "@/components/workflow/post-production/PostProductionEventDetails";
 import { PostProductionDeliverables } from "@/components/workflow/post-production/PostProductionDeliverables";
-import { mockTeamMembers } from "@/components/workflow/post-production/mockData";
 
 export default function PostProductionPage() {
   const [events, setEvents] = useState<ScheduledEvent[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<ScheduledEvent | null>(null);
-  const [teamMembers] = useState(mockTeamMembers);
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   
-  // Load events from localStorage on mount
+  // Load events and team members from localStorage on mount
   useEffect(() => {
+    // Load events
     const savedEvents = localStorage.getItem("scheduledEvents");
     if (savedEvents) {
       const parsedEvents = JSON.parse(savedEvents);
@@ -24,6 +24,12 @@ export default function PostProductionPage() {
         (event: ScheduledEvent) => event.stage === "post-production"
       );
       setEvents(postProductionEvents);
+    }
+    
+    // Load team members
+    const savedTeamMembers = localStorage.getItem("teamMembers");
+    if (savedTeamMembers) {
+      setTeamMembers(JSON.parse(savedTeamMembers));
     }
   }, []);
   
@@ -61,6 +67,11 @@ export default function PostProductionPage() {
           event.id === updatedEvent.id ? updatedEvent : event
         )
       );
+    }
+    
+    // If the updated event is the selected one, update that too
+    if (selectedEvent && selectedEvent.id === updatedEvent.id) {
+      setSelectedEvent(updatedEvent.stage === "completed" ? null : updatedEvent);
     }
   };
   

@@ -65,7 +65,7 @@ export function ProductionNotesTab({
       </Card>
       
       <ClientRequirementsDialog
-        open={showClientRequirements}
+        isOpen={showClientRequirements}
         onOpenChange={setShowClientRequirements}
         clientRequirements={event.clientRequirements || "No specific requirements provided."}
       />
