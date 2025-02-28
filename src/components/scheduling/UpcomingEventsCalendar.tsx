@@ -1,9 +1,11 @@
+
 import { Card } from "@/components/ui/card";
 import { ScheduledEvent } from "./types";
 import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { format, addDays, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, parseISO } from "date-fns";
+import { format, addDays, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, parseISO, isAfter } from "date-fns";
 import { Slider } from "@/components/ui/slider";
+import { processEventsWorkflow } from "@/utils/teamAssignmentUtils";
 
 interface UpcomingEventsCalendarProps {
   events: ScheduledEvent[];
@@ -13,6 +15,14 @@ export function UpcomingEventsCalendar({ events }: UpcomingEventsCalendarProps) 
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [weekDays, setWeekDays] = useState<Date[]>([]);
   const [hourRange, setHourRange] = useState<[number, number]>([8, 18]); // Default 8am-6pm
+  const [processedEvents, setProcessedEvents] = useState<ScheduledEvent[]>(events);
+  
+  // Process events on initial load and when events change
+  useEffect(() => {
+    // Process events through the workflow to update stages based on dates
+    const updatedEvents = processEventsWorkflow(events);
+    setProcessedEvents(updatedEvents);
+  }, [events]);
   
   // Update week days when selected date changes
   useEffect(() => {
@@ -32,7 +42,7 @@ export function UpcomingEventsCalendar({ events }: UpcomingEventsCalendarProps) 
   };
   
   // Filter events for the selected day
-  const dayEvents = events.filter(event => 
+  const dayEvents = processedEvents.filter(event => 
     weekDays.some(day => isSameDay(parseISO(event.date), day))
   );
   
@@ -84,6 +94,18 @@ export function UpcomingEventsCalendar({ events }: UpcomingEventsCalendarProps) 
       height,
       color
     };
+  };
+  
+  // Get event status based on date and stage
+  const getEventStatus = (event: ScheduledEvent) => {
+    const today = new Date();
+    const eventDate = parseISO(event.date);
+    
+    if (isAfter(today, eventDate)) {
+      return event.stage === "pre-production" ? "Pending Completion" : "Completed";
+    }
+    
+    return event.stage === "pre-production" ? "Upcoming" : "In Progress";
   };
   
   return (
@@ -174,6 +196,14 @@ export function UpcomingEventsCalendar({ events }: UpcomingEventsCalendarProps) 
             const colorIndex = Math.floor(event.id.charCodeAt(0) % colors.length);
             const borderColor = `border-${colors[colorIndex]}-500`;
             
+            // Get status badge color
+            const status = getEventStatus(event);
+            const statusColor = 
+              status === "Completed" ? "bg-green-100 text-green-800" :
+              status === "In Progress" ? "bg-blue-100 text-blue-800" :
+              status === "Pending Completion" ? "bg-yellow-100 text-yellow-800" :
+              "bg-gray-100 text-gray-800";
+            
             return (
               <div
                 key={eventIndex}
@@ -186,6 +216,9 @@ export function UpcomingEventsCalendar({ events }: UpcomingEventsCalendarProps) 
                 <div className="font-medium text-sm truncate">{event.name}</div>
                 <div className="text-xs text-gray-500">{event.startTime} - {event.endTime}</div>
                 <div className="text-xs text-gray-500 truncate">{event.location}</div>
+                <div className={`mt-1 text-xs px-1.5 py-0.5 rounded-sm inline-block ${statusColor}`}>
+                  {status}
+                </div>
               </div>
             );
           })}
@@ -204,27 +237,41 @@ export function UpcomingEventsCalendar({ events }: UpcomingEventsCalendarProps) 
         </h3>
         
         <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
-          {events
+          {processedEvents
             .filter(event => isSameDay(parseISO(event.date), selectedDate))
-            .map(event => (
-              <div key={event.id} className="p-3 border border-gray-100 rounded-md hover:bg-gray-50 transition-colors duration-200">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h4 className="font-medium">{event.name}</h4>
-                    <p className="text-sm text-muted-foreground">{event.startTime} - {event.endTime}</p>
+            .map(event => {
+              const status = getEventStatus(event);
+              const statusColor = 
+                status === "Completed" ? "bg-green-100 text-green-800" :
+                status === "In Progress" ? "bg-blue-100 text-blue-800" :
+                status === "Pending Completion" ? "bg-yellow-100 text-yellow-800" :
+                "bg-gray-100 text-gray-800";
+                
+              return (
+                <div key={event.id} className="p-3 border border-gray-100 rounded-md hover:bg-gray-50 transition-colors duration-200">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h4 className="font-medium">{event.name}</h4>
+                      <p className="text-sm text-muted-foreground">{event.startTime} - {event.endTime}</p>
+                    </div>
+                    <div className="flex flex-col gap-1 items-end">
+                      <div className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
+                        {event.photographersCount} P, {event.videographersCount} V
+                      </div>
+                      <div className={`text-xs px-2 py-1 rounded ${statusColor}`}>
+                        {status}
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                    {event.photographersCount} P, {event.videographersCount} V
+                  <div className="mt-2 text-sm">
+                    <p>{event.location}</p>
+                    <p className="text-muted-foreground mt-1">Client: {event.clientName}</p>
                   </div>
                 </div>
-                <div className="mt-2 text-sm">
-                  <p>{event.location}</p>
-                  <p className="text-muted-foreground mt-1">Client: {event.clientName}</p>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           
-          {events.filter(event => isSameDay(parseISO(event.date), selectedDate)).length === 0 && (
+          {processedEvents.filter(event => isSameDay(parseISO(event.date), selectedDate)).length === 0 && (
             <div className="text-center p-6">
               <p className="text-muted-foreground">No events scheduled for this date</p>
             </div>

@@ -3,6 +3,8 @@ import { useState } from "react";
 import { ScheduledEvent, TeamMember } from "@/components/scheduling/types";
 import { useTeamNotifications } from "@/components/scheduling/utils/notificationHelpers";
 import { useToast } from "@/components/ui/use-toast";
+import { updateEventStage } from "@/components/scheduling/utils/eventHelpers";
+import { format, isAfter, parseISO } from "date-fns";
 
 export function getAvailableTeamMembers(
   teamMembers: TeamMember[],
@@ -28,6 +30,47 @@ export function getAssignedTeamMembers(
         };
       })
     : [];
+}
+
+// Process events based on dates and update their stages accordingly
+export function processEventsWorkflow(events: ScheduledEvent[]): ScheduledEvent[] {
+  const today = new Date();
+  const updatedEvents = [...events];
+  let hasChanges = false;
+
+  // Check if any events need to move to the next stage based on date
+  updatedEvents.forEach(event => {
+    const eventDate = parseISO(event.date);
+    
+    // If event date has passed and it's still in pre-production, move it to post-production
+    if (isAfter(today, eventDate) && event.stage === "pre-production") {
+      console.log(`Moving event ${event.name} from pre-production to post-production`);
+      event.stage = "post-production";
+      hasChanges = true;
+    }
+  });
+
+  // If we made changes, save to localStorage
+  if (hasChanges) {
+    const allEvents = getAllEventsFromStorage();
+    
+    // Update the events in storage
+    const updatedAllEvents = allEvents.map(existingEvent => {
+      const updatedEvent = updatedEvents.find(e => e.id === existingEvent.id);
+      return updatedEvent || existingEvent;
+    });
+    
+    localStorage.setItem("scheduledEvents", JSON.stringify(updatedAllEvents));
+  }
+
+  return updatedEvents;
+}
+
+// Helper to get all events from storage
+function getAllEventsFromStorage(): ScheduledEvent[] {
+  const savedEvents = localStorage.getItem("scheduledEvents");
+  if (!savedEvents) return [];
+  return JSON.parse(savedEvents);
 }
 
 export function useTeamAssignmentHandlers(

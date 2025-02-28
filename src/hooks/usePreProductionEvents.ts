@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { ScheduledEvent } from "@/components/scheduling/types";
 import { useToast } from "@/components/ui/use-toast";
 import { createEventsFromApprovedEstimates, getEventsByStage } from "@/components/scheduling/utils/eventHelpers";
+import { processEventsWorkflow } from "@/utils/teamAssignmentUtils";
 
 export function usePreProductionEvents() {
   const { toast } = useToast();
@@ -22,7 +23,12 @@ export function usePreProductionEvents() {
     }
     
     // Get all pre-production events
-    const preProductionEvents = getEventsByStage("pre-production");
+    let preProductionEvents = getEventsByStage("pre-production");
+    
+    // Process events based on dates - this will move events to the next stage if needed
+    preProductionEvents = processEventsWorkflow(preProductionEvents);
+    
+    // Set pre-production events in the state
     setEvents(preProductionEvents);
   }, [toast]);
   
