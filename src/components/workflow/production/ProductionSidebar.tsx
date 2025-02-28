@@ -1,107 +1,92 @@
 
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Calendar, Clock, MapPin, ChevronRight } from "lucide-react";
 import { ScheduledEvent } from "@/components/scheduling/types";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Camera, Clock, Calendar, Users } from "lucide-react";
 
 interface ProductionSidebarProps {
   events: ScheduledEvent[];
+  selectedEvent: ScheduledEvent | null;
+  onSelectEvent: (event: ScheduledEvent) => void;
+  onMoveToPostProduction: (eventId: string) => void;
 }
 
-export function ProductionSidebar({ events }: ProductionSidebarProps) {
-  // Filter events to only show production events
+export function ProductionSidebar({ 
+  events, 
+  selectedEvent, 
+  onSelectEvent,
+  onMoveToPostProduction 
+}: ProductionSidebarProps) {
+  // Filter to only show production events
   const productionEvents = events.filter(event => event.stage === "production");
   
-  // Calculate total hours logged across all events
-  const totalHoursLogged = productionEvents.reduce((total, event) => {
-    if (!event.timeTracking) return total;
-    return total + event.timeTracking.reduce((sum, log) => sum + log.hoursLogged, 0);
-  }, 0);
-  
-  // Get today's date as a string (YYYY-MM-DD)
-  const today = new Date().toISOString().split('T')[0];
-  
-  // Get this week's events
-  const thisWeekEvents = productionEvents.filter(e => {
-    const eventDate = new Date(e.date);
-    const now = new Date();
-    const startOfWeek = new Date(now);
-    startOfWeek.setDate(now.getDate() - now.getDay());
-    startOfWeek.setHours(0, 0, 0, 0);
+  const handleMoveToPostProduction = (event: ScheduledEvent) => {
+    // Only allow moving if there's at least some time tracking data
+    if (!event.timeTracking || event.timeTracking.length === 0) {
+      return;
+    }
     
-    const endOfWeek = new Date(now);
-    endOfWeek.setDate(now.getDate() + (6 - now.getDay()));
-    endOfWeek.setHours(23, 59, 59, 999);
-    
-    return eventDate >= startOfWeek && eventDate <= endOfWeek;
-  });
-  
-  // Get today's events
-  const todayEvents = productionEvents.filter(event => event.date === today);
+    onMoveToPostProduction(event.id);
+  };
   
   return (
     <div className="space-y-4">
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg">Event Overview</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <Camera className="h-4 w-4 mr-2 text-primary" />
-                <span className="text-sm">Total Events</span>
-              </div>
-              <span className="font-medium">{productionEvents.length}</span>
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <Calendar className="h-4 w-4 mr-2 text-primary" />
-                <span className="text-sm">This Week</span>
-              </div>
-              <span className="font-medium">{thisWeekEvents.length}</span>
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <Clock className="h-4 w-4 mr-2 text-primary" />
-                <span className="text-sm">Total Hours</span>
-              </div>
-              <span className="font-medium">{totalHoursLogged}</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <h2 className="text-lg font-medium">Active Production Events</h2>
       
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg">Today's Shoots</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {todayEvents.length > 0 ? (
-              todayEvents.map(event => (
-                <div key={event.id} className="space-y-2 pb-3 border-b last:border-b-0 last:pb-0">
-                  <div className="font-medium text-sm">{event.name}</div>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <Clock className="h-3 w-3" />
-                    <span>{event.startTime} - {event.endTime}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <Users className="h-3 w-3" />
-                    <span>
-                      {event.photographersCount} Photographer{event.photographersCount !== 1 ? "s" : ""}, 
-                      {event.videographersCount} Videographer{event.videographersCount !== 1 ? "s" : ""}
-                    </span>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <p className="text-sm text-muted-foreground">No shoots scheduled today</p>
+      {productionEvents.length > 0 ? (
+        productionEvents.map(event => (
+          <Card
+            key={event.id}
+            className={`p-4 cursor-pointer hover:border-primary transition-colors ${
+              selectedEvent?.id === event.id ? "border-primary" : ""
+            }`}
+            onClick={() => onSelectEvent(event)}
+          >
+            <h3 className="font-medium">{event.name}</h3>
+            <div className="mt-2 space-y-1 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                <span>{new Date(event.date).toLocaleDateString()}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4" />
+                <span>{event.startTime} - {event.endTime}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <MapPin className="h-4 w-4" />
+                <span>{event.location}</span>
+              </div>
+            </div>
+            
+            {event.timeTracking && event.timeTracking.length > 0 && (
+              <div className="mt-2 flex items-center justify-between">
+                <span className="text-xs bg-green-50 text-green-700 px-2 py-1 rounded">
+                  {event.timeTracking.length} time entries
+                </span>
+                
+                {selectedEvent?.id === event.id && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleMoveToPostProduction(event);
+                    }}
+                    className="text-xs flex items-center"
+                  >
+                    Move to Post-Production
+                    <ChevronRight className="h-3 w-3 ml-1" />
+                  </Button>
+                )}
+              </div>
             )}
-          </div>
-        </CardContent>
-      </Card>
+          </Card>
+        ))
+      ) : (
+        <div className="text-center p-8 border rounded-md">
+          <p className="text-muted-foreground">No active production events</p>
+        </div>
+      )}
     </div>
   );
 }
