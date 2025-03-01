@@ -1,6 +1,7 @@
-
-import { ReactNode } from "react";
-import { services as serviceOptions } from "../pages/ServicesPage";
+import { ReactNode, useEffect, useState } from "react";
+import { services as defaultServices } from "../pages/ServicesPage";
+import { supabase } from "@/integrations/supabase/client";
+import { CustomService } from "../form/types";
 
 interface EstimateDetailsProps {
   estimate: {
@@ -33,6 +34,46 @@ interface EstimateDetailsProps {
 }
 
 export function EstimateDetails({ estimate }: EstimateDetailsProps) {
+  const [customServices, setCustomServices] = useState<Record<string, CustomService>>(defaultServices);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadCustomServices = async () => {
+      try {
+        // Try to load from Supabase first
+        const { data, error } = await supabase
+          .from('settings')
+          .select('settings')
+          .single();
+
+        if (error && error.code !== 'PGRST116') {
+          console.error("Error loading settings:", error);
+          throw error;
+        }
+
+        if (data && data.settings && data.settings.services) {
+          setCustomServices(data.settings.services);
+        } else {
+          // Fall back to localStorage
+          const savedSettings = localStorage.getItem("studiosync_settings");
+          if (savedSettings) {
+            const parsedSettings = JSON.parse(savedSettings);
+            if (parsedSettings.services) {
+              setCustomServices(parsedSettings.services);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error loading custom services:", error);
+        // Keep using the default services
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadCustomServices();
+  }, []);
+
   const statusClasses = {
     approved: "bg-green-100 text-green-800",
     declined: "bg-red-100 text-red-800",
@@ -69,6 +110,10 @@ export function EstimateDetails({ estimate }: EstimateDetailsProps) {
   // Get the selected services
   const selectedServices = estimate.selectedServices || [];
 
+  if (isLoading) {
+    return <div className="p-4 text-center">Loading estimate details...</div>;
+  }
+
   return (
     <div className="border rounded-lg p-6 space-y-6">
       <div className="text-center space-y-2">
@@ -99,16 +144,21 @@ export function EstimateDetails({ estimate }: EstimateDetailsProps) {
         <div className="mb-4">
           <h3 className="font-medium mb-2">Selected Services</h3>
           <div className="grid md:grid-cols-2 gap-4">
-            {selectedServices.map(serviceKey => (
-              <div key={serviceKey} className="border p-4 rounded-md">
-                <h4 className="font-medium mb-2">{serviceOptions[serviceKey]?.title}</h4>
-                <ul className="list-disc ml-5 space-y-1 text-sm text-muted-foreground">
-                  {serviceOptions[serviceKey]?.items.map((item, index) => (
-                    <li key={index}>{item}</li>
-                  ))}
-                </ul>
-              </div>
-            ))}
+            {selectedServices.map(serviceKey => {
+              const service = customServices[serviceKey];
+              if (!service) return null;
+              
+              return (
+                <div key={serviceKey} className="border p-4 rounded-md">
+                  <h4 className="font-medium mb-2">{service.title}</h4>
+                  <ul className="list-disc ml-5 space-y-1 text-sm text-muted-foreground">
+                    {service.items.map((item, index) => (
+                      <li key={index}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

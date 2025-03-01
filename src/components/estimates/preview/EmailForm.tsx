@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -6,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Send, X } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { services as serviceOptions } from "../pages/ServicesPage";
+import { services as defaultServices } from "../pages/ServicesPage";
+import { CustomService } from "../form/types";
 
 interface EmailFormProps {
   onClose: () => void;
@@ -43,7 +45,7 @@ export function EmailForm({ onClose, estimate }: EmailFormProps) {
   const [emailInput, setEmailInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [companyIntro, setCompanyIntro] = useState<string>("");
-  const [customServices, setCustomServices] = useState<any>(serviceOptions);
+  const [customServices, setCustomServices] = useState<Record<string, CustomService>>(defaultServices);
   const [customTerms, setCustomTerms] = useState<string[]>([]);
   const { toast } = useToast();
 

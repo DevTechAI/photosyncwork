@@ -4,13 +4,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { CustomService } from "../form/types";
 
-interface Service {
-  title: string;
-  items: string[];
-}
-
 // Default services as fallback
-export const services: Record<string, Service> = {
+export const services: Record<string, CustomService> = {
   bigFat: {
     title: "BigFat Weddings",
     items: [
