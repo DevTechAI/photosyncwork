@@ -1,0 +1,83 @@
+
+import { ScheduledEvent, TeamMember } from "@/components/scheduling/types";
+import { PreProductionEventList } from "@/components/workflow/pre-production/PreProductionEventList";
+import { EventDetailsTabs } from "@/components/workflow/pre-production/EventDetailsTabs";
+import { CompletedPreProductionEvents } from "@/components/workflow/pre-production/CompletedPreProductionEvents";
+
+interface PreProductionContentProps {
+  events: ScheduledEvent[];
+  completedEvents: ScheduledEvent[];
+  selectedEvent: ScheduledEvent | null;
+  setSelectedEvent: (event: ScheduledEvent) => void;
+  deleteCompletedEvent: (eventId: string) => void;
+  clientRequirements: string;
+  setClientRequirements: (value: string) => void;
+  teamMembers: TeamMember[];
+  assignedTeamMembers: Array<{ teamMember?: TeamMember } & any>;
+  availablePhotographers: TeamMember[];
+  availableVideographers: TeamMember[];
+  loading: boolean;
+  handleSaveRequirements: () => void;
+  handleAssignTeamMember: (teamMemberId: string, role: "photographer" | "videographer") => void;
+  handleMoveToProduction: () => void;
+}
+
+export function PreProductionContent({
+  events,
+  completedEvents,
+  selectedEvent,
+  setSelectedEvent,
+  deleteCompletedEvent,
+  clientRequirements,
+  setClientRequirements,
+  teamMembers,
+  assignedTeamMembers,
+  availablePhotographers,
+  availableVideographers,
+  loading,
+  handleSaveRequirements,
+  handleAssignTeamMember,
+  handleMoveToProduction
+}: PreProductionContentProps) {
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      {/* Event List */}
+      <div>
+        <PreProductionEventList 
+          events={events}
+          selectedEvent={selectedEvent}
+          setSelectedEvent={setSelectedEvent}
+        />
+        
+        {/* Completed Events Section */}
+        {completedEvents.length > 0 && (
+          <div className="mt-6">
+            <CompletedPreProductionEvents 
+              completedEvents={completedEvents}
+              teamMembers={teamMembers}
+              onDelete={deleteCompletedEvent}
+            />
+          </div>
+        )}
+      </div>
+      
+      {/* Event Details and Team Assignment */}
+      <div className="lg:col-span-2">
+        <EventDetailsTabs 
+          selectedEvent={selectedEvent}
+          setSelectedEvent={setSelectedEvent}
+          clientRequirements={clientRequirements}
+          setClientRequirements={setClientRequirements}
+          teamMembers={teamMembers}
+          assignedTeamMembers={assignedTeamMembers}
+          availablePhotographers={availablePhotographers}
+          availableVideographers={availableVideographers}
+          loading={loading}
+          handleSaveRequirements={handleSaveRequirements}
+          handleAssignTeamMember={handleAssignTeamMember}
+          handleMoveToProduction={handleMoveToProduction}
+        />
+      </div>
+    </div>
+  );
+}
