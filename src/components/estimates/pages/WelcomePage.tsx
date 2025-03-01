@@ -20,24 +20,10 @@ export function WelcomePage({
 }: WelcomePageProps) {
   const { toast } = useToast();
 
-  const validateEmail = (email: string) => {
-    if (!email) return true; // Allow empty email for now
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
-
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const email = e.target.value;
     onClientEmailChange(email);
-    
-    if (email && !validateEmail(email)) {
-      toast({
-        title: "Invalid email format",
-        description: "Please enter a valid email address",
-        variant: "destructive",
-        duration: 5000, // Increase duration to 5 seconds
-      });
-    }
+    // Removed the immediate toast notification for invalid email
   };
 
   return (

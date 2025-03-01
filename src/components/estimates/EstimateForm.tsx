@@ -44,6 +44,12 @@ export function EstimateForm({ open, onClose, editingEstimate }: EstimateFormPro
     onClose();
   };
 
+  const validateEmail = (email: string) => {
+    if (!email) return true; // Allow empty email for now
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
   const validateCurrentStep = () => {
     // Validate depending on the current step
     if (currentPage === 0) {
@@ -59,7 +65,7 @@ export function EstimateForm({ open, onClose, editingEstimate }: EstimateFormPro
       
       // Email validation (if provided)
       const email = formData.clientEmail;
-      if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      if (email && !validateEmail(email)) {
         toast({
           title: "Invalid email format",
           description: "Please enter a valid email address or leave it blank.",
