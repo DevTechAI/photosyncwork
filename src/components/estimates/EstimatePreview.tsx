@@ -74,7 +74,9 @@ export function EstimatePreview({ open, onClose, estimate, onStatusChange }: Est
     <WelcomePage 
       key="welcome" 
       clientName={estimate.clientName}
+      clientEmail={estimate.clientEmail || ""}
       onClientNameChange={() => {}} // No-op function since this is read-only
+      onClientEmailChange={() => {}} // No-op function since this is read-only
       isReadOnly={true}
     />,
     <ServicesPage 
