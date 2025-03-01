@@ -1,3 +1,4 @@
+
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
@@ -10,6 +11,7 @@ import {
   Calendar,
   Camera,
   Film,
+  FileCheck,
   LogOut,
   User,
 } from "lucide-react";
@@ -24,7 +26,9 @@ const navItems = [
   { path: "/estimates", label: "Estimates", icon: FileText, access: ["manager", "crm"] },
   { path: "/invoices", label: "Invoices", icon: Receipt, access: ["manager", "accounts"] },
   { path: "/finances", label: "Finances", icon: LineChart, access: ["manager", "accounts"] },
-  { path: "/scheduling", label: "Scheduling", icon: Calendar, access: ["manager", "crm", "photographer", "videographer"] },
+  { path: "/pre-production", label: "Pre-Production", icon: Calendar, access: ["manager", "crm"] },
+  { path: "/production", label: "Production", icon: Camera, access: ["manager", "crm", "photographer", "videographer"] },
+  { path: "/post-production", label: "Post-Production", icon: Film, access: ["manager", "crm", "editor"] },
 ];
 
 export default function Layout({ children }: { children: React.ReactNode }) {
@@ -156,7 +160,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <main className={cn(
         "min-h-screen transition-all duration-300 ease-in-out",
         "lg:pl-64 p-6",
-        "lg:pt-6 pt-20"
+        "lg:pt-6 pt-20" // Add top padding on mobile for the header
       )}>
         <div className="max-w-6xl mx-auto">
           {children}
@@ -165,5 +169,3 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
-
-export { Layout };

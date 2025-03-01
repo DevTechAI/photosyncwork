@@ -1,9 +1,9 @@
 
-import { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import Layout from "@/components/Layout";
+import { useState } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TeamManagement } from "@/components/scheduling/TeamManagement";
 import { CreateEventModal } from "@/components/scheduling/CreateEventModal";
 import { ScheduledEvent, TeamMember, EventAssignment, WorkflowStage } from "@/components/scheduling/types";
@@ -238,90 +238,92 @@ export default function SchedulingPage() {
   };
   
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">Scheduling</h1>
-          <p className="text-sm text-muted-foreground">
-            Manage your shoots, team assignments, and workflow
-          </p>
-        </div>
-        <Button onClick={() => setShowCreateEventModal(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          New Event
-        </Button>
-      </div>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-        <div className="lg:col-span-3">
-          <Tabs value={mainTab} onValueChange={setMainTab} className="w-full">
-            <TabsList className="w-full justify-start mb-4">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="pre-production">Pre-Production</TabsTrigger>
-              <TabsTrigger value="production">Production</TabsTrigger>
-              <TabsTrigger value="post-production">Post-Production</TabsTrigger>
-              <TabsTrigger value="team">Team</TabsTrigger>
-            </TabsList>
-            
-            {/* Overview Tab */}
-            <TabsContent value="overview" className="space-y-4">
-              <SchedulingOverview 
-                events={events} 
-                getEventsByStage={getEventsByStage} 
-              />
-            </TabsContent>
-            
-            {/* Pre-Production Tab */}
-            <TabsContent value="pre-production">
-              <PreProductionTab 
-                events={getEventsByStage("pre-production")}
-                teamMembers={teamMembers}
-                onAssignTeamMember={handleAssignTeamMember}
-                onUpdateAssignmentStatus={handleUpdateAssignmentStatus}
-                getAssignmentCounts={getAssignmentCounts}
-              />
-            </TabsContent>
-            
-            {/* Production Tab */}
-            <TabsContent value="production">
-              <ProductionTab 
-                events={getEventsByStage("production")} 
-                teamMembers={teamMembers} 
-              />
-            </TabsContent>
-            
-            {/* Post-Production Tab */}
-            <TabsContent value="post-production">
-              <PostProductionTab 
-                events={getEventsByStage("post-production")} 
-                teamMembers={teamMembers} 
-              />
-            </TabsContent>
-            
-            {/* Team Tab */}
-            <TabsContent value="team">
-              <TeamManagement 
-                teamMembers={teamMembers} 
-                onAddTeamMember={(member) => setTeamMembers(prev => [...prev, member])}
-                onUpdateTeamMember={(updatedMember) => {
-                  setTeamMembers(prev => prev.map(m => 
-                    m.id === updatedMember.id ? updatedMember : m
-                  ));
-                }}
-                onDeleteTeamMember={(id) => {
-                  setTeamMembers(prev => prev.filter(m => m.id !== id));
-                }}
-              />
-            </TabsContent>
-          </Tabs>
+    <Layout>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold">Scheduling</h1>
+            <p className="text-sm text-muted-foreground">
+              Manage your shoots, team assignments, and workflow
+            </p>
+          </div>
+          <Button onClick={() => setShowCreateEventModal(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            New Event
+          </Button>
         </div>
         
-        <div className="space-y-4">
-          <WorkflowSidebar 
-            events={events}
-            teamMembers={teamMembers}
-            getEventsByStage={getEventsByStage}
-          />
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+          <div className="lg:col-span-3">
+            <Tabs value={mainTab} onValueChange={setMainTab} className="w-full">
+              <TabsList className="w-full justify-start mb-4">
+                <TabsTrigger value="overview">Overview</TabsTrigger>
+                <TabsTrigger value="pre-production">Pre-Production</TabsTrigger>
+                <TabsTrigger value="production">Production</TabsTrigger>
+                <TabsTrigger value="post-production">Post-Production</TabsTrigger>
+                <TabsTrigger value="team">Team</TabsTrigger>
+              </TabsList>
+              
+              {/* Overview Tab */}
+              <TabsContent value="overview" className="space-y-4">
+                <SchedulingOverview 
+                  events={events} 
+                  getEventsByStage={getEventsByStage} 
+                />
+              </TabsContent>
+              
+              {/* Pre-Production Tab */}
+              <TabsContent value="pre-production">
+                <PreProductionTab 
+                  events={getEventsByStage("pre-production")}
+                  teamMembers={teamMembers}
+                  onAssignTeamMember={handleAssignTeamMember}
+                  onUpdateAssignmentStatus={handleUpdateAssignmentStatus}
+                  getAssignmentCounts={getAssignmentCounts}
+                />
+              </TabsContent>
+              
+              {/* Production Tab */}
+              <TabsContent value="production">
+                <ProductionTab 
+                  events={getEventsByStage("production")} 
+                  teamMembers={teamMembers} 
+                />
+              </TabsContent>
+              
+              {/* Post-Production Tab */}
+              <TabsContent value="post-production">
+                <PostProductionTab 
+                  events={getEventsByStage("post-production")} 
+                  teamMembers={teamMembers} 
+                />
+              </TabsContent>
+              
+              {/* Team Tab */}
+              <TabsContent value="team">
+                <TeamManagement 
+                  teamMembers={teamMembers} 
+                  onAddTeamMember={(member) => setTeamMembers(prev => [...prev, member])}
+                  onUpdateTeamMember={(updatedMember) => {
+                    setTeamMembers(prev => prev.map(m => 
+                      m.id === updatedMember.id ? updatedMember : m
+                    ));
+                  }}
+                  onDeleteTeamMember={(id) => {
+                    setTeamMembers(prev => prev.filter(m => m.id !== id));
+                  }}
+                />
+              </TabsContent>
+            </Tabs>
+          </div>
+          
+          <div className="space-y-4">
+            <WorkflowSidebar 
+              events={events}
+              teamMembers={teamMembers}
+              getEventsByStage={getEventsByStage}
+            />
+          </div>
         </div>
       </div>
       
@@ -330,6 +332,6 @@ export default function SchedulingPage() {
         onClose={() => setShowCreateEventModal(false)}
         onCreateEvent={handleCreateEvent}
       />
-    </div>
+    </Layout>
   );
 }

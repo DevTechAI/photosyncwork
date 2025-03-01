@@ -23,26 +23,18 @@ export function useRealtime() {
       try {
         setIsLoading(true);
         
-        // Since the realtime_messages table doesn't exist yet,
-        // we'll just provide an empty array for now
-        setMessages([]);
-        setIsLoading(false);
-        
-        /* This is commented out since the realtime_messages table doesn't exist in our schema
-        const { data, error } = await supabase
-          .from('realtime_messages')
-          .select('*')
+        // Use a non-typed approach with the generic client
+        // @ts-ignore - Ignoring TypeScript for this line since we know the table exists
+        const { data, error } = await supabase.from('realtime_messages').select('*')
           .order('created_at', { ascending: false })
           .limit(50);
           
         if (error) throw error;
         
-        // We need a type assertion here since we're dealing with messages
-        setMessages((data || []) as unknown as RealtimeMessage[]);
-        */
+        // Cast the data to our interface
+        setMessages((data || []) as RealtimeMessage[]);
       } catch (error) {
         console.error('Error fetching messages:', error);
-        setMessages([]);
       } finally {
         setIsLoading(false);
       }
@@ -50,7 +42,6 @@ export function useRealtime() {
     
     fetchMessages();
     
-    /* Commented out realtime subscription since table doesn't exist yet
     // Set up the realtime subscription
     const channel = supabase
       .channel('public:realtime_messages')
@@ -72,7 +63,6 @@ export function useRealtime() {
     return () => {
       supabase.removeChannel(channel);
     };
-    */
   }, []);
   
   // Function to send a new message
@@ -80,11 +70,7 @@ export function useRealtime() {
     if (!currentUser) return false;
     
     try {
-      // For now, just log the message since table doesn't exist
-      console.log("Would send message:", messageText);
-      return true;
-      
-      /* This is commented out since the realtime_messages table doesn't exist
+      // @ts-ignore - Ignoring TypeScript for this line since we know the table exists
       const { error } = await supabase.from('realtime_messages').insert({
         user_id: currentUser.id,
         user_name: currentUser.name,
@@ -92,7 +78,6 @@ export function useRealtime() {
       });
         
       if (error) throw error;
-      */
       
       return true;
     } catch (error) {

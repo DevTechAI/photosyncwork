@@ -18,14 +18,3 @@ export interface PreviewEstimate {
   clientEmail?: string;
   [key: string]: any;
 }
-
-export interface SettingsData {
-  terms: string[];
-  services: Record<string, CustomService>;
-  companyIntro: string;
-}
-
-export interface CustomService {
-  title: string;
-  items: string[];
-}
