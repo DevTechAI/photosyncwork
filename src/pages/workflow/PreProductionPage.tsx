@@ -1,4 +1,3 @@
-
 import Layout from "@/components/Layout";
 import { useState } from "react";
 import { TeamMember } from "@/components/scheduling/types";
@@ -8,6 +7,7 @@ import { CompletedPreProductionEvents } from "@/components/workflow/pre-producti
 import { usePreProductionEvents } from "@/hooks/usePreProductionEvents";
 import { useClientRequirements } from "@/hooks/useClientRequirements";
 import { useTeamAssignmentHandlers, getAvailableTeamMembers, getAssignedTeamMembers } from "@/utils/teamAssignmentUtils";
+import { Skeleton } from "@/components/ui/skeleton";
 
 // Mock data for demonstration
 const mockTeamMembers: TeamMember[] = [
@@ -57,6 +57,7 @@ export default function PreProductionPage() {
   
   // Events management hook
   const { 
+    isLoading,
     events, 
     setEvents, 
     completedEvents, 
@@ -96,45 +97,58 @@ export default function PreProductionPage() {
           </div>
         </div>
         
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {/* Event List */}
-          <div>
-            <PreProductionEventList 
-              events={events}
-              selectedEvent={selectedEvent}
-              setSelectedEvent={setSelectedEvent}
-            />
+        {isLoading ? (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="space-y-4">
+              <Skeleton className="h-8 w-32" />
+              <Skeleton className="h-32 w-full" />
+              <Skeleton className="h-32 w-full" />
+            </div>
+            <div className="lg:col-span-2">
+              <Skeleton className="h-64 w-full" />
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {/* Event List */}
+            <div>
+              <PreProductionEventList 
+                events={events}
+                selectedEvent={selectedEvent}
+                setSelectedEvent={setSelectedEvent}
+              />
+              
+              {/* Completed Events Section */}
+              {completedEvents.length > 0 && (
+                <div className="mt-6">
+                  <CompletedPreProductionEvents 
+                    completedEvents={completedEvents}
+                    teamMembers={teamMembers}
+                    onDelete={deleteCompletedEvent}
+                  />
+                </div>
+              )}
+            </div>
             
-            {/* Completed Events Section */}
-            {completedEvents.length > 0 && (
-              <div className="mt-6">
-                <CompletedPreProductionEvents 
-                  completedEvents={completedEvents}
-                  teamMembers={teamMembers}
-                  onDelete={deleteCompletedEvent}
-                />
-              </div>
-            )}
+            {/* Event Details and Team Assignment */}
+            <div className="lg:col-span-2">
+              <EventDetailsTabs 
+                selectedEvent={selectedEvent}
+                setSelectedEvent={setSelectedEvent}
+                clientRequirements={clientRequirements}
+                setClientRequirements={setClientRequirements}
+                teamMembers={teamMembers}
+                assignedTeamMembers={assignedTeamMembers}
+                availablePhotographers={availablePhotographers}
+                availableVideographers={availableVideographers}
+                loading={loading}
+                handleSaveRequirements={handleSaveRequirements}
+                handleAssignTeamMember={handleAssignTeamMember}
+                handleMoveToProduction={handleMoveToProduction}
+              />
+            </div>
           </div>
-          
-          {/* Event Details and Team Assignment */}
-          <div className="lg:col-span-2">
-            <EventDetailsTabs 
-              selectedEvent={selectedEvent}
-              setSelectedEvent={setSelectedEvent}
-              clientRequirements={clientRequirements}
-              setClientRequirements={setClientRequirements}
-              teamMembers={teamMembers}
-              assignedTeamMembers={assignedTeamMembers}
-              availablePhotographers={availablePhotographers}
-              availableVideographers={availableVideographers}
-              loading={loading}
-              handleSaveRequirements={handleSaveRequirements}
-              handleAssignTeamMember={handleAssignTeamMember}
-              handleMoveToProduction={handleMoveToProduction}
-            />
-          </div>
-        </div>
+        )}
       </div>
     </Layout>
   );
