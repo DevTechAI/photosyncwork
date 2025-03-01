@@ -15,6 +15,7 @@ interface TeamAssignmentTabProps {
   loading: boolean;
   handleAssignTeamMember: (teamMemberId: string, role: "photographer" | "videographer") => void;
   handleMoveToProduction: () => void;
+  handleUpdateAssignmentStatus?: (eventId: string, teamMemberId: string, status: "accepted" | "declined") => void;
 }
 
 export function TeamAssignmentTab({ 
@@ -25,16 +26,20 @@ export function TeamAssignmentTab({
   availableVideographers,
   loading,
   handleAssignTeamMember,
-  handleMoveToProduction
+  handleMoveToProduction,
+  handleUpdateAssignmentStatus
 }: TeamAssignmentTabProps) {
   const photographersAssigned = assignedTeamMembers.filter(a => a.teamMember?.role === "photographer").length;
   const videographersAssigned = assignedTeamMembers.filter(a => a.teamMember?.role === "videographer").length;
   
   return (
     <>
-      <AssignedTeamList assignedTeamMembers={assignedTeamMembers} />
+      <AssignedTeamList 
+        assignedTeamMembers={assignedTeamMembers} 
+        onUpdateStatus={handleUpdateAssignmentStatus}
+      />
       
-      <Card className="p-6">
+      <Card className="p-6 mt-4">
         <h2 className="text-lg font-medium mb-4">Assign Team Members</h2>
         
         <div className="space-y-6">
@@ -58,7 +63,7 @@ export function TeamAssignmentTab({
         </div>
       </Card>
       
-      <div className="flex justify-end">
+      <div className="flex justify-end mt-4">
         <Button 
           onClick={handleMoveToProduction}
           disabled={

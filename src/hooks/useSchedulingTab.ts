@@ -1,11 +1,14 @@
 
 import { ScheduledEvent, TeamMember, EventAssignment } from "@/components/scheduling/types";
+import { useToast } from "@/components/ui/use-toast";
 
 export function useSchedulingTab(
   events: ScheduledEvent[],
   setEvents: React.Dispatch<React.SetStateAction<ScheduledEvent[]>>,
   teamMembers: TeamMember[]
 ) {
+  const { toast } = useToast();
+  
   // Assignment counts function for the team assignments
   const getAssignmentCounts = (event: any) => {
     // Find team members for each assignment to determine their roles
@@ -52,6 +55,11 @@ export function useSchedulingTab(
       const updatedEvent = { ...eventToUpdate, assignments: updatedAssignments };
       const updatedEvents = events.map(e => e.id === eventId ? updatedEvent : e);
       setEvents(updatedEvents);
+      
+      toast({
+        title: "Team member assigned",
+        description: `${teamMember.name} has been notified about this assignment`
+      });
     }
   };
   
@@ -69,6 +77,17 @@ export function useSchedulingTab(
       const updatedEvent = { ...eventToUpdate, assignments: updatedAssignments };
       const updatedEvents = events.map(e => e.id === eventId ? updatedEvent : e);
       setEvents(updatedEvents);
+      
+      // Get team member and event details for notification
+      const teamMember = teamMembers.find(t => t.id === teamMemberId);
+      
+      // Show toast notification
+      toast({
+        title: `Assignment ${status}`,
+        description: teamMember ? 
+          `${teamMember.name} has ${status} the assignment for ${eventToUpdate.name}` : 
+          `Assignment for ${eventToUpdate.name} has been ${status}`
+      });
     }
   };
   

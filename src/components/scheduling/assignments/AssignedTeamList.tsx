@@ -1,6 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { ScheduledEvent, TeamMember } from "../types";
+import { Check, X } from "lucide-react";
 
 interface AssignedTeamListProps {
   event: ScheduledEvent;
@@ -35,17 +36,19 @@ export function AssignedTeamList({ event, teamMembers, onUpdateStatus }: Assigne
                     <Button 
                       variant="ghost" 
                       size="sm"
-                      className="h-6 text-xs text-green-600 hover:text-green-700 hover:bg-green-50"
+                      className="h-7 text-xs text-green-600 hover:text-green-700 hover:bg-green-50"
                       onClick={() => onUpdateStatus(event.id, assignment.teamMemberId, "accepted")}
                     >
+                      <Check className="h-4 w-4 mr-1" />
                       Accept
                     </Button>
                     <Button 
                       variant="ghost" 
                       size="sm"
-                      className="h-6 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                      className="h-7 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
                       onClick={() => onUpdateStatus(event.id, assignment.teamMemberId, "declined")}
                     >
+                      <X className="h-4 w-4 mr-1" />
                       Decline
                     </Button>
                   </div>
