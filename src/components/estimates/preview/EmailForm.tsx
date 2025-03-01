@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -43,9 +42,53 @@ interface EmailFormProps {
 export function EmailForm({ onClose, estimate }: EmailFormProps) {
   const [emailInput, setEmailInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [companyIntro, setCompanyIntro] = useState<string>("");
+  const [customServices, setCustomServices] = useState<any>(serviceOptions);
+  const [customTerms, setCustomTerms] = useState<string[]>([]);
   const { toast } = useToast();
 
-  // Pre-fill the client email if available
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('settings')
+          .select('settings')
+          .single();
+
+        if (error && error.code !== 'PGRST116') {
+          console.error("Error loading settings:", error);
+          throw error;
+        }
+
+        let settingsData;
+        if (data && data.settings) {
+          settingsData = data.settings;
+        } else {
+          const savedSettings = localStorage.getItem("studiosync_settings");
+          if (savedSettings) {
+            settingsData = JSON.parse(savedSettings);
+          }
+        }
+
+        if (settingsData) {
+          if (settingsData.companyIntro) {
+            setCompanyIntro(settingsData.companyIntro);
+          }
+          if (settingsData.services) {
+            setCustomServices(settingsData.services);
+          }
+          if (settingsData.terms) {
+            setCustomTerms(settingsData.terms);
+          }
+        }
+      } catch (error) {
+        console.error("Error loading settings:", error);
+      }
+    };
+
+    loadSettings();
+  }, []);
+
   useEffect(() => {
     if (estimate.clientEmail) {
       setEmailInput(estimate.clientEmail);
@@ -53,11 +96,8 @@ export function EmailForm({ onClose, estimate }: EmailFormProps) {
   }, [estimate.clientEmail]);
 
   const sendEmailFallback = async (emailData) => {
-    // This is a fallback mechanism that would typically store the email request 
-    // for later processing or use a different email sending method
     console.log("Using email fallback mechanism with data:", emailData);
     
-    // Store the email request in localStorage for demonstration
     const pendingEmails = JSON.parse(localStorage.getItem("pendingEmails") || "[]");
     pendingEmails.push({
       ...emailData,
@@ -65,32 +105,29 @@ export function EmailForm({ onClose, estimate }: EmailFormProps) {
     });
     localStorage.setItem("pendingEmails", JSON.stringify(pendingEmails));
     
-    // In a real app, you might want to:
-    // 1. Store this in a database for later processing
-    // 2. Use a different email service directly from the client
-    // 3. Implement a retry mechanism
-    
     return { success: true, fallback: true };
   };
 
-  // Function to generate HTML for the intro page
   const generateIntroHtml = () => {
+    const defaultIntro = `
+      We are a Hyderabad based Wedding Photography firm with over 11 years of experience in non-meddling,
+      inventive, photojournalistic approach. We need you to recollect how you felt on your big day. At each
+      wedding, We plan to archive genuine minutes and crude feelings in new and remarkable manners.
+    `;
+
     return `
       <div style="text-align:center; margin-bottom:30px;">
         <h1 style="font-size:28px; font-weight:300; letter-spacing:0.5px;">STUDIOSYNC</h1>
         <p style="font-size:20px; font-weight:300; color:#666;">Hello ${estimate.clientName}!</p>
         <div style="max-width:600px; margin:20px auto; text-align:center; color:#666; font-size:14px;">
           <p>
-            We are a Hyderabad based Wedding Photography firm with over 11 years of experience in non-meddling,
-            inventive, photojournalistic approach. We need you to recollect how you felt on your big day. At each
-            wedding, We plan to archive genuine minutes and crude feelings in new and remarkable manners.
+            ${companyIntro || defaultIntro}
           </p>
         </div>
       </div>
     `;
   };
 
-  // Function to generate HTML for the services page
   const generateServicesHtml = () => {
     const selectedServices = estimate.selectedServices || [];
     
@@ -105,7 +142,7 @@ export function EmailForm({ onClose, estimate }: EmailFormProps) {
     `;
     
     selectedServices.forEach(serviceKey => {
-      const service = serviceOptions[serviceKey];
+      const service = customServices[serviceKey];
       if (service) {
         servicesHtml += `
           <div style="border:1px solid #e2e8f0; border-radius:8px; padding:20px;">
@@ -129,12 +166,9 @@ export function EmailForm({ onClose, estimate }: EmailFormProps) {
     return servicesHtml;
   };
 
-  // Function to generate HTML for the estimate details
   const generateEstimateDetailsHtml = () => {
-    // Check if we have packages data (multiple estimate options)
     const hasPackages = estimate.packages && estimate.packages.length > 0;
     
-    // If we don't have packages, use the legacy format (services and deliverables directly on estimate)
     const legacyPackage = {
       name: "Standard Package",
       amount: estimate.amount,
@@ -142,18 +176,17 @@ export function EmailForm({ onClose, estimate }: EmailFormProps) {
       deliverables: estimate.deliverables || []
     };
     
-    // Use packages if available, otherwise create a single package from the estimate's direct properties
     const packagesToRender = hasPackages ? estimate.packages : [legacyPackage];
     
-    // Default terms if none provided
     const defaultTerms = [
       "This estimate is valid for 30 days from the date of issue.",
       "A 50% advance payment is required to confirm the booking.",
       "The balance payment is due before the event date."
     ];
     
-    // Use provided terms or default terms
-    const termsToDisplay = estimate.terms && estimate.terms.length > 0 ? estimate.terms : defaultTerms;
+    const termsToDisplay = estimate.terms && estimate.terms.length > 0 
+      ? estimate.terms 
+      : (customTerms.length > 0 ? customTerms : defaultTerms);
 
     let estimateHtml = `
       <div style="border:1px solid #e2e8f0; border-radius:8px; padding:24px; margin-bottom:30px;">
@@ -178,7 +211,6 @@ export function EmailForm({ onClose, estimate }: EmailFormProps) {
         </div>
     `;
 
-    // Packages content
     packagesToRender.forEach((pkg, packageIndex) => {
       estimateHtml += `
         <div style="border:1px solid #e2e8f0; border-radius:8px; padding:16px; margin-bottom:24px;">
@@ -229,7 +261,6 @@ export function EmailForm({ onClose, estimate }: EmailFormProps) {
       `;
     });
 
-    // Terms and conditions
     estimateHtml += `
         <div style="border-top:1px solid #e2e8f0; padding-top:16px; font-size:14px; color:#666;">
           <p>Terms & Conditions</p>
@@ -256,7 +287,6 @@ export function EmailForm({ onClose, estimate }: EmailFormProps) {
     setIsLoading(true);
 
     try {
-      // Generate complete HTML that includes all three pages
       const completeHtml = `
         <div style="font-family: system-ui, -apple-system, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px;">
           ${generateIntroHtml()}
@@ -265,7 +295,6 @@ export function EmailForm({ onClose, estimate }: EmailFormProps) {
         </div>
       `;
 
-      // Prepare the email data
       const emailData = {
         to: emailInput,
         clientName: estimate.clientName,
@@ -276,10 +305,9 @@ export function EmailForm({ onClose, estimate }: EmailFormProps) {
         deliverables: estimate.deliverables,
         packages: estimate.packages,
         terms: estimate.terms,
-        completeHtml: completeHtml // Add the complete HTML to the email data
+        completeHtml: completeHtml
       };
       
-      // Try to send via edge function first
       let result;
       try {
         const { data, error } = await supabase.functions.invoke("send-estimate-email", {
@@ -293,7 +321,6 @@ export function EmailForm({ onClose, estimate }: EmailFormProps) {
         result = { success: true, data };
       } catch (edgeFunctionError) {
         console.warn("Edge function failed, using fallback:", edgeFunctionError);
-        // If edge function fails, use the fallback
         result = await sendEmailFallback(emailData);
       }
       

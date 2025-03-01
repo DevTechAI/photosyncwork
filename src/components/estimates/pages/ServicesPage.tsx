@@ -1,12 +1,15 @@
-
+import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { supabase } from "@/integrations/supabase/client";
+import { CustomService } from "../form/types";
 
 interface Service {
   title: string;
   items: string[];
 }
 
+// Default services as fallback
 export const services: Record<string, Service> = {
   bigFat: {
     title: "BigFat Weddings",
@@ -47,6 +50,46 @@ interface ServicesPageProps {
 }
 
 export function ServicesPage({ selectedServices, onServicesChange, isReadOnly = false }: ServicesPageProps) {
+  const [customServices, setCustomServices] = useState<Record<string, CustomService>>(services);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadCustomServices = async () => {
+      try {
+        // Try to load from Supabase first
+        const { data, error } = await supabase
+          .from('settings')
+          .select('settings')
+          .single();
+
+        if (error && error.code !== 'PGRST116') {
+          console.error("Error loading settings:", error);
+          throw error;
+        }
+
+        if (data && data.settings && data.settings.services) {
+          setCustomServices(data.settings.services);
+        } else {
+          // Fall back to localStorage
+          const savedSettings = localStorage.getItem("studiosync_settings");
+          if (savedSettings) {
+            const parsedSettings = JSON.parse(savedSettings);
+            if (parsedSettings.services) {
+              setCustomServices(parsedSettings.services);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error loading custom services:", error);
+        // Keep using the default services defined above
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadCustomServices();
+  }, []);
+
   const handleToggleService = (serviceKey: string) => {
     if (selectedServices.includes(serviceKey)) {
       onServicesChange(selectedServices.filter(s => s !== serviceKey));
@@ -54,6 +97,10 @@ export function ServicesPage({ selectedServices, onServicesChange, isReadOnly = 
       onServicesChange([...selectedServices, serviceKey]);
     }
   };
+
+  if (isLoading) {
+    return <div className="p-4 text-center">Loading services...</div>;
+  }
 
   return (
     <div className="space-y-8">
@@ -67,7 +114,7 @@ export function ServicesPage({ selectedServices, onServicesChange, isReadOnly = 
       </div>
       
       <div className="grid md:grid-cols-2 gap-8">
-        {Object.entries(services).map(([key, service]) => (
+        {Object.entries(customServices).map(([key, service]) => (
           <Card key={key} className="p-6 space-y-4 relative">
             {!isReadOnly && (
               <div className="absolute right-4 top-4">
