@@ -1,15 +1,15 @@
 
 import { Routes, Route } from "react-router-dom";
-import { Index } from "./pages/Index";
-import { Login } from "./pages/Login";
-import { NotFound } from "./pages/NotFound";
-import { EstimatesPage } from "./pages/estimates/EstimatesPage";
-import { InvoicesPage } from "./pages/invoices/InvoicesPage";
-import { FinancesPage } from "./pages/finances/FinancesPage";
-import { SchedulingPage } from "./pages/scheduling/SchedulingPage";
+import Index from "./pages/Index";
+import Login from "./pages/Login";
+import NotFound from "./pages/NotFound";
+import EstimatesPage from "./pages/estimates/EstimatesPage";
+import InvoicesPage from "./pages/invoices/InvoicesPage";
+import FinancesPage from "./pages/finances/FinancesPage";
+import SchedulingPage from "./pages/scheduling/SchedulingPage";
 import { ProtectedRoute } from "./components/ProtectedRoute";
-import { Layout } from "./components/Layout";
-import { RealtimeTestPage } from "./pages/RealtimeTestPage";
+import Layout from "./components/Layout";
+import RealtimeTestPage from "./pages/RealtimeTestPage";
 import { SettingsPage } from "./components/settings/SettingsPage";
 
 import "./App.css";

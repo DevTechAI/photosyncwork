@@ -1,3 +1,4 @@
+
 import { ReactNode, useEffect, useState } from "react";
 import { services as defaultServices } from "../pages/ServicesPage";
 import { supabase } from "@/integrations/supabase/client";
@@ -51,8 +52,12 @@ export function EstimateDetails({ estimate }: EstimateDetailsProps) {
           throw error;
         }
 
-        if (data && data.settings && data.settings.services) {
-          setCustomServices(data.settings.services);
+        if (data && data.settings && typeof data.settings === 'object') {
+          // Check if services exist in the settings object
+          const settingsObj = data.settings as { services?: Record<string, CustomService> };
+          if (settingsObj.services) {
+            setCustomServices(settingsObj.services);
+          }
         } else {
           // Fall back to localStorage
           const savedSettings = localStorage.getItem("studiosync_settings");

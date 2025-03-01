@@ -7,8 +7,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Save, Trash2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { SettingsData, CustomService } from "../estimates/form/types";
+import { CustomService } from "../estimates/form/types";
 import { supabase } from "@/integrations/supabase/client";
+
+export interface SettingsData {
+  terms: string[];
+  services: Record<string, CustomService>;
+  companyIntro: string;
+}
 
 const DEFAULT_COMPANY_INTRO = `We are a Hyderabad based Wedding Photography firm with over 11 years of experience in non-meddling, 
 inventive, photojournalistic approach. We need you to recollect how you felt on your big day. At each 
@@ -85,8 +91,16 @@ export function SettingsPage() {
         }
         
         // If found in Supabase, use that
-        if (data) {
-          setSettings(data.settings);
+        if (data && data.settings) {
+          const settingsData = data.settings as any;
+          if (typeof settingsData === 'object') {
+            const loadedSettings: SettingsData = {
+              terms: settingsData.terms || [...DEFAULT_TERMS],
+              services: settingsData.services || JSON.parse(JSON.stringify(DEFAULT_SERVICES)),
+              companyIntro: settingsData.companyIntro || DEFAULT_COMPANY_INTRO
+            };
+            setSettings(loadedSettings);
+          }
         } else {
           // Fallback to localStorage
           const savedSettings = localStorage.getItem("studiosync_settings");
@@ -122,7 +136,7 @@ export function SettingsPage() {
           .from('settings')
           .upsert({ 
             id: 1, // Single settings record
-            settings: settings,
+            settings: settings as any,
             updated_at: new Date().toISOString()
           });
           

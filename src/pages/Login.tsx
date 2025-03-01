@@ -75,3 +75,5 @@ export default function Login() {
     </div>
   );
 }
+
+export { Login };

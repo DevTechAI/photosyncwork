@@ -1,8 +1,10 @@
+
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { CustomService } from "../form/types";
+import { Database } from "@/integrations/supabase/types";
 
 // Default services as fallback
 export const services: Record<string, CustomService> = {
@@ -62,8 +64,12 @@ export function ServicesPage({ selectedServices, onServicesChange, isReadOnly = 
           throw error;
         }
 
-        if (data && data.settings && data.settings.services) {
-          setCustomServices(data.settings.services);
+        if (data && data.settings && typeof data.settings === 'object') {
+          // Check if services exist in the settings object
+          const settingsObj = data.settings as { services?: Record<string, CustomService> };
+          if (settingsObj.services) {
+            setCustomServices(settingsObj.services);
+          }
         } else {
           // Fall back to localStorage
           const savedSettings = localStorage.getItem("studiosync_settings");
