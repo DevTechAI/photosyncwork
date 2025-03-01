@@ -1,5 +1,6 @@
 
 import { Card } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface Service {
   title: string;
@@ -46,20 +47,37 @@ interface ServicesPageProps {
 }
 
 export function ServicesPage({ selectedServices, onServicesChange, isReadOnly = false }: ServicesPageProps) {
+  const handleToggleService = (serviceKey: string) => {
+    if (selectedServices.includes(serviceKey)) {
+      onServicesChange(selectedServices.filter(s => s !== serviceKey));
+    } else {
+      onServicesChange([...selectedServices, serviceKey]);
+    }
+  };
+
   return (
     <div className="space-y-8">
       <div className="text-center">
         <h2 className="text-3xl font-light">SERVICES</h2>
         {!isReadOnly && (
           <p className="text-sm text-muted-foreground mt-2">
-            (Optional) These services will be displayed in the final estimate sent to the client
+            (Optional) Select service packages to include in your estimate. This page will always be displayed in the final estimate.
           </p>
         )}
       </div>
       
       <div className="grid md:grid-cols-2 gap-8">
         {Object.entries(services).map(([key, service]) => (
-          <Card key={key} className="p-6 space-y-4">
+          <Card key={key} className="p-6 space-y-4 relative">
+            {!isReadOnly && (
+              <div className="absolute right-4 top-4">
+                <Checkbox 
+                  checked={selectedServices.includes(key)}
+                  onCheckedChange={() => handleToggleService(key)}
+                  id={`service-${key}`}
+                />
+              </div>
+            )}
             <h3 className="text-xl font-medium">{service.title}</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
               {service.items.map((item) => (

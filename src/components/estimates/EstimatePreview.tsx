@@ -22,6 +22,7 @@ interface EstimatePreviewProps {
     date: string;
     amount: string;
     status: string;
+    selectedServices?: string[];
     services?: Array<{
       event: string;
       date: string;
@@ -68,7 +69,8 @@ export function EstimatePreview({ open, onClose, estimate, onStatusChange }: Est
     setShowApprovalForm(false);
   };
 
-  const selectedServices = estimate?.services?.map(service => service.event) || [];
+  // Ensure selectedServices is always an array
+  const selectedServices = estimate?.selectedServices || [];
 
   const pages = [
     <WelcomePage 
