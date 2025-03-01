@@ -74,14 +74,9 @@ export function EstimateForm({ open, onClose, editingEstimate }: EstimateFormPro
         });
         return false;
       }
-    } else if (currentPage === 1 && formData.selectedServices.length === 0) {
-      toast({
-        title: "No services selected",
-        description: "Please select at least one service to continue.",
-        variant: "destructive",
-        duration: 5000,
-      });
-      return false;
+    } else if (currentPage === 1) {
+      // Make services selection optional - removed validation that was here
+      return true;
     } else if (currentPage === 2) {
       // Validate estimate details
       const { estimates } = formData.estimateDetails;

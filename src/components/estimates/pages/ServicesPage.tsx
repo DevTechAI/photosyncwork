@@ -48,7 +48,14 @@ interface ServicesPageProps {
 export function ServicesPage({ selectedServices, onServicesChange, isReadOnly = false }: ServicesPageProps) {
   return (
     <div className="space-y-8">
-      <h2 className="text-3xl font-light text-center">SERVICES</h2>
+      <div className="text-center">
+        <h2 className="text-3xl font-light">SERVICES</h2>
+        {!isReadOnly && (
+          <p className="text-sm text-muted-foreground mt-2">
+            (Optional) These services will be displayed in the final estimate sent to the client
+          </p>
+        )}
+      </div>
       
       <div className="grid md:grid-cols-2 gap-8">
         {Object.entries(services).map(([key, service]) => (
