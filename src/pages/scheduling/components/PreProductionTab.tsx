@@ -1,8 +1,7 @@
-
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScheduledEvent, TeamMember } from "@/components/scheduling/types";
-import { EventAssignments } from "@/components/scheduling/EventAssignments";
+import { EventAssignments } from "@/components/scheduling/assignments/EventAssignments";
 
 interface PreProductionTabProps {
   events: ScheduledEvent[];
