@@ -1,8 +1,8 @@
 
 import { ScheduledEvent, TeamMember } from "@/components/scheduling/types";
-import { PreProductionEventList } from "@/components/workflow/pre-production/PreProductionEventList";
+import { PreProductionEventList } from "@/components/workflow/pre-production/EventList/PreProductionEventList";
+import { CompletedEventsList } from "@/components/workflow/pre-production/EventList/CompletedEventsList";
 import { EventDetailsTabs } from "@/components/workflow/pre-production/EventDetailsTabs";
-import { CompletedPreProductionEvents } from "@/components/workflow/pre-production/CompletedPreProductionEvents";
 
 interface PreProductionContentProps {
   events: ScheduledEvent[];
@@ -41,7 +41,7 @@ export function PreProductionContent({
 }: PreProductionContentProps) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-      {/* Event List */}
+      {/* Event Lists Section */}
       <div>
         <PreProductionEventList 
           events={events}
@@ -50,15 +50,11 @@ export function PreProductionContent({
         />
         
         {/* Completed Events Section */}
-        {completedEvents.length > 0 && (
-          <div className="mt-6">
-            <CompletedPreProductionEvents 
-              completedEvents={completedEvents}
-              teamMembers={teamMembers}
-              onDelete={deleteCompletedEvent}
-            />
-          </div>
-        )}
+        <CompletedEventsList
+          completedEvents={completedEvents}
+          teamMembers={teamMembers}
+          onDelete={deleteCompletedEvent}
+        />
       </div>
       
       {/* Event Details and Team Assignment */}

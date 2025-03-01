@@ -1,5 +1,5 @@
 
-import { ScheduledEvent, TeamMember } from "@/components/scheduling/types";
+import { ScheduledEvent, TeamMember, EventAssignment } from "@/components/scheduling/types";
 
 export function useSchedulingTab(
   events: ScheduledEvent[],
@@ -25,16 +25,18 @@ export function useSchedulingTab(
   const handleAssignTeamMemberForScheduling = (eventId: string, teamMemberId: string, role: string) => {
     const eventToUpdate = events.find(e => e.id === eventId);
     if (eventToUpdate && teamMemberId && role) {
-      const updatedAssignments = [...eventToUpdate.assignments, {
+      const newAssignment: EventAssignment = {
         eventId,
         teamMemberId,
-        role,
+        role: role as "photographer" | "videographer",
         status: "pending",
         eventName: eventToUpdate.name,
         date: eventToUpdate.date,
         location: eventToUpdate.location,
         notes: `Assigned as ${role}`
-      }];
+      };
+      
+      const updatedAssignments = [...eventToUpdate.assignments, newAssignment];
       
       const updatedEvent = { ...eventToUpdate, assignments: updatedAssignments };
       const updatedEvents = events.map(e => e.id === eventId ? updatedEvent : e);
