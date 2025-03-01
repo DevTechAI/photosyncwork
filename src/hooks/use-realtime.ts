@@ -23,19 +23,22 @@ export function useRealtime() {
       try {
         setIsLoading(true);
         
-        // Since the realtime_messages table doesn't seem to exist yet,
+        // Since the realtime_messages table doesn't exist yet,
         // we'll just provide an empty array for now
         setMessages([]);
         setIsLoading(false);
         
-        /* Commented out since this table doesn't exist in our schema yet
-        const { data, error } = await supabase.from('realtime_messages').select('*')
+        /* This is commented out since the realtime_messages table doesn't exist in our schema
+        const { data, error } = await supabase
+          .from('realtime_messages')
+          .select('*')
           .order('created_at', { ascending: false })
           .limit(50);
           
         if (error) throw error;
         
-        setMessages((data || []) as RealtimeMessage[]);
+        // We need a type assertion here since we're dealing with messages
+        setMessages((data || []) as unknown as RealtimeMessage[]);
         */
       } catch (error) {
         console.error('Error fetching messages:', error);
@@ -81,7 +84,7 @@ export function useRealtime() {
       console.log("Would send message:", messageText);
       return true;
       
-      /* Commented out since table doesn't exist
+      /* This is commented out since the realtime_messages table doesn't exist
       const { error } = await supabase.from('realtime_messages').insert({
         user_id: currentUser.id,
         user_name: currentUser.name,

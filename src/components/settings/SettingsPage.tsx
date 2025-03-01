@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -136,7 +135,7 @@ export function SettingsPage() {
           .from('settings')
           .upsert({ 
             id: 1, // Single settings record
-            settings: settings as any,
+            settings: settings as unknown as JSON,
             updated_at: new Date().toISOString()
           });
           
@@ -161,27 +160,25 @@ export function SettingsPage() {
     }
   };
   
-  // Terms management
-  const addTerm = () => {
+  function addTerm() {
     if (!newTerm.trim()) return;
     setSettings({
       ...settings,
       terms: [...settings.terms, newTerm]
     });
     setNewTerm("");
-  };
+  }
   
-  const removeTerm = (index: number) => {
+  function removeTerm(index: number) {
     const updatedTerms = [...settings.terms];
     updatedTerms.splice(index, 1);
     setSettings({
       ...settings,
       terms: updatedTerms
     });
-  };
+  }
   
-  // Service management
-  const addService = () => {
+  function addService() {
     if (!newServiceKey.trim() || !newServiceTitle.trim()) return;
     
     // Make sure key is unique and in the right format
@@ -210,9 +207,9 @@ export function SettingsPage() {
     setNewServiceKey("");
     setNewServiceTitle("");
     setEditingServiceKey(key);
-  };
+  }
   
-  const removeService = (key: string) => {
+  function removeService(key: string) {
     const updatedServices = { ...settings.services };
     delete updatedServices[key];
     setSettings({
@@ -223,14 +220,14 @@ export function SettingsPage() {
     if (editingServiceKey === key) {
       setEditingServiceKey(null);
     }
-  };
+  }
   
-  const selectServiceToEdit = (key: string) => {
+  function selectServiceToEdit(key: string) {
     setEditingServiceKey(key);
     setTempServiceItem("");
-  };
+  }
   
-  const addServiceItem = () => {
+  function addServiceItem() {
     if (!editingServiceKey || !tempServiceItem.trim()) return;
     
     const updatedServices = { ...settings.services };
@@ -242,9 +239,9 @@ export function SettingsPage() {
     });
     
     setTempServiceItem("");
-  };
+  }
   
-  const removeServiceItem = (serviceKey: string, itemIndex: number) => {
+  function removeServiceItem(serviceKey: string, itemIndex: number) {
     const updatedServices = { ...settings.services };
     updatedServices[serviceKey].items.splice(itemIndex, 1);
     
@@ -252,7 +249,7 @@ export function SettingsPage() {
       ...settings,
       services: updatedServices
     });
-  };
+  }
   
   if (loading) {
     return <div className="flex items-center justify-center p-8">Loading settings...</div>;
