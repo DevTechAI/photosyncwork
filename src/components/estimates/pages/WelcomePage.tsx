@@ -1,14 +1,44 @@
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useToast } from "@/components/ui/use-toast";
 
 interface WelcomePageProps {
   clientName: string;
+  clientEmail: string;
   onClientNameChange: (name: string) => void;
+  onClientEmailChange: (email: string) => void;
   isReadOnly?: boolean;
 }
 
-export function WelcomePage({ clientName, onClientNameChange, isReadOnly = false }: WelcomePageProps) {
+export function WelcomePage({ 
+  clientName, 
+  clientEmail,
+  onClientNameChange, 
+  onClientEmailChange,
+  isReadOnly = false 
+}: WelcomePageProps) {
+  const { toast } = useToast();
+
+  const validateEmail = (email: string) => {
+    if (!email) return true; // Allow empty email for now
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const email = e.target.value;
+    onClientEmailChange(email);
+    
+    if (email && !validateEmail(email)) {
+      toast({
+        title: "Invalid email format",
+        description: "Please enter a valid email address",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="space-y-8">
       <div className="text-center space-y-4">
@@ -26,6 +56,19 @@ export function WelcomePage({ clientName, onClientNameChange, isReadOnly = false
             value={clientName}
             onChange={(e) => onClientNameChange(e.target.value)}
             placeholder="Enter client name"
+            readOnly={isReadOnly}
+            className={isReadOnly ? "bg-gray-100" : ""}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="clientEmail">Client Email</Label>
+          <Input
+            id="clientEmail"
+            type="email"
+            value={clientEmail}
+            onChange={handleEmailChange}
+            placeholder="Enter client email"
             readOnly={isReadOnly}
             className={isReadOnly ? "bg-gray-100" : ""}
           />

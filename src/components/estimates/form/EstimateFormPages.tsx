@@ -35,8 +35,12 @@ export function EstimateFormPages({
         return (
           <WelcomePage 
             clientName={formData.clientName}
+            clientEmail={formData.clientEmail}
             onClientNameChange={(name) => 
               onUpdateFormData("clientName", name)
+            }
+            onClientEmailChange={(email) =>
+              onUpdateFormData("clientEmail", email)
             }
             isReadOnly={isEditing}
           />
@@ -83,6 +87,7 @@ export function EstimateFormPages({
           onPrevious={onPrevious}
           onNext={onNext}
           hidePrevious={isEditing && currentPage === 2}
+          isNextDisabled={currentPage === 0 && !formData.clientName.trim()}
         />
       )}
     </>
