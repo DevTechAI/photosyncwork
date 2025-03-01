@@ -10,6 +10,11 @@ interface SchedulingOverviewProps {
 }
 
 export function SchedulingOverview({ events, getEventsByStage }: SchedulingOverviewProps) {
+  // Helper to check if there are any events for a stage
+  const hasEvents = (stage: "pre-production" | "production" | "post-production" | "completed") => {
+    return getEventsByStage(stage).length > 0;
+  };
+
   return (
     <div className="space-y-4">
       <UpcomingEventsCalendar events={events} />
@@ -22,11 +27,12 @@ export function SchedulingOverview({ events, getEventsByStage }: SchedulingOverv
             <span>Pre-Production</span>
           </h3>
           <div className="space-y-3">
-            {getEventsByStage("pre-production").length > 0 ? (
+            {hasEvents("pre-production") ? (
               getEventsByStage("pre-production").map(event => (
                 <div key={event.id} className="p-2 border-l-2 border-indigo-400 pl-3">
                   <p className="font-medium">{event.name}</p>
                   <p className="text-xs text-muted-foreground">{new Date(event.date).toLocaleDateString()}</p>
+                  <p className="text-xs text-muted-foreground">Client: {event.clientName}</p>
                 </div>
               ))
             ) : (
@@ -41,11 +47,12 @@ export function SchedulingOverview({ events, getEventsByStage }: SchedulingOverv
             <span>Production</span>
           </h3>
           <div className="space-y-3">
-            {getEventsByStage("production").length > 0 ? (
+            {hasEvents("production") ? (
               getEventsByStage("production").map(event => (
                 <div key={event.id} className="p-2 border-l-2 border-amber-400 pl-3">
                   <p className="font-medium">{event.name}</p>
                   <p className="text-xs text-muted-foreground">{new Date(event.date).toLocaleDateString()}</p>
+                  <p className="text-xs text-muted-foreground">Client: {event.clientName}</p>
                 </div>
               ))
             ) : (
@@ -60,11 +67,12 @@ export function SchedulingOverview({ events, getEventsByStage }: SchedulingOverv
             <span>Post-Production</span>
           </h3>
           <div className="space-y-3">
-            {getEventsByStage("post-production").length > 0 ? (
+            {hasEvents("post-production") ? (
               getEventsByStage("post-production").map(event => (
                 <div key={event.id} className="p-2 border-l-2 border-green-400 pl-3">
                   <p className="font-medium">{event.name}</p>
                   <p className="text-xs text-muted-foreground">{new Date(event.date).toLocaleDateString()}</p>
+                  <p className="text-xs text-muted-foreground">Client: {event.clientName}</p>
                 </div>
               ))
             ) : (

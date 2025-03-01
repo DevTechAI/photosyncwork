@@ -22,6 +22,33 @@ export function ApprovalForm({ onClose, estimate, onStatusChange }: ApprovalForm
   const { toast } = useToast();
 
   const handleApprove = () => {
+    // Fix any circular references in deliverables before storing the estimate
+    const savedEstimates = localStorage.getItem("estimates");
+    if (savedEstimates) {
+      const estimates = JSON.parse(savedEstimates);
+      const currentEstimateIndex = estimates.findIndex(est => est.id === estimate.id);
+      
+      if (currentEstimateIndex !== -1) {
+        // Make sure packages have proper deliverables (not circular references)
+        if (estimates[currentEstimateIndex].packages) {
+          estimates[currentEstimateIndex].packages = estimates[currentEstimateIndex].packages.map(pkg => {
+            // If deliverables is a circular reference or invalid, use the main deliverables
+            if (!Array.isArray(pkg.deliverables)) {
+              return {
+                ...pkg,
+                deliverables: estimates[currentEstimateIndex].deliverables
+              };
+            }
+            return pkg;
+          });
+          
+          // Update the storage
+          localStorage.setItem("estimates", JSON.stringify(estimates));
+        }
+      }
+    }
+    
+    // Update the status
     onStatusChange(
       estimate.id, 
       'approved', 

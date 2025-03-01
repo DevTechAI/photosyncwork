@@ -45,14 +45,19 @@ export function createEventFromEstimate(estimate) {
       eventData.videographersCount = parseInt(firstService.cinematographers) || 1;
     }
     
-    // Extract deliverables
-    if (selectedPackage.deliverables && selectedPackage.deliverables.length > 0) {
+    // Extract deliverables - fix the circular reference issue
+    if (selectedPackage.deliverables) {
+      // Handle both array deliverables and the circular reference case
+      const deliverablesArray = Array.isArray(selectedPackage.deliverables) 
+        ? selectedPackage.deliverables 
+        : estimate.deliverables || [];
+      
       // Map deliverables to the required format
-      eventData.deliverables = selectedPackage.deliverables.map((item, index) => ({
+      eventData.deliverables = deliverablesArray.map((item, index) => ({
         id: `del-${Date.now()}-${index}`,
-        type: item.toLowerCase().includes('photo') ? 'photos' : 
-              item.toLowerCase().includes('video') ? 'videos' : 
-              item.toLowerCase().includes('album') ? 'album' : 'photos',
+        type: typeof item === 'string' && item.toLowerCase().includes('photo') ? 'photos' : 
+              typeof item === 'string' && item.toLowerCase().includes('video') ? 'videos' : 
+              typeof item === 'string' && item.toLowerCase().includes('album') ? 'album' : 'photos',
         status: 'pending'
       }));
     }
@@ -70,12 +75,12 @@ export function createEventFromEstimate(estimate) {
     eventData.videographersCount = parseInt(firstService.cinematographers) || 1;
     
     // Extract deliverables from main estimate
-    if (estimate.deliverables && estimate.deliverables.length > 0) {
+    if (estimate.deliverables && Array.isArray(estimate.deliverables)) {
       eventData.deliverables = estimate.deliverables.map((item, index) => ({
         id: `del-${Date.now()}-${index}`,
-        type: item.toLowerCase().includes('photo') ? 'photos' : 
-              item.toLowerCase().includes('video') ? 'videos' : 
-              item.toLowerCase().includes('album') ? 'album' : 'photos',
+        type: typeof item === 'string' && item.toLowerCase().includes('photo') ? 'photos' : 
+              typeof item === 'string' && item.toLowerCase().includes('video') ? 'videos' : 
+              typeof item === 'string' && item.toLowerCase().includes('album') ? 'album' : 'photos',
         status: 'pending'
       }));
     }
@@ -85,3 +90,4 @@ export function createEventFromEstimate(estimate) {
   
   return eventData;
 }
+
