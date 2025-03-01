@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Send } from "lucide-react";
 import { ScheduledEvent, TeamMember } from "@/components/scheduling/types";
-import { AssignedTeamList } from "./AssignedTeamList";
+import { AssignedTeamList } from "@/components/scheduling/assignments/AssignedTeamList";
 import { TeamMemberList } from "./TeamMemberList";
 
 interface TeamAssignmentTabProps {
@@ -35,8 +35,9 @@ export function TeamAssignmentTab({
   return (
     <>
       <AssignedTeamList 
-        assignedTeamMembers={assignedTeamMembers} 
-        onUpdateStatus={handleUpdateAssignmentStatus}
+        event={selectedEvent}
+        teamMembers={teamMembers}
+        onUpdateStatus={handleUpdateAssignmentStatus || (() => {})}
       />
       
       <Card className="p-6 mt-4">
