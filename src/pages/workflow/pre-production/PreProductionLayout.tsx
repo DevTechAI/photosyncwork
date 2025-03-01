@@ -4,11 +4,13 @@ import { useState } from "react";
 import { TeamMember } from "@/components/scheduling/types";
 import { usePreProductionEvents } from "@/hooks/usePreProductionEvents";
 import { useClientRequirements } from "@/hooks/useClientRequirements";
-import { useTeamAssignmentHandlers, getAvailableTeamMembers, getAssignedTeamMembers } from "@/utils/teamAssignmentUtils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EventAssignments } from "@/components/scheduling/assignments/EventAssignments";
 import { PreProductionContent } from "./PreProductionContent";
+import { useTeamAssignmentsTab } from "@/hooks/useTeamAssignmentsTab";
+import { useSchedulingTab } from "@/hooks/useSchedulingTab";
+import { useTabState } from "@/hooks/useTabState";
 
 // Mock data for demonstration
 const mockTeamMembers: TeamMember[] = [
@@ -55,7 +57,9 @@ const mockTeamMembers: TeamMember[] = [
 export default function PreProductionPage() {
   // Team members data
   const [teamMembers] = useState<TeamMember[]>(mockTeamMembers);
-  const [activeTab, setActiveTab] = useState("details");
+  
+  // Tab state management
+  const { activeTab, setActiveTab } = useTabState("details");
   
   // Events management hook
   const { 
@@ -75,57 +79,22 @@ export default function PreProductionPage() {
     handleSaveRequirements 
   } = useClientRequirements(selectedEvent, setEvents, setSelectedEvent);
   
-  // Team assignment handlers
-  const { 
-    loading, 
-    handleAssignTeamMember, 
-    handleMoveToProduction 
-  } = useTeamAssignmentHandlers(events, setEvents, selectedEvent, setSelectedEvent, teamMembers);
+  // Team assignment tab hook
+  const {
+    loading,
+    availablePhotographers,
+    availableVideographers,
+    assignedTeamMembers,
+    handleAssignTeamMember,
+    handleMoveToProduction
+  } = useTeamAssignmentsTab(events, setEvents, selectedEvent, setSelectedEvent, teamMembers);
   
-  // Filter team members
-  const availablePhotographers = getAvailableTeamMembers(teamMembers, selectedEvent, "photographer");
-  const availableVideographers = getAvailableTeamMembers(teamMembers, selectedEvent, "videographer");
-  const assignedTeamMembers = getAssignedTeamMembers(selectedEvent, teamMembers);
-
-  // Assignment counts function for the team assignments
-  const getAssignmentCounts = (event: any) => {
-    const photographers = event.assignments?.filter((a: any) => a.role === "photographer") || [];
-    const videographers = event.assignments?.filter((a: any) => a.role === "videographer") || [];
-    
-    return {
-      acceptedPhotographers: photographers.filter((a: any) => a.status === "accepted").length,
-      acceptedVideographers: videographers.filter((a: any) => a.status === "accepted").length,
-      pendingPhotographers: photographers.filter((a: any) => a.status === "pending").length,
-      pendingVideographers: videographers.filter((a: any) => a.status === "pending").length,
-      totalPhotographers: event.requiredPhotographers || 0,
-      totalVideographers: event.requiredVideographers || 0
-    };
-  };
-  
-  // Handler for assignment
-  const handleAssignTeamMemberForScheduling = (eventId: string, teamMemberId: string, role: string) => {
-    const eventToUpdate = events.find(e => e.id === eventId);
-    if (eventToUpdate && teamMemberId && role) {
-      handleAssignTeamMember(teamMemberId, role as "photographer" | "videographer");
-    }
-  };
-  
-  // Handler for updating assignment status
-  const handleUpdateAssignmentStatus = (eventId: string, teamMemberId: string, status: "accepted" | "declined") => {
-    const eventToUpdate = events.find(e => e.id === eventId);
-    if (eventToUpdate) {
-      const updatedAssignments = eventToUpdate.assignments.map(a => {
-        if (a.teamMemberId === teamMemberId) {
-          return { ...a, status };
-        }
-        return a;
-      });
-      
-      const updatedEvent = { ...eventToUpdate, assignments: updatedAssignments };
-      const updatedEvents = events.map(e => e.id === eventId ? updatedEvent : e);
-      setEvents(updatedEvents);
-    }
-  };
+  // Scheduling tab hook
+  const {
+    getAssignmentCounts,
+    handleAssignTeamMemberForScheduling,
+    handleUpdateAssignmentStatus
+  } = useSchedulingTab(events, setEvents, teamMembers);
   
   return (
     <Layout>
