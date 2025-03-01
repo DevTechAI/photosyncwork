@@ -1,4 +1,3 @@
-
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
@@ -13,7 +12,6 @@ import {
   Film,
   LogOut,
   User,
-  Settings,
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { useEffect, useState } from "react";
@@ -27,7 +25,6 @@ const navItems = [
   { path: "/invoices", label: "Invoices", icon: Receipt, access: ["manager", "accounts"] },
   { path: "/finances", label: "Finances", icon: LineChart, access: ["manager", "accounts"] },
   { path: "/scheduling", label: "Scheduling", icon: Calendar, access: ["manager", "crm", "photographer", "videographer"] },
-  { path: "/settings", label: "Settings", icon: Settings, access: ["manager", "crm"] },
 ];
 
 export default function Layout({ children }: { children: React.ReactNode }) {
@@ -159,7 +156,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <main className={cn(
         "min-h-screen transition-all duration-300 ease-in-out",
         "lg:pl-64 p-6",
-        "lg:pt-6 pt-20" // Add top padding on mobile for the header
+        "lg:pt-6 pt-20"
       )}>
         <div className="max-w-6xl mx-auto">
           {children}

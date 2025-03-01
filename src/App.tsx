@@ -10,7 +10,6 @@ import SchedulingPage from "./pages/scheduling/SchedulingPage";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import Layout from "./components/Layout";
 import RealtimeTestPage from "./pages/RealtimeTestPage";
-import { SettingsPage } from "./components/settings/SettingsPage";
 
 import "./App.css";
 
@@ -37,10 +36,6 @@ function App() {
         <Route 
           path="/scheduling/*" 
           element={<ProtectedRoute><SchedulingPage /></ProtectedRoute>} 
-        />
-        <Route 
-          path="/settings" 
-          element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} 
         />
         <Route 
           path="/realtime-test" 
