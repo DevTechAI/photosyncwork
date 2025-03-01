@@ -52,6 +52,7 @@ export function EstimateForm({ open, onClose, editingEstimate }: EstimateFormPro
           title: "Client name required",
           description: "Please enter the client name to continue.",
           variant: "destructive",
+          duration: 5000,
         });
         return false;
       }
@@ -63,6 +64,7 @@ export function EstimateForm({ open, onClose, editingEstimate }: EstimateFormPro
           title: "Invalid email format",
           description: "Please enter a valid email address or leave it blank.",
           variant: "destructive",
+          duration: 5000,
         });
         return false;
       }
@@ -71,6 +73,7 @@ export function EstimateForm({ open, onClose, editingEstimate }: EstimateFormPro
         title: "No services selected",
         description: "Please select at least one service to continue.",
         variant: "destructive",
+        duration: 5000,
       });
       return false;
     } else if (currentPage === 2) {
@@ -81,6 +84,7 @@ export function EstimateForm({ open, onClose, editingEstimate }: EstimateFormPro
           title: "No estimate packages",
           description: "Please add at least one estimate package to continue.",
           variant: "destructive",
+          duration: 5000,
         });
         return false;
       }
@@ -95,6 +99,7 @@ export function EstimateForm({ open, onClose, editingEstimate }: EstimateFormPro
           title: "Missing services",
           description: "Please add at least one service to an estimate package.",
           variant: "destructive",
+          duration: 5000,
         });
         return false;
       }

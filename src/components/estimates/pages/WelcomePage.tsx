@@ -35,6 +35,7 @@ export function WelcomePage({
         title: "Invalid email format",
         description: "Please enter a valid email address",
         variant: "destructive",
+        duration: 5000, // Increase duration to 5 seconds
       });
     }
   };
