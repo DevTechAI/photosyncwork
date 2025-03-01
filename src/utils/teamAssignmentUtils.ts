@@ -1,78 +1,79 @@
-
-import { useState } from "react";
-import { ScheduledEvent, TeamMember } from "@/components/scheduling/types";
-import { useTeamNotifications } from "@/components/scheduling/utils/notificationHelpers";
+import { ScheduledEvent, TeamMember, EventAssignment } from "@/components/scheduling/types";
 import { useToast } from "@/components/ui/use-toast";
-import { updateEventStage } from "@/components/scheduling/utils/eventHelpers";
-import { format, isAfter, parseISO } from "date-fns";
+import { useState } from "react";
+import { saveEvents, saveEvent } from "@/components/scheduling/utils/eventHelpers";
 
-export function getAvailableTeamMembers(
+// Function to filter available team members based on role and availability
+export const getAvailableTeamMembers = (
   teamMembers: TeamMember[],
   selectedEvent: ScheduledEvent | null,
   role: "photographer" | "videographer"
-) {
-  return teamMembers.filter(
-    tm => tm.role === role && 
-    (!selectedEvent || !selectedEvent.assignments.some(a => a.teamMemberId === tm.id))
-  );
-}
+): TeamMember[] => {
+  if (!selectedEvent) return [];
 
-export function getAssignedTeamMembers(
+  const eventDate = selectedEvent.date;
+
+  return teamMembers.filter(member => {
+    // Check if member's role matches
+    const roleMatches = member.role === role;
+
+    // Check if member is available on the event date
+    const isAvailable = !member.availability[eventDate] ||
+      member.availability[eventDate] === "available";
+
+    // Check if member is not already assigned to this event
+    const isNotAssigned = !selectedEvent.assignments.some(
+      assignment => assignment.teamMemberId === member.id
+    );
+
+    return roleMatches && isAvailable && isNotAssigned;
+  });
+};
+
+// Function to get assigned team members for an event
+export const getAssignedTeamMembers = (
   selectedEvent: ScheduledEvent | null,
   teamMembers: TeamMember[]
-) {
-  return selectedEvent
-    ? selectedEvent.assignments.map(assignment => {
-        const teamMember = teamMembers.find(tm => tm.id === assignment.teamMemberId);
-        return { 
-          ...assignment, 
-          teamMember 
-        };
-      })
-    : [];
-}
+): Array<{ teamMember?: TeamMember } & EventAssignment> => {
+  if (!selectedEvent) return [];
 
-// Process events based on dates and update their stages accordingly
-export function processEventsWorkflow(events: ScheduledEvent[]): ScheduledEvent[] {
-  const today = new Date();
-  const updatedEvents = [...events];
-  let hasChanges = false;
-
-  // Check if any events need to move to the next stage based on date
-  updatedEvents.forEach(event => {
-    const eventDate = parseISO(event.date);
-    
-    // If event date has passed and it's still in pre-production, move it to post-production
-    if (isAfter(today, eventDate) && event.stage === "pre-production") {
-      console.log(`Moving event ${event.name} from pre-production to post-production`);
-      event.stage = "post-production";
-      hasChanges = true;
-    }
+  return selectedEvent.assignments.map(assignment => {
+    const teamMember = teamMembers.find(member => member.id === assignment.teamMemberId);
+    return { ...assignment, teamMember };
   });
+};
 
-  // If we made changes, save to localStorage
-  if (hasChanges) {
-    const allEvents = getAllEventsFromStorage();
-    
-    // Update the events in storage
-    const updatedAllEvents = allEvents.map(existingEvent => {
-      const updatedEvent = updatedEvents.find(e => e.id === existingEvent.id);
-      return updatedEvent || existingEvent;
-    });
-    
-    localStorage.setItem("scheduledEvents", JSON.stringify(updatedAllEvents));
-  }
+// Mock function to simulate sending assignment notification
+const sendAssignmentNotification = (teamMember: TeamMember, event: ScheduledEvent) => {
+  console.log(`Sending notification to ${teamMember.name} for event ${event.name}`);
+  // In a real application, you would use an actual notification service
+};
 
-  return updatedEvents;
-}
+// Function to process events and move them to the next stage based on the date
+export const processEventsWorkflow = (events: ScheduledEvent[]): ScheduledEvent[] => {
+  return events.map(event => {
+    const eventDate = new Date(event.date);
+    const today = new Date();
 
-// Helper to get all events from storage
-function getAllEventsFromStorage(): ScheduledEvent[] {
-  const savedEvents = localStorage.getItem("scheduledEvents");
-  if (!savedEvents) return [];
-  return JSON.parse(savedEvents);
-}
+    // If the event date is in the past, move it to the next stage
+    if (eventDate < today) {
+      switch (event.stage) {
+        case "pre-production":
+          return { ...event, stage: "production" };
+        case "production":
+          return { ...event, stage: "post-production" };
+        case "post-production":
+          return { ...event, stage: "completed" };
+        default:
+          return event;
+      }
+    }
 
+    return event;
+  });
+};
+
+// Update this function to mark events as dataCopied when moved to production
 export function useTeamAssignmentHandlers(
   events: ScheduledEvent[],
   setEvents: React.Dispatch<React.SetStateAction<ScheduledEvent[]>>,
@@ -81,117 +82,108 @@ export function useTeamAssignmentHandlers(
   teamMembers: TeamMember[]
 ) {
   const { toast } = useToast();
-  const { sendAssignmentNotification } = useTeamNotifications();
   const [loading, setLoading] = useState(false);
-
+  
+  // Assign team member to the selected event
   const handleAssignTeamMember = async (teamMemberId: string, role: "photographer" | "videographer") => {
     if (!selectedEvent) return;
     
     setLoading(true);
     
     try {
-      const teamMember = teamMembers.find(tm => tm.id === teamMemberId);
+      // Find team member
+      const teamMember = teamMembers.find(member => member.id === teamMemberId);
       if (!teamMember) throw new Error("Team member not found");
       
       // Create a new assignment
-      const newAssignment = {
+      const newAssignment: EventAssignment = {
         eventId: selectedEvent.id,
         eventName: selectedEvent.name,
         date: selectedEvent.date,
         location: selectedEvent.location,
-        teamMemberId,
-        status: "pending" as const,
-        reportingTime: selectedEvent.startTime
+        teamMemberId: teamMemberId,
+        status: "pending",
+        notes: `Assigned as ${role}`
       };
       
-      // Add assignment to the event
+      // Add assignment to event
       const updatedEvent = {
         ...selectedEvent,
         assignments: [...selectedEvent.assignments, newAssignment]
       };
       
-      // Update events state
-      setEvents(prev => 
-        prev.map(event => 
-          event.id === selectedEvent.id ? updatedEvent : event
-        )
+      // Update events array
+      const updatedEvents = events.map(event => 
+        event.id === updatedEvent.id ? updatedEvent : event
       );
       
+      // Save to localStorage
+      saveEvents(updatedEvents);
+      
+      // Update state
+      setEvents(updatedEvents);
       setSelectedEvent(updatedEvent);
       
-      // Send notification to team member
-      await sendAssignmentNotification(updatedEvent, newAssignment, teamMember);
-      
+      // Show toast notification
       toast({
         title: "Team Member Assigned",
-        description: `${teamMember.name} has been assigned to the event and notified.`
+        description: `${teamMember.name} has been assigned as a ${role}`
       });
+      
+      // Send notification to team member
+      sendAssignmentNotification(teamMember, updatedEvent);
     } catch (error) {
       console.error("Error assigning team member:", error);
       toast({
-        title: "Assignment Failed",
-        description: "There was an error assigning the team member.",
+        title: "Error assigning team member",
+        description: "An error occurred while assigning the team member",
         variant: "destructive"
       });
     } finally {
       setLoading(false);
     }
   };
-
-  const handleMoveToProduction = () => {
+  
+  // Move event to production stage
+  const handleMoveToProduction = async () => {
     if (!selectedEvent) return;
     
-    // Check if there are enough team members assigned
-    const photographersAssigned = selectedEvent.assignments.filter(
-      a => teamMembers.find(tm => tm.id === a.teamMemberId)?.role === "photographer"
-    ).length;
+    setLoading(true);
     
-    const videographersAssigned = selectedEvent.assignments.filter(
-      a => teamMembers.find(tm => tm.id === a.teamMemberId)?.role === "videographer"
-    ).length;
-    
-    if (
-      photographersAssigned < selectedEvent.photographersCount ||
-      videographersAssigned < selectedEvent.videographersCount
-    ) {
+    try {
+      // Update event stage
+      const updatedEvent = {
+        ...selectedEvent,
+        stage: "production" as const,
+        dataCopied: true // Mark event as copied for reference
+      };
+      
+      // Update events array
+      const updatedEvents = events.filter(event => event.id !== updatedEvent.id);
+      
+      // Update localStorage
+      saveEvent(updatedEvent);
+      
+      // Update state
+      setEvents(updatedEvents);
+      setSelectedEvent(null);
+      
+      // Show toast notification
       toast({
-        title: "Insufficient Team Members",
-        description: "Please assign the required number of team members before moving to production.",
+        title: "Event Moved to Production",
+        description: `${updatedEvent.name} has been moved to the production stage`
+      });
+    } catch (error) {
+      console.error("Error moving event to production:", error);
+      toast({
+        title: "Error moving event",
+        description: "An error occurred while moving the event to production",
         variant: "destructive"
       });
-      return;
+    } finally {
+      setLoading(false);
     }
-    
-    // Update event stage to production
-    const updatedEvent = {
-      ...selectedEvent,
-      stage: "production" as const
-    };
-    
-    // Update events state
-    setEvents(prev => prev.filter(event => event.id !== selectedEvent.id));
-    
-    // Update all events in localStorage
-    const savedEvents = localStorage.getItem("scheduledEvents");
-    if (savedEvents) {
-      const parsedEvents = JSON.parse(savedEvents);
-      const updatedEvents = parsedEvents.map((event: ScheduledEvent) =>
-        event.id === selectedEvent.id ? updatedEvent : event
-      );
-      localStorage.setItem("scheduledEvents", JSON.stringify(updatedEvents));
-    }
-    
-    setSelectedEvent(null);
-    
-    toast({
-      title: "Event Moved to Production",
-      description: "The event has been moved to the production stage."
-    });
   };
-
-  return {
-    loading,
-    handleAssignTeamMember,
-    handleMoveToProduction
-  };
+  
+  return { loading, handleAssignTeamMember, handleMoveToProduction };
 }

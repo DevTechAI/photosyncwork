@@ -4,6 +4,7 @@ import { useState } from "react";
 import { TeamMember } from "@/components/scheduling/types";
 import { PreProductionEventList } from "@/components/workflow/pre-production/PreProductionEventList";
 import { EventDetailsTabs } from "@/components/workflow/pre-production/EventDetailsTabs";
+import { CompletedPreProductionEvents } from "@/components/workflow/pre-production/CompletedPreProductionEvents";
 import { usePreProductionEvents } from "@/hooks/usePreProductionEvents";
 import { useClientRequirements } from "@/hooks/useClientRequirements";
 import { useTeamAssignmentHandlers, getAvailableTeamMembers, getAssignedTeamMembers } from "@/utils/teamAssignmentUtils";
@@ -55,7 +56,14 @@ export default function PreProductionPage() {
   const [teamMembers] = useState<TeamMember[]>(mockTeamMembers);
   
   // Events management hook
-  const { events, setEvents, selectedEvent, setSelectedEvent } = usePreProductionEvents();
+  const { 
+    events, 
+    setEvents, 
+    completedEvents, 
+    selectedEvent, 
+    setSelectedEvent,
+    deleteCompletedEvent
+  } = usePreProductionEvents();
   
   // Client requirements hook
   const { 
@@ -90,27 +98,42 @@ export default function PreProductionPage() {
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Event List */}
-          <PreProductionEventList 
-            events={events}
-            selectedEvent={selectedEvent}
-            setSelectedEvent={setSelectedEvent}
-          />
+          <div>
+            <PreProductionEventList 
+              events={events}
+              selectedEvent={selectedEvent}
+              setSelectedEvent={setSelectedEvent}
+            />
+            
+            {/* Completed Events Section */}
+            {completedEvents.length > 0 && (
+              <div className="mt-6">
+                <CompletedPreProductionEvents 
+                  completedEvents={completedEvents}
+                  teamMembers={teamMembers}
+                  onDelete={deleteCompletedEvent}
+                />
+              </div>
+            )}
+          </div>
           
           {/* Event Details and Team Assignment */}
-          <EventDetailsTabs 
-            selectedEvent={selectedEvent}
-            setSelectedEvent={setSelectedEvent}
-            clientRequirements={clientRequirements}
-            setClientRequirements={setClientRequirements}
-            teamMembers={teamMembers}
-            assignedTeamMembers={assignedTeamMembers}
-            availablePhotographers={availablePhotographers}
-            availableVideographers={availableVideographers}
-            loading={loading}
-            handleSaveRequirements={handleSaveRequirements}
-            handleAssignTeamMember={handleAssignTeamMember}
-            handleMoveToProduction={handleMoveToProduction}
-          />
+          <div className="lg:col-span-2">
+            <EventDetailsTabs 
+              selectedEvent={selectedEvent}
+              setSelectedEvent={setSelectedEvent}
+              clientRequirements={clientRequirements}
+              setClientRequirements={setClientRequirements}
+              teamMembers={teamMembers}
+              assignedTeamMembers={assignedTeamMembers}
+              availablePhotographers={availablePhotographers}
+              availableVideographers={availableVideographers}
+              loading={loading}
+              handleSaveRequirements={handleSaveRequirements}
+              handleAssignTeamMember={handleAssignTeamMember}
+              handleMoveToProduction={handleMoveToProduction}
+            />
+          </div>
         </div>
       </div>
     </Layout>
