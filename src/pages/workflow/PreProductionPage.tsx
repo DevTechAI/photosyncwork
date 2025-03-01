@@ -10,7 +10,7 @@ import { useClientRequirements } from "@/hooks/useClientRequirements";
 import { useTeamAssignmentHandlers, getAvailableTeamMembers, getAssignedTeamMembers } from "@/utils/teamAssignmentUtils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PreProductionTab } from "@/pages/scheduling/components/PreProductionTab";
+import { EventAssignments } from "@/components/scheduling/assignments/EventAssignments";
 
 // Mock data for demonstration
 const mockTeamMembers: TeamMember[] = [
@@ -89,7 +89,7 @@ export default function PreProductionPage() {
   const availableVideographers = getAvailableTeamMembers(teamMembers, selectedEvent, "videographer");
   const assignedTeamMembers = getAssignedTeamMembers(selectedEvent, teamMembers);
 
-  // Assignment counts function for the PreProductionTab
+  // Assignment counts function for the team assignments
   const getAssignmentCounts = (event: any) => {
     const photographers = event.assignments?.filter((a: any) => a.role === "photographer") || [];
     const videographers = event.assignments?.filter((a: any) => a.role === "videographer") || [];
@@ -203,11 +203,11 @@ export default function PreProductionPage() {
           </TabsContent>
           
           <TabsContent value="scheduling">
-            <PreProductionTab 
+            <EventAssignments 
               events={events}
-              teamMembers={teamMembers}
-              onAssignTeamMember={handleAssignTeamMemberForScheduling}
-              onUpdateAssignmentStatus={handleUpdateAssignmentStatus}
+              teamMembers={teamMembers} 
+              onAssign={handleAssignTeamMemberForScheduling}
+              onUpdateStatus={handleUpdateAssignmentStatus}
               getAssignmentCounts={getAssignmentCounts}
             />
           </TabsContent>
