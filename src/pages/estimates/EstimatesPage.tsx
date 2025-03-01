@@ -1,4 +1,3 @@
-
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -45,19 +44,39 @@ export default function EstimatesPage() {
     setShowPreview(true);
   };
 
-  const handleStatusChange = (estimateId: string, newStatus: string, negotiatedAmount?: string) => {
+  const handleStatusChange = (estimateId: string, newStatus: string, negotiatedAmount?: string, selectedPackageIndex?: number) => {
     const updatedEstimates = estimates.map(est => {
       if (est.id === estimateId) {
         const updatedEstimate = {
           ...est,
           status: newStatus,
+          selectedPackageIndex: selectedPackageIndex
         };
+        
+        // If there's a selected package, update the main amount with that package's amount
+        if (selectedPackageIndex !== undefined && updatedEstimate.packages && updatedEstimate.packages[selectedPackageIndex]) {
+          updatedEstimate.amount = updatedEstimate.packages[selectedPackageIndex].amount;
+        }
         
         // If there's a negotiated amount, update all package amounts proportionally
         if (negotiatedAmount) {
-          const ratio = parseFloat(negotiatedAmount) / parseFloat(est.amount);
           updatedEstimate.amount = negotiatedAmount;
-          if (updatedEstimate.packages) {
+          
+          // If there's a selected package, we only need to update that one
+          if (selectedPackageIndex !== undefined && updatedEstimate.packages) {
+            updatedEstimate.packages = updatedEstimate.packages.map((pkg, idx) => {
+              if (idx === selectedPackageIndex) {
+                return {
+                  ...pkg,
+                  amount: negotiatedAmount
+                };
+              }
+              return pkg;
+            });
+          }
+          // Otherwise update all packages proportionally (legacy behavior)
+          else if (updatedEstimate.packages) {
+            const ratio = parseFloat(negotiatedAmount) / parseFloat(est.amount);
             updatedEstimate.packages = updatedEstimate.packages.map(pkg => ({
               ...pkg,
               amount: (parseFloat(pkg.amount) * ratio).toFixed(2)
@@ -139,6 +158,9 @@ export default function EstimatesPage() {
                       <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
                         <span>Created: {new Date(estimate.date).toLocaleDateString()}</span>
                         <span>Amount: {estimate.amount}</span>
+                        {estimate.selectedPackageIndex !== undefined && estimate.packages && (
+                          <span>Selected Package: Option {estimate.selectedPackageIndex + 1}</span>
+                        )}
                         <span className={`capitalize px-2 py-1 rounded-full text-xs ${
                           estimate.status === "approved" ? "bg-green-100 text-green-800" :
                           estimate.status === "declined" ? "bg-red-100 text-red-800" :

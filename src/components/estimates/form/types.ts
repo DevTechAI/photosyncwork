@@ -16,5 +16,6 @@ export interface PreviewEstimate {
   status?: string;
   clientName: string;
   clientEmail?: string;
+  selectedPackageIndex?: number; // Added to track which package was approved
   [key: string]: any;
 }

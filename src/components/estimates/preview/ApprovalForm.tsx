@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { createEventsFromApprovedEstimates } from "@/components/scheduling/utils/eventHelpers";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -12,13 +13,21 @@ interface ApprovalFormProps {
   estimate: {
     id: string;
     amount: string;
+    packages?: Array<{
+      name?: string;
+      amount: string;
+      services: any[];
+    }>;
   };
-  onStatusChange: (estimateId: string, newStatus: string, negotiatedAmount?: string) => void;
+  onStatusChange: (estimateId: string, newStatus: string, negotiatedAmount?: string, selectedPackageIndex?: number) => void;
 }
 
 export function ApprovalForm({ onClose, estimate, onStatusChange }: ApprovalFormProps) {
   const [isNegotiated, setIsNegotiated] = useState(false);
   const [negotiatedAmount, setNegotiatedAmount] = useState(estimate.amount);
+  const [selectedPackageIndex, setSelectedPackageIndex] = useState<number | undefined>(
+    estimate.packages && estimate.packages.length > 0 ? 0 : undefined
+  );
   const { toast } = useToast();
 
   const handleApprove = () => {
@@ -52,7 +61,8 @@ export function ApprovalForm({ onClose, estimate, onStatusChange }: ApprovalForm
     onStatusChange(
       estimate.id, 
       'approved', 
-      isNegotiated ? negotiatedAmount : undefined
+      isNegotiated ? negotiatedAmount : undefined,
+      selectedPackageIndex
     );
     
     // Create events from approved estimates
@@ -70,6 +80,9 @@ export function ApprovalForm({ onClose, estimate, onStatusChange }: ApprovalForm
     onClose();
   };
 
+  // Only show package selection if there are multiple packages
+  const showPackageSelector = estimate.packages && estimate.packages.length > 1;
+
   return (
     <Dialog open={true} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
@@ -81,6 +94,28 @@ export function ApprovalForm({ onClose, estimate, onStatusChange }: ApprovalForm
         </DialogHeader>
         
         <div className="space-y-4 py-4">
+          {showPackageSelector && (
+            <div className="space-y-3">
+              <Label>Select approved package option</Label>
+              <RadioGroup 
+                value={selectedPackageIndex?.toString()} 
+                onValueChange={(value) => setSelectedPackageIndex(parseInt(value))}
+              >
+                {estimate.packages?.map((pkg, index) => (
+                  <div key={index} className="flex items-center space-x-2 py-2 border rounded-md px-3">
+                    <RadioGroupItem value={index.toString()} id={`package-${index}`} />
+                    <Label htmlFor={`package-${index}`} className="flex-1 cursor-pointer">
+                      <div className="flex justify-between w-full">
+                        <span>Package Option {index + 1}</span>
+                        <span className="font-semibold">{pkg.amount}</span>
+                      </div>
+                    </Label>
+                  </div>
+                ))}
+              </RadioGroup>
+            </div>
+          )}
+
           <div className="flex items-start space-x-2">
             <div className="flex h-5 items-center">
               <input
@@ -111,7 +146,12 @@ export function ApprovalForm({ onClose, estimate, onStatusChange }: ApprovalForm
         
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={handleApprove}>Approve Estimate</Button>
+          <Button 
+            onClick={handleApprove}
+            disabled={showPackageSelector && selectedPackageIndex === undefined}
+          >
+            Approve Estimate
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

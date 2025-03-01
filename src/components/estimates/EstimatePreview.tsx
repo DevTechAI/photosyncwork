@@ -23,6 +23,7 @@ interface EstimatePreviewProps {
     amount: string;
     status: string;
     selectedServices?: string[];
+    selectedPackageIndex?: number;
     services?: Array<{
       event: string;
       date: string;
@@ -43,7 +44,7 @@ interface EstimatePreviewProps {
     }>;
     terms?: string[];
   };
-  onStatusChange?: (estimateId: string, newStatus: string, negotiatedAmount?: string) => void;
+  onStatusChange?: (estimateId: string, newStatus: string, negotiatedAmount?: string, selectedPackageIndex?: number) => void;
 }
 
 export function EstimatePreview({ open, onClose, estimate, onStatusChange }: EstimatePreviewProps) {
@@ -53,9 +54,9 @@ export function EstimatePreview({ open, onClose, estimate, onStatusChange }: Est
   const [showApprovalForm, setShowApprovalForm] = useState(false);
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
 
-  const handleStatusChange = (estimateId: string, newStatus: string, negotiatedAmount?: string) => {
+  const handleStatusChange = (estimateId: string, newStatus: string, negotiatedAmount?: string, selectedPackageIndex?: number) => {
     if (onStatusChange) {
-      onStatusChange(estimateId, newStatus, negotiatedAmount);
+      onStatusChange(estimateId, newStatus, negotiatedAmount, selectedPackageIndex);
       
       toast({
         title: "Estimate Updated",
@@ -88,7 +89,10 @@ export function EstimatePreview({ open, onClose, estimate, onStatusChange }: Est
       onServicesChange={() => {}} // No-op function since this is read-only
       isReadOnly={true}
     />,
-    <EstimateDetails estimate={estimate} />
+    <EstimateDetails 
+      key="details"
+      estimate={estimate} 
+    />
   ];
 
   return (
