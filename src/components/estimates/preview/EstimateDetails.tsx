@@ -1,5 +1,6 @@
 
 import { ReactNode } from "react";
+import { services as serviceOptions } from "../pages/ServicesPage";
 
 interface EstimateDetailsProps {
   estimate: {
@@ -8,6 +9,7 @@ interface EstimateDetailsProps {
     date: string;
     amount: string;
     status: string;
+    selectedServices?: string[];
     services?: Array<{
       event: string;
       date: string;
@@ -26,6 +28,7 @@ interface EstimateDetailsProps {
       }>;
       deliverables: string[];
     }>;
+    terms?: string[];
   };
 }
 
@@ -52,6 +55,19 @@ export function EstimateDetails({ estimate }: EstimateDetailsProps) {
   
   // Use packages if available, otherwise create a single package from the estimate's direct properties
   const packagesToRender = hasPackages ? estimate.packages : [legacyPackage];
+  
+  // Default terms if none provided
+  const defaultTerms = [
+    "This estimate is valid for 30 days from the date of issue.",
+    "A 50% advance payment is required to confirm the booking.",
+    "The balance payment is due before the event date."
+  ];
+  
+  // Use provided terms or default terms
+  const termsToDisplay = estimate.terms && estimate.terms.length > 0 ? estimate.terms : defaultTerms;
+
+  // Get the selected services
+  const selectedServices = estimate.selectedServices || [];
 
   return (
     <div className="border rounded-lg p-6 space-y-6">
@@ -78,6 +94,24 @@ export function EstimateDetails({ estimate }: EstimateDetailsProps) {
           </p>
         </div>
       </div>
+
+      {selectedServices.length > 0 && (
+        <div className="mb-4">
+          <h3 className="font-medium mb-2">Selected Services</h3>
+          <div className="grid md:grid-cols-2 gap-4">
+            {selectedServices.map(serviceKey => (
+              <div key={serviceKey} className="border p-4 rounded-md">
+                <h4 className="font-medium mb-2">{serviceOptions[serviceKey]?.title}</h4>
+                <ul className="list-disc ml-5 space-y-1 text-sm text-muted-foreground">
+                  {serviceOptions[serviceKey]?.items.map((item, index) => (
+                    <li key={index}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {packagesToRender.map((pkg, packageIndex) => (
         <div key={packageIndex} className="border p-4 rounded-md mb-6">
@@ -132,9 +166,9 @@ export function EstimateDetails({ estimate }: EstimateDetailsProps) {
       <div className="border-t pt-4 text-sm text-muted-foreground">
         <p>Terms & Conditions</p>
         <ul className="list-disc ml-5 mt-2 space-y-1">
-          <li>This estimate is valid for 30 days from the date of issue.</li>
-          <li>A 50% advance payment is required to confirm the booking.</li>
-          <li>The balance payment is due before the event date.</li>
+          {termsToDisplay.map((term, index) => (
+            <li key={index}>{term}</li>
+          ))}
         </ul>
       </div>
     </div>

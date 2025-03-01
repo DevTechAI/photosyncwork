@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,8 +13,10 @@ interface EmailFormProps {
   estimate: {
     id: string;
     clientName: string;
+    clientEmail?: string;
     amount: string;
     date: string;
+    selectedServices?: string[];
     services?: Array<{
       event: string;
       date: string;
@@ -33,6 +35,7 @@ interface EmailFormProps {
       }>;
       deliverables: string[];
     }>;
+    terms?: string[];
   };
 }
 
@@ -40,6 +43,13 @@ export function EmailForm({ onClose, estimate }: EmailFormProps) {
   const [emailInput, setEmailInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+
+  // Pre-fill the client email if available
+  useEffect(() => {
+    if (estimate.clientEmail) {
+      setEmailInput(estimate.clientEmail);
+    }
+  }, [estimate.clientEmail]);
 
   const sendEmailFallback = async (emailData) => {
     // This is a fallback mechanism that would typically store the email request 
@@ -81,9 +91,11 @@ export function EmailForm({ onClose, estimate }: EmailFormProps) {
         clientName: estimate.clientName,
         estimateId: estimate.id,
         amount: estimate.amount,
+        selectedServices: estimate.selectedServices,
         services: estimate.services,
         deliverables: estimate.deliverables,
-        packages: estimate.packages
+        packages: estimate.packages,
+        terms: estimate.terms
       };
       
       // Try to send via edge function first
@@ -116,7 +128,6 @@ export function EmailForm({ onClose, estimate }: EmailFormProps) {
         description: toastMessage,
       });
       
-      setEmailInput("");
       onClose();
     } catch (error) {
       console.error("Failed to send email:", error);

@@ -15,14 +15,19 @@ export function useEstimateForm(editingEstimate?: any) {
       events: [],
       estimates: [],
       deliverables: []
-    }
+    },
+    terms: [
+      "This estimate is valid for 30 days from the date of issue.",
+      "A 50% advance payment is required to confirm the booking.",
+      "The balance payment is due before the event date."
+    ]
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [previewEstimate, setPreviewEstimate] = useState<PreviewEstimate | null>(null);
 
   useEffect(() => {
     if (editingEstimate) {
-      const selectedServices = editingEstimate.services?.map(service => service.event) || [];
+      const selectedServices = editingEstimate.selectedServices || [];
       
       let estimates = [];
       if (editingEstimate.packages && editingEstimate.packages.length > 0) {
@@ -47,7 +52,12 @@ export function useEstimateForm(editingEstimate?: any) {
           events: [],
           estimates,
           deliverables: []
-        }
+        },
+        terms: editingEstimate.terms || [
+          "This estimate is valid for 30 days from the date of issue.",
+          "A 50% advance payment is required to confirm the booking.",
+          "The balance payment is due before the event date."
+        ]
       });
       
       setPreviewEstimate(editingEstimate);
@@ -68,6 +78,12 @@ export function useEstimateForm(editingEstimate?: any) {
       } else {
         preview.clientEmail = formData.clientEmail || "";
       }
+      
+      // Add selectedServices to the preview
+      preview.selectedServices = formData.selectedServices;
+      
+      // Add terms to the preview
+      preview.terms = formData.terms;
       
       setPreviewEstimate(preview);
       setCurrentPage(3);

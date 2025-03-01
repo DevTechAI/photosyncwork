@@ -41,6 +41,7 @@ interface EstimatePreviewProps {
       }>;
       deliverables: string[];
     }>;
+    terms?: string[];
   };
   onStatusChange?: (estimateId: string, newStatus: string, negotiatedAmount?: string) => void;
 }

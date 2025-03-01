@@ -7,7 +7,7 @@ interface Service {
   items: string[];
 }
 
-const services: Record<string, Service> = {
+export const services: Record<string, Service> = {
   bigFat: {
     title: "BigFat Weddings",
     items: [

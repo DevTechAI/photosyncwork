@@ -76,7 +76,7 @@ export function generatePreviewEstimate(formData: any, toast: any) {
   const previewData = {
     id: Math.floor(Math.random() * 10000).toString(),
     clientName: formData.clientName,
-    clientEmail: formData.clientEmail || "", // Include clientEmail in the preview data
+    clientEmail: formData.clientEmail || "", 
     date: new Date().toISOString(),
     // Still keep the first estimate's amount as the main amount for compatibility
     amount: estimates[0].total,
@@ -90,7 +90,11 @@ export function generatePreviewEstimate(formData: any, toast: any) {
     })),
     deliverables: estimates[0].deliverables,
     // Add the new packages array with all estimate options
-    packages: packages
+    packages: packages,
+    // Add the selected services
+    selectedServices: formData.selectedServices,
+    // Add custom terms
+    terms: formData.terms
   };
   
   return previewData;
