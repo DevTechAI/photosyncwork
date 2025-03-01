@@ -11,6 +11,7 @@ import { PreProductionContent } from "./PreProductionContent";
 import { useTeamAssignmentsTab } from "@/hooks/useTeamAssignmentsTab";
 import { useSchedulingTab } from "@/hooks/useSchedulingTab";
 import { useTabState } from "@/hooks/useTabState";
+import { TeamManagement } from "@/components/scheduling/TeamManagement";
 
 // Mock data for demonstration
 const mockTeamMembers: TeamMember[] = [
@@ -56,7 +57,7 @@ const mockTeamMembers: TeamMember[] = [
 
 export default function PreProductionPage() {
   // Team members data
-  const [teamMembers] = useState<TeamMember[]>(mockTeamMembers);
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>(mockTeamMembers);
   
   // Tab state management
   const { activeTab, setActiveTab } = useTabState("details");
@@ -112,6 +113,7 @@ export default function PreProductionPage() {
           <TabsList className="mb-4">
             <TabsTrigger value="details">Event Details</TabsTrigger>
             <TabsTrigger value="scheduling">Scheduling</TabsTrigger>
+            <TabsTrigger value="team">Team Management</TabsTrigger>
           </TabsList>
           
           <TabsContent value="details">
@@ -145,6 +147,21 @@ export default function PreProductionPage() {
               onAssign={handleAssignTeamMemberForScheduling}
               onUpdateStatus={handleUpdateAssignmentStatus}
               getAssignmentCounts={getAssignmentCounts}
+            />
+          </TabsContent>
+
+          <TabsContent value="team">
+            <TeamManagement 
+              teamMembers={teamMembers} 
+              onAddTeamMember={(member) => setTeamMembers(prev => [...prev, member])}
+              onUpdateTeamMember={(updatedMember) => {
+                setTeamMembers(prev => prev.map(m => 
+                  m.id === updatedMember.id ? updatedMember : m
+                ));
+              }}
+              onDeleteTeamMember={(id) => {
+                setTeamMembers(prev => prev.filter(m => m.id !== id));
+              }}
             />
           </TabsContent>
         </Tabs>
