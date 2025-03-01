@@ -8,6 +8,7 @@ export interface EstimateFormData {
     estimates: any[];
     deliverables: string[];
   };
+  terms: string[];
 }
 
 export interface PreviewEstimate {
