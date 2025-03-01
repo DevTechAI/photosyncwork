@@ -51,7 +51,7 @@ export function PreProductionContent({
         
         {/* Completed Events Section */}
         <CompletedEventsList
-          completedEvents={completedEvents}
+          events={completedEvents}
           teamMembers={teamMembers}
           onDelete={deleteCompletedEvent}
         />

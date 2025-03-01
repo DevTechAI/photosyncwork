@@ -15,7 +15,7 @@ export function CompletedPreProductionEvents({
 }: CompletedPreProductionEventsProps) {
   return (
     <CompletedEventsList
-      completedEvents={completedEvents}
+      events={completedEvents}
       teamMembers={teamMembers}
       onDelete={onDelete}
     />
