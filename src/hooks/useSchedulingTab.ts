@@ -8,27 +8,38 @@ export function useSchedulingTab(
 ) {
   // Assignment counts function for the team assignments
   const getAssignmentCounts = (event: any) => {
-    const photographers = event.assignments?.filter((a: any) => a.role === "photographer") || [];
-    const videographers = event.assignments?.filter((a: any) => a.role === "videographer") || [];
+    // Find team members for each assignment to determine their roles
+    const assignments = event.assignments || [];
+    
+    const photographers = assignments.filter((a: any) => {
+      const member = teamMembers.find(m => m.id === a.teamMemberId);
+      return member?.role === "photographer";
+    });
+    
+    const videographers = assignments.filter((a: any) => {
+      const member = teamMembers.find(m => m.id === a.teamMemberId);
+      return member?.role === "videographer";
+    });
     
     return {
       acceptedPhotographers: photographers.filter((a: any) => a.status === "accepted").length,
       acceptedVideographers: videographers.filter((a: any) => a.status === "accepted").length,
       pendingPhotographers: photographers.filter((a: any) => a.status === "pending").length,
       pendingVideographers: videographers.filter((a: any) => a.status === "pending").length,
-      totalPhotographers: event.requiredPhotographers || 0,
-      totalVideographers: event.requiredVideographers || 0
+      totalPhotographers: event.photographersCount || 0,
+      totalVideographers: event.videographersCount || 0
     };
   };
   
   // Handler for assignment
   const handleAssignTeamMemberForScheduling = (eventId: string, teamMemberId: string, role: string) => {
     const eventToUpdate = events.find(e => e.id === eventId);
-    if (eventToUpdate && teamMemberId && role) {
+    const teamMember = teamMembers.find(m => m.id === teamMemberId);
+    
+    if (eventToUpdate && teamMemberId && teamMember) {
       const newAssignment: EventAssignment = {
         eventId,
         teamMemberId,
-        role: role as "photographer" | "videographer",
         status: "pending",
         eventName: eventToUpdate.name,
         date: eventToUpdate.date,

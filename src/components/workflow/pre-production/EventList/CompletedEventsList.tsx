@@ -1,61 +1,97 @@
 
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { TeamMember, ScheduledEvent } from "@/components/scheduling/types";
+import { ScheduledEvent, TeamMember } from "@/components/scheduling/types";
+import { Calendar, MapPin, Trash2 } from "lucide-react";
 
 interface CompletedEventsListProps {
-  completedEvents: ScheduledEvent[];
+  events: ScheduledEvent[];
   teamMembers: TeamMember[];
-  onDelete: (eventId: string) => void;
+  onDelete: (id: string) => void;
 }
 
 export function CompletedEventsList({
-  completedEvents,
+  events,
   teamMembers,
-  onDelete
+  onDelete,
 }: CompletedEventsListProps) {
-  if (!completedEvents.length) return null;
-  
+  if (events.length === 0) {
+    return (
+      <div className="p-4 text-center border rounded-md">
+        <p className="text-muted-foreground">No completed events</p>
+      </div>
+    );
+  }
+
+  // Function to get team member name by ID
+  const getTeamMemberName = (id: string) => {
+    const member = teamMembers.find(m => m.id === id);
+    return member ? member.name : "Unknown";
+  };
+
   return (
-    <div className="mt-6">
-      <h2 className="text-lg font-medium mb-4">Completed Pre-Production Events</h2>
-      <div className="space-y-4">
-        {completedEvents.map((event) => (
-          <Card key={event.id} className="p-4">
-            <div className="flex justify-between items-start">
-              <div>
-                <h3 className="font-medium">{event.name}</h3>
-                <p className="text-sm text-muted-foreground">
-                  {new Date(event.date).toLocaleDateString()}
-                </p>
-                
-                <div className="mt-2">
-                  <p className="text-xs text-muted-foreground">Team: </p>
-                  <div className="mt-1 flex flex-wrap gap-1">
-                    {event.assignments.map((assignment) => {
-                      const member = teamMembers.find(m => m.id === assignment.teamMemberId);
-                      return member ? (
-                        <span 
-                          key={`${event.id}-${member.id}`}
-                          className="text-xs bg-gray-100 px-2 py-1 rounded"
-                        >
-                          {member.name} ({assignment.role})
-                        </span>
-                      ) : null;
+    <div className="space-y-4">
+      {events.map((event) => (
+        <Card key={event.id} className="p-4">
+          <div className="flex justify-between items-start">
+            <div className="space-y-2">
+              <h3 className="font-medium">{event.name}</h3>
+              <div className="flex flex-wrap gap-3">
+                <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                  <Calendar className="h-4 w-4" />
+                  <span>
+                    {new Date(event.date).toLocaleDateString("en-US", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
                     })}
-                  </div>
+                  </span>
+                </div>
+                <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                  <MapPin className="h-4 w-4" />
+                  <span>{event.location}</span>
                 </div>
               </div>
               
-              <button 
-                onClick={() => onDelete(event.id)}
-                className="text-sm text-red-500 hover:text-red-700"
-              >
-                Remove
-              </button>
+              {event.assignments && event.assignments.length > 0 && (
+                <div className="mt-3">
+                  <h4 className="text-sm font-medium mb-1">Team:</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {event.assignments.map((assignment, idx) => {
+                      const teamMember = teamMembers.find(m => m.id === assignment.teamMemberId);
+                      return (
+                        <div key={idx} className="text-xs px-2 py-1 bg-gray-100 rounded-full flex items-center gap-1">
+                          <span>{getTeamMemberName(assignment.teamMemberId)}</span>
+                          <span className={`ml-1 px-1.5 py-0.5 rounded-full text-white text-xs ${
+                            assignment.status === 'accepted' ? 'bg-green-500' : 
+                            assignment.status === 'declined' ? 'bg-red-500' : 
+                            'bg-yellow-500'
+                          }`}>
+                            {assignment.status}
+                          </span>
+                          {teamMember && (
+                            <span className="ml-1 text-muted-foreground">({teamMember.role})</span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
-          </Card>
-        ))}
-      </div>
+            
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={() => onDelete(event.id)}
+              className="h-8 w-8"
+            >
+              <Trash2 className="h-4 w-4" />
+              <span className="sr-only">Delete</span>
+            </Button>
+          </div>
+        </Card>
+      ))}
     </div>
   );
 }
