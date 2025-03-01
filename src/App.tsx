@@ -1,5 +1,5 @@
 
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Outlet } from "react-router-dom";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
@@ -17,7 +17,7 @@ import "./App.css";
 function App() {
   return (
     <Routes>
-      <Route element={<Layout />}>
+      <Route element={<Layout><Outlet /></Layout>}>
         <Route 
           path="/" 
           element={<ProtectedRoute><Index /></ProtectedRoute>} 

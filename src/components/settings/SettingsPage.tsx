@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +9,7 @@ import { Plus, Save, Trash2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { CustomService } from "../estimates/form/types";
 import { supabase } from "@/integrations/supabase/client";
+import { Json } from "@/integrations/supabase/types";
 
 export interface SettingsData {
   terms: string[];
@@ -131,11 +133,14 @@ export function SettingsPage() {
       
       // Try to save to Supabase if available
       try {
+        // Convert settings to the correct Json type for Supabase
+        const settingsJson = settings as unknown as Json;
+        
         const { data, error } = await supabase
           .from('settings')
           .upsert({ 
             id: 1, // Single settings record
-            settings: settings as unknown as JSON,
+            settings: settingsJson,
             updated_at: new Date().toISOString()
           });
           
