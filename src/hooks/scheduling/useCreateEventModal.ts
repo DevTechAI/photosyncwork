@@ -1,14 +1,13 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useToast } from "@/components/ui/use-toast";
-import { useEstimateToEventConverter } from "./useEstimateToEventConverter";
 import { getApprovedEstimates } from "@/components/scheduling/utils/approvedEstimatesLoader";
 import { createScheduledEventFromEstimateEvent } from "@/components/scheduling/utils/eventCreator";
 import { saveEvent } from "@/components/scheduling/utils/eventPersistence";
 import { checkEventExistsForEstimateEvent } from "@/components/scheduling/utils/eventExistenceChecker";
 import { ScheduledEvent } from "@/components/scheduling/types";
 import { z } from "zod";
+import { useEstimateToEventConverter } from "@/hooks/scheduling/useEstimateToEventConverter";
 
 // Define event form schema using zod
 export const eventFormSchema = z.object({

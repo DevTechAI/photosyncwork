@@ -8,7 +8,7 @@ import { ClientDetailsForm } from "./components/ClientDetailsForm";
 import { TeamRequirementsForm } from "./components/TeamRequirementsForm";
 import { EstimateSelector } from "./components/EstimateSelector";
 import { ScheduledEvent } from "./types";
-import { useCreateEventModal } from "@/hooks/scheduling/useCreateEventModal";
+import { useCreateEventModal, ModalTab } from "@/hooks/scheduling/useCreateEventModal";
 
 interface CreateEventModalProps {
   open: boolean;
@@ -44,6 +44,11 @@ export function CreateEventModal({
     loadEstimates();
   }, []);
   
+  // This function handles the tab change and enforces the correct type
+  const handleTabChange = (value: string) => {
+    setActiveTab(value as ModalTab);
+  };
+  
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[625px]">
@@ -54,7 +59,7 @@ export function CreateEventModal({
           </DialogDescription>
         </DialogHeader>
         
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <Tabs value={activeTab} onValueChange={handleTabChange}>
           <TabsList className="w-full justify-start mb-4">
             <TabsTrigger value="details">Event Details</TabsTrigger>
             <TabsTrigger value="client">Client Details</TabsTrigger>
