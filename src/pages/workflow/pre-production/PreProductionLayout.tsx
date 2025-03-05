@@ -12,10 +12,15 @@ import { useTabState } from "@/hooks/useTabState";
 import { TeamManagement } from "@/components/team/TeamManagement";
 import { LoadingSkeleton } from "@/components/workflow/pre-production/LoadingSkeleton";
 import { useTeamMembersData } from "@/hooks/useTeamMembersData";
+import { Button } from "@/components/ui/button";
+import { RefreshCw } from "lucide-react";
+import { createEventsFromApprovedEstimates } from "@/components/scheduling/utils/estimateConversion";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function PreProductionPage() {
   // Tab state management
   const { activeTab, setActiveTab } = useTabState("details");
+  const { toast } = useToast();
   
   // Team members management
   const { 
@@ -33,7 +38,8 @@ export default function PreProductionPage() {
     completedEvents, 
     selectedEvent, 
     setSelectedEvent,
-    deleteCompletedEvent
+    deleteCompletedEvent,
+    loadEvents
   } = usePreProductionEvents();
   
   // Client requirements hook
@@ -71,6 +77,36 @@ export default function PreProductionPage() {
     }
   }, [events, teamMembers]);
   
+  // Function to manually check for and create events from approved estimates
+  const handleCheckForApprovedEstimates = async () => {
+    try {
+      toast({ title: "Checking for approved estimates..." });
+      
+      const newEvents = await createEventsFromApprovedEstimates();
+      
+      if (newEvents.length > 0) {
+        toast({
+          title: "Events Created",
+          description: `Created ${newEvents.length} new events from approved estimates.`
+        });
+        // Reload events to show the newly created ones
+        await loadEvents();
+      } else {
+        toast({
+          title: "No New Events",
+          description: "No new events were created. Either there are no approved estimates or events already exist for them."
+        });
+      }
+    } catch (error) {
+      console.error("Error checking for approved estimates:", error);
+      toast({
+        title: "Error",
+        description: "Failed to create events from approved estimates.",
+        variant: "destructive"
+      });
+    }
+  };
+  
   return (
     <Layout>
       <div className="space-y-6">
@@ -80,6 +116,23 @@ export default function PreProductionPage() {
             <p className="text-sm text-muted-foreground">
               Prepare for upcoming events and assign team members
             </p>
+          </div>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={loadEvents}
+              className="flex items-center gap-1"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Refresh Events
+            </Button>
+            <Button 
+              size="sm" 
+              onClick={handleCheckForApprovedEstimates}
+            >
+              Check Approved Estimates
+            </Button>
           </div>
         </div>
         

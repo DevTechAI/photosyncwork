@@ -20,46 +20,68 @@ export function StatusChecker({ isActive, estimate, onStatusChange }: StatusChec
     let intervalId: ReturnType<typeof setTimeout>;
     
     if (isActive && estimate?.status === 'pending') {
+      console.log("StatusChecker active, setting up interval to check for estimate status changes");
+      
       intervalId = setInterval(async () => {
         try {
           // Check localStorage for estimate status updates (legacy support)
           const savedEstimates = localStorage.getItem("estimates");
           if (savedEstimates) {
+            console.log("Checking saved estimates for status changes...");
+            
             const estimates = JSON.parse(savedEstimates);
             const updatedEstimate = estimates.find((est: any) => est.id === estimate.id);
             
-            if (updatedEstimate && updatedEstimate.status === 'approved') {
-              onStatusChange(estimate.id, 'approved');
+            if (updatedEstimate) {
+              console.log("Found estimate in localStorage:", updatedEstimate);
               
-              // Create events from approved estimates and save to Supabase
-              console.log("Creating events from approved estimate:", updatedEstimate);
-              const newEvents = await createEventsFromApprovedEstimates();
-              
-              if (newEvents.length > 0) {
-                console.log("New events created:", newEvents);
+              if (updatedEstimate.status === 'approved') {
+                console.log("Estimate was approved, triggering status change");
+                onStatusChange(estimate.id, 'approved');
+                
+                // Create events from approved estimates and save to Supabase
+                console.log("Creating events from approved estimate...");
+                const newEvents = await createEventsFromApprovedEstimates();
+                
+                if (newEvents.length > 0) {
+                  console.log("New events created successfully:", newEvents);
+                  toast({
+                    title: "Event Created",
+                    description: "This estimate has been converted to an event in pre-production.",
+                  });
+                } else {
+                  console.log("No new events were created from the approved estimate");
+                  toast({
+                    title: "Event Conversion Issue",
+                    description: "Could not create event from estimate. Please check the console for details.",
+                    variant: "destructive",
+                  });
+                }
+                
                 toast({
-                  title: "Event Created",
-                  description: "This estimate has been converted to an event in pre-production.",
+                  title: "Estimate Approved!",
+                  description: "The client has approved the estimate.",
                 });
-              } else {
-                console.log("No events were created from the approved estimate");
+                clearInterval(intervalId);
               }
-              
-              toast({
-                title: "Estimate Approved!",
-                description: "The client has approved the estimate.",
-              });
-              clearInterval(intervalId);
             }
           }
         } catch (error) {
           console.error("Error checking estimate status:", error);
+          toast({
+            title: "Error",
+            description: "Failed to check estimate status or create event.",
+            variant: "destructive",
+          });
         }
       }, 5000); // Check every 5 seconds
     }
     
     return () => {
-      if (intervalId) clearInterval(intervalId);
+      if (intervalId) {
+        console.log("Clearing StatusChecker interval");
+        clearInterval(intervalId);
+      }
     };
   }, [isActive, estimate?.id, estimate?.status, onStatusChange, toast]);
 

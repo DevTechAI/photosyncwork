@@ -12,10 +12,17 @@ import { v4 as uuidv4 } from 'uuid';
 function getApprovedEstimates(): any[] {
   try {
     const savedEstimates = localStorage.getItem("estimates");
-    if (!savedEstimates) return [];
+    if (!savedEstimates) {
+      console.log("No estimates found in localStorage");
+      return [];
+    }
     
     const allEstimates = JSON.parse(savedEstimates);
-    return allEstimates.filter((estimate: any) => estimate.status === "approved");
+    console.log("All estimates from localStorage:", allEstimates);
+    
+    const approvedEstimates = allEstimates.filter((estimate: any) => estimate.status === "approved");
+    console.log("Filtered approved estimates:", approvedEstimates);
+    return approvedEstimates;
   } catch (error) {
     console.error('Error retrieving approved estimates:', error);
     return [];
@@ -29,6 +36,7 @@ function getApprovedEstimates(): any[] {
  */
 async function checkEventExistsForEstimate(estimateId: string): Promise<boolean> {
   try {
+    console.log(`Checking if event exists for estimate ID: ${estimateId}`);
     const { data: existingEvents, error } = await supabase
       .from('scheduled_events')
       .select('id')
@@ -39,7 +47,9 @@ async function checkEventExistsForEstimate(estimateId: string): Promise<boolean>
       return false;
     }
     
-    return Boolean(existingEvents && existingEvents.length > 0);
+    const exists = Boolean(existingEvents && existingEvents.length > 0);
+    console.log(`Event exists for estimate ${estimateId}: ${exists}`);
+    return exists;
   } catch (error) {
     console.error('Error in checkEventExistsForEstimate:', error);
     return false;
@@ -53,6 +63,8 @@ async function checkEventExistsForEstimate(estimateId: string): Promise<boolean>
  */
 function createScheduledEventFromEstimate(estimate: any): ScheduledEvent {
   try {
+    console.log("Creating scheduled event from estimate:", estimate);
+    
     // Create event data from the estimate
     const eventData = createEventFromEstimate(estimate);
     console.log("Created event data from estimate:", eventData);
@@ -83,6 +95,7 @@ function createScheduledEventFromEstimate(estimate: any): ScheduledEvent {
       estimatePackage: eventData.estimatePackage || ""
     };
     
+    console.log("Generated new scheduled event:", newEvent);
     return newEvent;
   } catch (error) {
     console.error('Error creating scheduled event from estimate:', error);
@@ -93,12 +106,14 @@ function createScheduledEventFromEstimate(estimate: any): ScheduledEvent {
 // Convert approved estimates to events with improved error handling
 export async function createEventsFromApprovedEstimates(): Promise<ScheduledEvent[]> {
   try {
+    console.log("Starting conversion of approved estimates to events");
+    
     // Get all approved estimates
     const approvedEstimates = getApprovedEstimates();
-    console.log("Found approved estimates:", approvedEstimates);
+    console.log(`Found ${approvedEstimates.length} approved estimates`);
     
     if (approvedEstimates.length === 0) {
-      console.log("No approved estimates found");
+      console.log("No approved estimates found to convert");
       return [];
     }
     
@@ -113,14 +128,18 @@ export async function createEventsFromApprovedEstimates(): Promise<ScheduledEven
           continue;
         }
         
+        console.log(`Processing approved estimate ID: ${estimate.id}`);
+        
         // Check if this estimate already has an event
         const eventExists = await checkEventExistsForEstimate(estimate.id);
         
         if (eventExists) {
           // Event already exists for this estimate
-          console.log(`Event already exists for estimate ID ${estimate.id}`);
+          console.log(`Event already exists for estimate ID ${estimate.id}, skipping creation`);
           continue;
         }
+        
+        console.log(`No existing event found for estimate ID ${estimate.id}, creating new event`);
         
         // Create a new event from the estimate
         const newEvent = createScheduledEventFromEstimate(estimate);
@@ -128,15 +147,17 @@ export async function createEventsFromApprovedEstimates(): Promise<ScheduledEven
         
         // Save the new event to Supabase
         await saveEvent(newEvent);
-        console.log("Successfully saved new event to Supabase:", newEvent.id);
+        console.log(`Successfully saved new event to Supabase with ID: ${newEvent.id}`);
         
         newEvents.push(newEvent);
+        console.log(`Added new event to return array, total new events: ${newEvents.length}`);
       } catch (estimateError) {
         // Log error but continue processing other estimates
         console.error(`Error processing estimate ${estimate?.id}:`, estimateError);
       }
     }
     
+    console.log(`Successfully created ${newEvents.length} new events from approved estimates`);
     return newEvents;
   } catch (error) {
     console.error('Error in createEventsFromApprovedEstimates:', error);

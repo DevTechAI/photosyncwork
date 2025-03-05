@@ -29,34 +29,49 @@ export function ApprovalForm({ onClose, estimate, onStatusChange }: ApprovalForm
   );
   const { toast } = useToast();
 
-  const handleApprove = () => {
-    // Prevent approval if packages exist but none is selected
-    if (estimate.packages && estimate.packages.length > 0 && selectedPackageIndex === undefined) {
+  const handleApprove = async () => {
+    try {
+      // Prevent approval if packages exist but none is selected
+      if (estimate.packages && estimate.packages.length > 0 && selectedPackageIndex === undefined) {
+        toast({
+          title: "Package Selection Required",
+          description: "Please select a package before approving the estimate.",
+          variant: "destructive"
+        });
+        return;
+      }
+  
+      console.log("Approving estimate with details:", {
+        estimateId: estimate.id,
+        negotiatedAmount: isNegotiated ? negotiatedAmount : undefined,
+        selectedPackageIndex
+      });
+      
+      // Update the status with the selected package index
+      onStatusChange(
+        estimate.id, 
+        'approved', 
+        isNegotiated ? negotiatedAmount : undefined,
+        selectedPackageIndex
+      );
+      
+      // Show success toast
       toast({
-        title: "Package Selection Required",
-        description: "Please select a package before approving the estimate.",
+        title: "Estimate Approved",
+        description: selectedPackageIndex !== undefined 
+          ? `Package Option ${selectedPackageIndex + 1} has been approved.` 
+          : "The estimate has been approved."
+      });
+      
+      onClose();
+    } catch (error) {
+      console.error("Error approving estimate:", error);
+      toast({
+        title: "Error",
+        description: "Failed to approve the estimate. Please try again.",
         variant: "destructive"
       });
-      return;
     }
-
-    // Update the status with the selected package index
-    onStatusChange(
-      estimate.id, 
-      'approved', 
-      isNegotiated ? negotiatedAmount : undefined,
-      selectedPackageIndex
-    );
-    
-    // Show success toast
-    toast({
-      title: "Estimate Approved",
-      description: selectedPackageIndex !== undefined 
-        ? `Package Option ${selectedPackageIndex + 1} has been approved.` 
-        : "The estimate has been approved."
-    });
-    
-    onClose();
   };
 
   // Only show package selection if there are packages
@@ -86,7 +101,7 @@ export function ApprovalForm({ onClose, estimate, onStatusChange }: ApprovalForm
                     <RadioGroupItem value={index.toString()} id={`package-${index}`} />
                     <Label htmlFor={`package-${index}`} className="flex-1 cursor-pointer">
                       <div className="flex justify-between w-full">
-                        <span>Package Option {index + 1}</span>
+                        <span>Package Option {index + 1} {pkg.name ? `- ${pkg.name}` : ''}</span>
                         <span className="font-semibold">{pkg.amount}</span>
                       </div>
                     </Label>
