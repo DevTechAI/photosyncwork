@@ -1,14 +1,11 @@
-
 import { useState, useEffect } from "react";
-import { ScheduledEvent, TeamMember } from "@/components/scheduling/types";
+import { ScheduledEvent } from "@/components/scheduling/types";
 import { CreateEventModal } from "@/components/scheduling/CreateEventModal";
 import { SchedulingHeader } from "./components/SchedulingHeader";
 import { SchedulingTabs } from "./components/SchedulingTabs";
 import { useSchedulingPage } from "@/hooks/scheduling/useSchedulingPage";
 import { useTeamMembersData } from "@/hooks/useTeamMembersData";
 import { createEventsFromApprovedEstimates, getAllEvents } from "@/components/scheduling/utils/eventHelpers";
-import { dbToScheduledEvent, scheduledEventToDb } from "@/utils/supabaseConverters";
-import { supabase } from "@/integrations/supabase/client";
 
 export default function SchedulingPage() {
   // Get team members data and handlers
