@@ -22,9 +22,19 @@ export function TeamMemberList({
 }: TeamMemberListProps) {
   console.log(`TeamMemberList ${title} - Members:`, members);
   
+  // Check if we've already assigned enough team members
+  const isFulfilled = assignedCount >= requiredCount;
+  
   return (
     <div>
-      <h3 className="text-sm font-medium mb-2">{title} ({assignedCount} / {requiredCount})</h3>
+      <h3 className="text-sm font-medium mb-2">
+        {title} ({assignedCount} / {requiredCount})
+        {isFulfilled && (
+          <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
+            Fulfilled
+          </span>
+        )}
+      </h3>
       {members.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {members.map(member => (
@@ -47,7 +57,7 @@ export function TeamMemberList({
                   console.log(`Assigning team member: ${member.id} (${member.name})`);
                   onAssign(member.id);
                 }}
-                disabled={loading}
+                disabled={loading || isFulfilled}
               >
                 <UserCheck className="h-4 w-4 mr-1" />
                 Assign
