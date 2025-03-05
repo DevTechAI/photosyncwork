@@ -1,10 +1,10 @@
-
 import { useState, useEffect } from "react";
 import { TeamMember } from "@/components/scheduling/types";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
 // Mock data for demonstration - used as fallback if database fetch fails
-const mockTeamMembers: TeamMember[] = [
+export const mockTeamMembers: TeamMember[] = [
   {
     id: "tm-1",
     name: "Ankit Patel",
@@ -48,6 +48,7 @@ const mockTeamMembers: TeamMember[] = [
 export function useTeamMembersLoader() {
   // Team members data
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const { toast } = useToast();
   
   // Load team members from Supabase on component mount
   useEffect(() => {
@@ -59,6 +60,11 @@ export function useTeamMembersLoader() {
         
         if (error) {
           console.error('Error loading team members from Supabase:', error);
+          toast({
+            title: "Error Loading Team Members",
+            description: "Could not load team members from the database. Using demo data.",
+            variant: "destructive"
+          });
           // Use mock data as fallback
           setTeamMembers(mockTeamMembers);
           return;
@@ -75,6 +81,7 @@ export function useTeamMembersLoader() {
           
           setTeamMembers(processedTeamMembers);
         } else {
+          console.log("No team members found in Supabase, initializing with mock data");
           // No data in Supabase, use mock data and save it
           setTeamMembers(mockTeamMembers);
           
@@ -87,6 +94,11 @@ export function useTeamMembersLoader() {
         }
       } catch (error) {
         console.error('Error in loadTeamMembers:', error);
+        toast({
+          title: "Error Loading Team Members",
+          description: "An unexpected error occurred. Using demo data.",
+          variant: "destructive"
+        });
         setTeamMembers(mockTeamMembers);
       }
     };
@@ -99,5 +111,3 @@ export function useTeamMembersLoader() {
     setTeamMembers
   };
 }
-
-export { mockTeamMembers };

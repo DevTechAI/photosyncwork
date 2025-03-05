@@ -1,6 +1,6 @@
 
 import { ScheduledEvent } from "@/components/scheduling/types";
-import { getAllEvents } from "@/components/scheduling/utils/eventHelpers";
+import { getAllEvents, saveEvent } from "@/components/scheduling/utils/eventHelpers";
 import { useToast } from "@/components/ui/use-toast";
 
 export function useEventStorage() {
@@ -8,10 +8,10 @@ export function useEventStorage() {
 
   // Delete a completed pre-production event reference
   const deleteCompletedEvent = async (eventId: string) => {
-    // Get all events from localStorage or Supabase
+    // Get all events from Supabase
     const allEvents = await getAllEvents();
     
-    // Update the event in localStorage by setting dataCopied to false
+    // Update the event by setting dataCopied to false
     const updatedAllEvents = allEvents.map(event => {
       if (event.id === eventId) {
         return { ...event, dataCopied: false };
@@ -19,8 +19,11 @@ export function useEventStorage() {
       return event;
     });
     
-    // Save back to localStorage (this will be updated to use Supabase in a future update)
-    localStorage.setItem("scheduledEvents", JSON.stringify(updatedAllEvents));
+    // Save the updated event back to Supabase
+    const eventToUpdate = updatedAllEvents.find(event => event.id === eventId);
+    if (eventToUpdate) {
+      await saveEvent(eventToUpdate);
+    }
     
     // Show toast notification
     toast({
