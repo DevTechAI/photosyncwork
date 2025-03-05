@@ -7,7 +7,11 @@ import { scheduledEventToDb } from "@/utils/supabaseConverters";
 export function useAssignmentStatus(events: ScheduledEvent[], setEvents: React.Dispatch<React.SetStateAction<ScheduledEvent[]>>, teamMembers: TeamMember[]) {
   const { toast } = useToast();
   
-  const handleUpdateAssignmentStatus = async (eventId: string, teamMemberId: string, status: "accepted" | "declined") => {
+  const handleUpdateAssignmentStatus = async (
+    eventId: string, 
+    teamMemberId: string, 
+    status: "accepted" | "declined" | "pending"
+  ) => {
     try {
       const updatedEvents = events.map(event => {
         if (event.id === eventId) {
@@ -52,9 +56,20 @@ export function useAssignmentStatus(events: ScheduledEvent[], setEvents: React.D
       const event = events.find(e => e.id === eventId);
       
       if (teamMember && event) {
+        // Customize toast based on status
+        let title, description;
+        
+        if (status === 'pending') {
+          title = 'Assignment Reverted';
+          description = `${teamMember.name}'s assignment for ${event.name} has been reverted to pending`;
+        } else {
+          title = `Assignment ${status === 'accepted' ? 'Accepted' : 'Declined'}`;
+          description = `${teamMember.name} has ${status === 'accepted' ? 'accepted' : 'declined'} the assignment for ${event.name}.`;
+        }
+        
         toast({
-          title: `Assignment ${status === 'accepted' ? 'Accepted' : 'Declined'}`,
-          description: `${teamMember.name} has ${status === 'accepted' ? 'accepted' : 'declined'} the assignment for ${event.name}.`
+          title,
+          description
         });
       }
     } catch (error) {

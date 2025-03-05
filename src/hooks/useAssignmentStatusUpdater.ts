@@ -12,7 +12,11 @@ export function useAssignmentStatusUpdater(
   const { toast } = useToast();
   
   // Handle updating assignment status
-  const handleUpdateAssignmentStatus = (eventId: string, teamMemberId: string, status: "accepted" | "declined") => {
+  const handleUpdateAssignmentStatus = (
+    eventId: string, 
+    teamMemberId: string, 
+    status: "accepted" | "declined" | "pending"
+  ) => {
     if (!selectedEvent) return;
     
     // This eventId should match the selectedEvent.id
@@ -49,12 +53,25 @@ export function useAssignmentStatusUpdater(
     // Get team member details for notification
     const teamMember = teamMembers.find(m => m.id === teamMemberId);
     
-    // Show toast notification
-    toast({
-      title: `Assignment ${status}`,
-      description: teamMember ? 
+    // Show toast notification with appropriate message based on status
+    let toastTitle = '';
+    let toastDescription = '';
+    
+    if (status === 'pending') {
+      toastTitle = 'Assignment Reverted';
+      toastDescription = teamMember ? 
+        `${teamMember.name}'s assignment for ${selectedEvent.name} has been reverted to pending` : 
+        `Assignment for ${selectedEvent.name} has been reverted to pending`;
+    } else {
+      toastTitle = `Assignment ${status}`;
+      toastDescription = teamMember ? 
         `${teamMember.name} has ${status} the assignment for ${selectedEvent.name}` : 
-        `Assignment for ${selectedEvent.name} has been ${status}`
+        `Assignment for ${selectedEvent.name} has been ${status}`;
+    }
+    
+    toast({
+      title: toastTitle,
+      description: toastDescription
     });
   };
   

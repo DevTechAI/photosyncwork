@@ -1,15 +1,21 @@
 
 import { Button } from "@/components/ui/button";
 import { ScheduledEvent, TeamMember } from "../types";
-import { Check, X } from "lucide-react";
+import { Check, X, RotateCcw, UserCheck } from "lucide-react";
 
 interface AssignedTeamListProps {
   event: ScheduledEvent;
   teamMembers: TeamMember[];
-  onUpdateStatus: (eventId: string, teamMemberId: string, status: "accepted" | "declined") => void;
+  onUpdateStatus: (eventId: string, teamMemberId: string, status: "accepted" | "declined" | "pending") => void;
+  showRevertOption?: boolean;
 }
 
-export function AssignedTeamList({ event, teamMembers, onUpdateStatus }: AssignedTeamListProps) {
+export function AssignedTeamList({ 
+  event, 
+  teamMembers, 
+  onUpdateStatus,
+  showRevertOption = false
+}: AssignedTeamListProps) {
   return (
     <div className="mt-4 pt-4 border-t">
       <h5 className="text-sm font-medium mb-2">Assigned Team Members</h5>
@@ -53,6 +59,20 @@ export function AssignedTeamList({ event, teamMembers, onUpdateStatus }: Assigne
                         Decline
                       </Button>
                     </div>
+                  )}
+                  
+                  {/* Revert option for admin - Available for accepted or declined assignments */}
+                  {showRevertOption && assignment.status !== 'pending' && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      className="h-7 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                      title="Revert to pending status"
+                      onClick={() => onUpdateStatus(event.id, assignment.teamMemberId, "pending")}
+                    >
+                      <RotateCcw className="h-4 w-4 mr-1" />
+                      Revert
+                    </Button>
                   )}
                 </div>
               </div>
