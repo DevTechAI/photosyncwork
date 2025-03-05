@@ -2,6 +2,7 @@
 import { ScheduledEvent, TeamMember, EventAssignment } from "../types";
 import { createEventFromEstimate } from "./estimatesHelpers";
 import { supabase } from "@/integrations/supabase/client";
+import { dbToScheduledEvent, scheduledEventToDb } from "@/utils/supabaseConverters";
 
 // Get all scheduled events
 export async function getAllEvents(): Promise<ScheduledEvent[]> {
@@ -15,7 +16,8 @@ export async function getAllEvents(): Promise<ScheduledEvent[]> {
       return [];
     }
     
-    return data as ScheduledEvent[];
+    // Convert DB records to frontend model
+    return (data || []).map(record => dbToScheduledEvent(record));
   } catch (error) {
     console.error('Error in getAllEvents:', error);
     return [];
@@ -42,7 +44,8 @@ export async function getEventsByStage(stage: "pre-production" | "production" | 
       return [];
     }
     
-    return data as ScheduledEvent[];
+    // Convert DB records to frontend model
+    return (data || []).map(record => dbToScheduledEvent(record));
   } catch (error) {
     console.error(`Error in getEventsByStage for ${stage}:`, error);
     return [];
@@ -52,6 +55,9 @@ export async function getEventsByStage(stage: "pre-production" | "production" | 
 // Save an event to Supabase
 export async function saveEvent(event: ScheduledEvent): Promise<void> {
   try {
+    // Convert to DB format
+    const dbEvent = scheduledEventToDb(event);
+    
     // Check if event already exists
     const { data, error: fetchError } = await supabase
       .from('scheduled_events')
@@ -68,7 +74,7 @@ export async function saveEvent(event: ScheduledEvent): Promise<void> {
       // Update existing event
       const { error } = await supabase
         .from('scheduled_events')
-        .update(event)
+        .update(dbEvent)
         .eq('id', event.id);
       
       if (error) {
@@ -78,7 +84,7 @@ export async function saveEvent(event: ScheduledEvent): Promise<void> {
       // Insert new event
       const { error } = await supabase
         .from('scheduled_events')
-        .insert(event);
+        .insert(dbEvent);
       
       if (error) {
         console.error('Error inserting event in Supabase:', error);
@@ -123,12 +129,18 @@ export async function updateEventStage(
       return null;
     }
     
+    // Convert to frontend model
+    const event = dbToScheduledEvent(data);
+    
     // Update the event stage
-    const updatedEvent = { ...data, stage: newStage } as ScheduledEvent;
+    const updatedEvent = { ...event, stage: newStage };
+    
+    // Convert back to DB format for update
+    const dbEvent = scheduledEventToDb(updatedEvent);
     
     const { error } = await supabase
       .from('scheduled_events')
-      .update(updatedEvent)
+      .update(dbEvent)
       .eq('id', eventId);
     
     if (error) {
@@ -143,8 +155,8 @@ export async function updateEventStage(
   }
 }
 
-// Convert approved estimates to events (this still uses localStorage for compatibility)
-export function createEventsFromApprovedEstimates(): ScheduledEvent[] {
+// Convert approved estimates to events
+export async function createEventsFromApprovedEstimates(): Promise<ScheduledEvent[]> {
   const savedEstimates = localStorage.getItem("estimates");
   if (!savedEstimates) return [];
   
@@ -154,21 +166,21 @@ export function createEventsFromApprovedEstimates(): ScheduledEvent[] {
   const newEvents: ScheduledEvent[] = [];
   
   // Process each approved estimate
-  approvedEstimates.forEach(async (estimate) => {
+  for (const estimate of approvedEstimates) {
     // Check if this estimate already has an event in Supabase
     const { data: existingEvents, error } = await supabase
       .from('scheduled_events')
       .select('id')
-      .eq('estimateId', estimate.id);
+      .eq('estimateid', estimate.id);
     
     if (error) {
       console.error('Error checking for existing events in Supabase:', error);
-      return;
+      continue;
     }
     
     if (existingEvents && existingEvents.length > 0) {
       // Event already exists for this estimate
-      return;
+      continue;
     }
     
     // Create event data from the estimate
@@ -196,10 +208,10 @@ export function createEventsFromApprovedEstimates(): ScheduledEvent[] {
     };
     
     // Save the new event to Supabase
-    saveEvent(newEvent);
+    await saveEvent(newEvent);
     
     newEvents.push(newEvent);
-  });
+  }
   
   return newEvents;
 }

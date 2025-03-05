@@ -4,9 +4,10 @@ import { ScheduledEvent, TeamMember } from "@/components/scheduling/types";
 import { CreateEventModal } from "@/components/scheduling/CreateEventModal";
 import { SchedulingHeader } from "./components/SchedulingHeader";
 import { SchedulingTabs } from "./components/SchedulingTabs";
-import { useSchedulingPage } from "@/hooks/useSchedulingPage";
+import { useSchedulingPage } from "@/hooks/scheduling/useSchedulingPage";
 import { useTeamMembersData } from "@/hooks/useTeamMembersData";
-import { createEventsFromApprovedEstimates } from "@/components/scheduling/utils/eventHelpers";
+import { createEventsFromApprovedEstimates, getAllEvents } from "@/components/scheduling/utils/eventHelpers";
+import { dbToScheduledEvent, scheduledEventToDb } from "@/utils/supabaseConverters";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function SchedulingPage() {
@@ -38,46 +39,17 @@ export default function SchedulingPage() {
     const loadEvents = async () => {
       try {
         // First, check for any approved estimates that need to be converted to events
-        const newEvents = createEventsFromApprovedEstimates();
+        const newEvents = await createEventsFromApprovedEstimates();
         
         // Load events from Supabase
-        const { data: supabaseEvents, error } = await supabase
-          .from('scheduled_events')
-          .select('*');
-        
-        if (error) {
-          console.error("Error fetching events:", error);
-          return;
-        }
+        const supabaseEvents = await getAllEvents();
         
         // If we have data from Supabase, use it
         if (supabaseEvents && supabaseEvents.length > 0) {
-          // Convert assignments from JSON strings if needed
-          const processedEvents = supabaseEvents.map(event => ({
-            ...event,
-            assignments: Array.isArray(event.assignments) 
-              ? event.assignments 
-              : typeof event.assignments === 'string' 
-                ? JSON.parse(event.assignments) 
-                : [],
-            deliverables: Array.isArray(event.deliverables) 
-              ? event.deliverables 
-              : typeof event.deliverables === 'string' 
-                ? JSON.parse(event.deliverables) 
-                : []
-          })) as ScheduledEvent[];
-          
-          setEvents(processedEvents);
+          setEvents(supabaseEvents);
         } else if (newEvents.length > 0) {
           // If no Supabase data but we have new events from estimates
           setEvents(newEvents);
-          
-          // Save new events to Supabase
-          for (const event of newEvents) {
-            await supabase
-              .from('scheduled_events')
-              .insert(event);
-          }
         }
       } catch (error) {
         console.error("Error in loadEvents:", error);
@@ -86,42 +58,6 @@ export default function SchedulingPage() {
     
     loadEvents();
   }, [setEvents]);
-  
-  // Save events to Supabase whenever they change
-  useEffect(() => {
-    if (events.length > 0) {
-      const saveEvents = async () => {
-        try {
-          // Update or insert each event
-          for (const event of events) {
-            // Check if event already exists
-            const { data: existingEvent } = await supabase
-              .from('scheduled_events')
-              .select('id')
-              .eq('id', event.id)
-              .single();
-            
-            if (existingEvent) {
-              // Update existing event
-              await supabase
-                .from('scheduled_events')
-                .update(event)
-                .eq('id', event.id);
-            } else {
-              // Insert new event
-              await supabase
-                .from('scheduled_events')
-                .insert(event);
-            }
-          }
-        } catch (error) {
-          console.error("Error saving events to Supabase:", error);
-        }
-      };
-      
-      saveEvents();
-    }
-  }, [events]);
   
   return (
     <div className="container mx-auto py-6 space-y-8">
@@ -143,7 +79,7 @@ export default function SchedulingPage() {
       
       {showCreateEventModal && (
         <CreateEventModal
-          isOpen={showCreateEventModal}
+          open={showCreateEventModal}
           onClose={() => setShowCreateEventModal(false)}
           onCreateEvent={handleCreateEvent}
         />

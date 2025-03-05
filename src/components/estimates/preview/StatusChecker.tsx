@@ -32,7 +32,7 @@ export function StatusChecker({ isActive, estimate, onStatusChange }: StatusChec
               onStatusChange(estimate.id, 'approved');
               
               // Create events from approved estimates and save to Supabase
-              const newEvents = createEventsFromApprovedEstimates();
+              const newEvents = await createEventsFromApprovedEstimates();
               
               if (newEvents.length > 0) {
                 toast({
