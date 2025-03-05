@@ -1,11 +1,10 @@
 
 import { useState } from "react";
-import { ScheduledEvent, TeamMember } from "@/components/scheduling/types";
+import { ScheduledEvent, TeamMember, EventAssignment } from "@/components/scheduling/types";
 import { useToast } from "@/components/ui/use-toast";
 import { saveEvents, saveEvent } from "@/components/scheduling/utils/eventHelpers";
 import { sendAssignmentNotification } from "@/utils/notificationUtils";
 
-// Update this function to mark events as dataCopied when moved to production
 export function useTeamAssignmentHandlers(
   events: ScheduledEvent[],
   setEvents: React.Dispatch<React.SetStateAction<ScheduledEvent[]>>,
@@ -28,7 +27,7 @@ export function useTeamAssignmentHandlers(
       if (!teamMember) throw new Error("Team member not found");
       
       // Create a new assignment
-      const newAssignment = {
+      const newAssignment: EventAssignment = {
         eventId: selectedEvent.id,
         eventName: selectedEvent.name,
         date: selectedEvent.date,
@@ -89,9 +88,9 @@ export function useTeamAssignmentHandlers(
     
     try {
       // Update event stage
-      const updatedEvent = {
+      const updatedEvent: ScheduledEvent = {
         ...selectedEvent,
-        stage: "production" as const,
+        stage: "production",
         dataCopied: true // Mark event as copied for reference
       };
       

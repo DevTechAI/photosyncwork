@@ -1,20 +1,14 @@
 
 import Layout from "@/components/Layout";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
 import { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { TeamManagement } from "@/components/team/TeamManagement";
 import { CreateEventModal } from "@/components/scheduling/CreateEventModal";
-import { ScheduledEvent, TeamMember, EventAssignment, WorkflowStage } from "@/components/scheduling/types";
-import { SchedulingOverview } from "./components/SchedulingOverview";
-import { PreProductionTab } from "./components/PreProductionTab";
-import { ProductionTab } from "./components/ProductionTab";
-import { PostProductionTab } from "./components/PostProductionTab";
+import { SchedulingHeader } from "./components/SchedulingHeader";
+import { SchedulingTabs } from "./components/SchedulingTabs";
 import { WorkflowSidebar } from "./components/WorkflowSidebar";
+import { useSchedulingPage } from "@/hooks/useSchedulingPage";
 
 // Mock data for demonstration
-const mockEvents: ScheduledEvent[] = [
+const mockEvents = [
   {
     id: "evt-1",
     estimateId: "est-001",
@@ -88,7 +82,7 @@ const mockEvents: ScheduledEvent[] = [
   }
 ];
 
-const mockTeamMembers: TeamMember[] = [
+const mockTeamMembers = [
   {
     id: "tm-1",
     name: "Ankit Patel",
@@ -129,192 +123,48 @@ const mockTeamMembers: TeamMember[] = [
 ];
 
 export default function SchedulingPage() {
-  const [events, setEvents] = useState<ScheduledEvent[]>(mockEvents);
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>(mockTeamMembers);
-  const [showCreateEventModal, setShowCreateEventModal] = useState(false);
-  const [mainTab, setMainTab] = useState("overview");
-  
-  const handleCreateEvent = (newEvent: ScheduledEvent) => {
-    setEvents(prev => [...prev, newEvent]);
-    setShowCreateEventModal(false);
-  };
-  
-  const handleAssignTeamMember = (eventId: string, teamMemberId: string, role: string) => {
-    const event = events.find(e => e.id === eventId);
-    const teamMember = teamMembers.find(t => t.id === teamMemberId);
-    
-    if (event && teamMember) {
-      const newAssignment: EventAssignment = {
-        eventId,
-        eventName: event.name,
-        date: event.date,
-        location: event.location,
-        teamMemberId,
-        status: "pending",
-        notes: `Assigned as ${role}`
-      };
-      
-      const updatedEvents = events.map(e => {
-        if (e.id === eventId) {
-          return {
-            ...e,
-            assignments: [...e.assignments, newAssignment]
-          };
-        }
-        return e;
-      });
-      
-      setEvents(updatedEvents);
-    }
-  };
-  
-  const handleUpdateAssignmentStatus = (eventId: string, teamMemberId: string, status: "accepted" | "declined") => {
-    const updatedEvents = events.map(event => {
-      if (event.id === eventId) {
-        const updatedAssignments = event.assignments.map(assignment => {
-          if (assignment.teamMemberId === teamMemberId) {
-            return {
-              ...assignment,
-              status
-            };
-          }
-          return assignment;
-        });
-        
-        return {
-          ...event,
-          assignments: updatedAssignments
-        };
-      }
-      return event;
-    });
-    
-    setEvents(updatedEvents);
-  };
-
-  // Get assignment counts by role and status
-  const getAssignmentCounts = (event: ScheduledEvent) => {
-    const acceptedPhotographers = event.assignments.filter(
-      a => {
-        const member = teamMembers.find(m => m.id === a.teamMemberId);
-        return member?.role === "photographer" && a.status === "accepted";
-      }
-    ).length;
-
-    const acceptedVideographers = event.assignments.filter(
-      a => {
-        const member = teamMembers.find(m => m.id === a.teamMemberId);
-        return member?.role === "videographer" && a.status === "accepted";
-      }
-    ).length;
-
-    const pendingPhotographers = event.assignments.filter(
-      a => {
-        const member = teamMembers.find(m => m.id === a.teamMemberId);
-        return member?.role === "photographer" && a.status === "pending";
-      }
-    ).length;
-
-    const pendingVideographers = event.assignments.filter(
-      a => {
-        const member = teamMembers.find(m => m.id === a.teamMemberId);
-        return member?.role === "videographer" && a.status === "pending";
-      }
-    ).length;
-
-    return {
-      acceptedPhotographers,
-      acceptedVideographers,
-      pendingPhotographers,
-      pendingVideographers,
-      totalPhotographers: acceptedPhotographers + pendingPhotographers,
-      totalVideographers: acceptedVideographers + pendingVideographers
-    };
-  };
-
-  // Filter events by workflow stage
-  const getEventsByStage = (stage: WorkflowStage) => {
-    return events.filter(event => event.stage === stage);
-  };
+  const {
+    events,
+    setEvents,
+    teamMembers,
+    setTeamMembers,
+    showCreateEventModal,
+    setShowCreateEventModal,
+    mainTab,
+    setMainTab,
+    handleCreateEvent,
+    handleAssignTeamMember,
+    handleUpdateAssignmentStatus,
+    getAssignmentCounts,
+    getEventsByStage
+  } = useSchedulingPage(mockEvents, mockTeamMembers);
   
   return (
     <Layout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold">Scheduling</h1>
-            <p className="text-sm text-muted-foreground">
-              Manage your shoots, team assignments, and workflow
-            </p>
-          </div>
-          <Button onClick={() => setShowCreateEventModal(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            New Event
-          </Button>
-        </div>
+        <SchedulingHeader onCreateEvent={() => setShowCreateEventModal(true)} />
         
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
           <div className="lg:col-span-3">
-            <Tabs value={mainTab} onValueChange={setMainTab} className="w-full">
-              <TabsList className="w-full justify-start mb-4">
-                <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="pre-production">Pre-Production</TabsTrigger>
-                <TabsTrigger value="production">Production</TabsTrigger>
-                <TabsTrigger value="post-production">Post-Production</TabsTrigger>
-                <TabsTrigger value="team">Team</TabsTrigger>
-              </TabsList>
-              
-              {/* Overview Tab */}
-              <TabsContent value="overview" className="space-y-4">
-                <SchedulingOverview 
-                  events={events} 
-                  getEventsByStage={getEventsByStage} 
-                />
-              </TabsContent>
-              
-              {/* Pre-Production Tab */}
-              <TabsContent value="pre-production">
-                <PreProductionTab 
-                  events={getEventsByStage("pre-production")}
-                  teamMembers={teamMembers}
-                  onAssignTeamMember={handleAssignTeamMember}
-                  onUpdateAssignmentStatus={handleUpdateAssignmentStatus}
-                  getAssignmentCounts={getAssignmentCounts}
-                />
-              </TabsContent>
-              
-              {/* Production Tab */}
-              <TabsContent value="production">
-                <ProductionTab 
-                  events={getEventsByStage("production")} 
-                  teamMembers={teamMembers} 
-                />
-              </TabsContent>
-              
-              {/* Post-Production Tab */}
-              <TabsContent value="post-production">
-                <PostProductionTab 
-                  events={getEventsByStage("post-production")} 
-                  teamMembers={teamMembers} 
-                />
-              </TabsContent>
-              
-              {/* Team Tab */}
-              <TabsContent value="team">
-                <TeamManagement 
-                  teamMembers={teamMembers} 
-                  onAddTeamMember={(member) => setTeamMembers(prev => [...prev, member])}
-                  onUpdateTeamMember={(updatedMember) => {
-                    setTeamMembers(prev => prev.map(m => 
-                      m.id === updatedMember.id ? updatedMember : m
-                    ));
-                  }}
-                  onDeleteTeamMember={(id) => {
-                    setTeamMembers(prev => prev.filter(m => m.id !== id));
-                  }}
-                />
-              </TabsContent>
-            </Tabs>
+            <SchedulingTabs
+              activeTab={mainTab}
+              onTabChange={setMainTab}
+              events={events}
+              teamMembers={teamMembers}
+              getEventsByStage={getEventsByStage}
+              onAssignTeamMember={handleAssignTeamMember}
+              onUpdateAssignmentStatus={handleUpdateAssignmentStatus}
+              getAssignmentCounts={getAssignmentCounts}
+              onUpdateTeamMember={(updatedMember) => {
+                setTeamMembers(prev => prev.map(m => 
+                  m.id === updatedMember.id ? updatedMember : m
+                ));
+              }}
+              onAddTeamMember={(member) => setTeamMembers(prev => [...prev, member])}
+              onDeleteTeamMember={(id) => {
+                setTeamMembers(prev => prev.filter(m => m.id !== id));
+              }}
+            />
           </div>
           
           <div className="space-y-4">
