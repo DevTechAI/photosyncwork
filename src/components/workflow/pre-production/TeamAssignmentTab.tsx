@@ -32,12 +32,22 @@ export function TeamAssignmentTab({
   const photographersAssigned = assignedTeamMembers.filter(a => a.teamMember?.role === "photographer").length;
   const videographersAssigned = assignedTeamMembers.filter(a => a.teamMember?.role === "videographer").length;
   
+  // Function to handle accepting/declining assignments with better error handling
+  const onUpdateStatus = (eventId: string, teamMemberId: string, status: "accepted" | "declined") => {
+    console.log(`Updating assignment status: ${eventId}, ${teamMemberId}, ${status}`);
+    if (handleUpdateAssignmentStatus) {
+      handleUpdateAssignmentStatus(eventId, teamMemberId, status);
+    } else {
+      console.error("handleUpdateAssignmentStatus is not defined");
+    }
+  };
+  
   return (
     <>
       <AssignedTeamList 
         event={selectedEvent}
         teamMembers={teamMembers}
-        onUpdateStatus={handleUpdateAssignmentStatus || (() => {})}
+        onUpdateStatus={onUpdateStatus}
       />
       
       <Card className="p-6 mt-4">

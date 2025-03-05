@@ -1,3 +1,4 @@
+
 import { ScheduledEvent, TeamMember, EventAssignment } from "@/components/scheduling/types";
 import { useToast } from "@/components/ui/use-toast";
 import { useState } from "react";
@@ -117,8 +118,13 @@ export function useTeamAssignmentHandlers(
         event.id === updatedEvent.id ? updatedEvent : event
       );
       
-      // Save to localStorage
+      // Save to localStorage - using both methods to ensure data is saved
       saveEvents(updatedEvents);
+      try {
+        localStorage.setItem('preProductionEvents', JSON.stringify(updatedEvents));
+      } catch (error) {
+        console.error('Error saving to localStorage:', error);
+      }
       
       // Update state
       setEvents(updatedEvents);
@@ -161,8 +167,17 @@ export function useTeamAssignmentHandlers(
       // Update events array
       const updatedEvents = events.filter(event => event.id !== updatedEvent.id);
       
-      // Update localStorage
+      // Update localStorage - using both methods to ensure data is saved
       saveEvent(updatedEvent);
+      try {
+        localStorage.setItem('preProductionEvents', JSON.stringify(updatedEvents));
+        
+        // Also save to production events
+        const productionEvents = JSON.parse(localStorage.getItem('productionEvents') || '[]');
+        localStorage.setItem('productionEvents', JSON.stringify([...productionEvents, updatedEvent]));
+      } catch (error) {
+        console.error('Error saving to localStorage:', error);
+      }
       
       // Update state
       setEvents(updatedEvents);

@@ -27,6 +27,12 @@ export function useTeamAssignmentsTab(
   const handleUpdateAssignmentStatus = (eventId: string, teamMemberId: string, status: "accepted" | "declined") => {
     if (!selectedEvent) return;
     
+    // This eventId should match the selectedEvent.id
+    if (eventId !== selectedEvent.id) {
+      console.error("Event ID mismatch in handleUpdateAssignmentStatus");
+      return;
+    }
+    
     const updatedAssignments = selectedEvent.assignments.map(assignment => {
       if (assignment.teamMemberId === teamMemberId) {
         return { ...assignment, status };
@@ -40,6 +46,13 @@ export function useTeamAssignmentsTab(
     const updatedEvents = events.map(event => 
       event.id === updatedEvent.id ? updatedEvent : event
     );
+    
+    // Save to localStorage to persist changes
+    try {
+      localStorage.setItem('preProductionEvents', JSON.stringify(updatedEvents));
+    } catch (error) {
+      console.error('Error saving events to localStorage:', error);
+    }
     
     // Update state
     setEvents(updatedEvents);

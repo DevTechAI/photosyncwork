@@ -1,6 +1,6 @@
 
 import Layout from "@/components/Layout";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { TeamMember } from "@/components/scheduling/types";
 import { usePreProductionEvents } from "@/hooks/usePreProductionEvents";
 import { useClientRequirements } from "@/hooks/useClientRequirements";
@@ -56,8 +56,35 @@ const mockTeamMembers: TeamMember[] = [
 ];
 
 export default function PreProductionPage() {
-  // Team members data
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>(mockTeamMembers);
+  // Team members data - now with persisted storage
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  
+  // Load team members from localStorage on component mount
+  useEffect(() => {
+    try {
+      const savedTeamMembers = localStorage.getItem('teamMembers');
+      if (savedTeamMembers) {
+        setTeamMembers(JSON.parse(savedTeamMembers));
+      } else {
+        // If no saved team members, use the mock data
+        setTeamMembers(mockTeamMembers);
+        // Save mock data to localStorage
+        localStorage.setItem('teamMembers', JSON.stringify(mockTeamMembers));
+      }
+    } catch (error) {
+      console.error('Error loading team members from localStorage:', error);
+      setTeamMembers(mockTeamMembers);
+    }
+  }, []);
+  
+  // Save teamMembers to localStorage whenever it changes
+  useEffect(() => {
+    try {
+      localStorage.setItem('teamMembers', JSON.stringify(teamMembers));
+    } catch (error) {
+      console.error('Error saving team members to localStorage:', error);
+    }
+  }, [teamMembers]);
   
   // Tab state management
   const { activeTab, setActiveTab } = useTabState("details");
@@ -87,15 +114,33 @@ export default function PreProductionPage() {
     availableVideographers,
     assignedTeamMembers,
     handleAssignTeamMember,
-    handleMoveToProduction
+    handleMoveToProduction,
+    handleUpdateAssignmentStatus
   } = useTeamAssignmentsTab(events, setEvents, selectedEvent, setSelectedEvent, teamMembers);
   
   // Scheduling tab hook
   const {
     getAssignmentCounts,
     handleAssignTeamMemberForScheduling,
-    handleUpdateAssignmentStatus
+    handleUpdateAssignmentStatus: handleUpdateSchedulingStatus
   } = useSchedulingTab(events, setEvents, teamMembers);
+
+  // Handle adding a team member
+  const handleAddTeamMember = (member: TeamMember) => {
+    setTeamMembers(prev => [...prev, member]);
+  };
+
+  // Handle updating a team member
+  const handleUpdateTeamMember = (updatedMember: TeamMember) => {
+    setTeamMembers(prev => 
+      prev.map(m => m.id === updatedMember.id ? updatedMember : m)
+    );
+  };
+
+  // Handle deleting a team member
+  const handleDeleteTeamMember = (id: string) => {
+    setTeamMembers(prev => prev.filter(m => m.id !== id));
+  };
   
   return (
     <Layout>
@@ -136,6 +181,7 @@ export default function PreProductionPage() {
                 handleSaveRequirements={handleSaveRequirements}
                 handleAssignTeamMember={handleAssignTeamMember}
                 handleMoveToProduction={handleMoveToProduction}
+                handleUpdateAssignmentStatus={handleUpdateAssignmentStatus}
               />
             )}
           </TabsContent>
@@ -145,7 +191,7 @@ export default function PreProductionPage() {
               events={events}
               teamMembers={teamMembers} 
               onAssign={handleAssignTeamMemberForScheduling}
-              onUpdateStatus={handleUpdateAssignmentStatus}
+              onUpdateStatus={handleUpdateSchedulingStatus}
               getAssignmentCounts={getAssignmentCounts}
             />
           </TabsContent>
@@ -153,15 +199,9 @@ export default function PreProductionPage() {
           <TabsContent value="team">
             <TeamManagement 
               teamMembers={teamMembers} 
-              onAddTeamMember={(member) => setTeamMembers(prev => [...prev, member])}
-              onUpdateTeamMember={(updatedMember) => {
-                setTeamMembers(prev => prev.map(m => 
-                  m.id === updatedMember.id ? updatedMember : m
-                ));
-              }}
-              onDeleteTeamMember={(id) => {
-                setTeamMembers(prev => prev.filter(m => m.id !== id));
-              }}
+              onAddTeamMember={handleAddTeamMember}
+              onUpdateTeamMember={handleUpdateTeamMember}
+              onDeleteTeamMember={handleDeleteTeamMember}
             />
           </TabsContent>
         </Tabs>

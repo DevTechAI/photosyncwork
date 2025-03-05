@@ -4,7 +4,7 @@ import { ScheduledEvent, TeamMember } from "@/components/scheduling/types";
 import { Camera } from "lucide-react";
 import { EventDetailsTab } from "./EventDetailsTab";
 import { ClientRequirementsTab } from "./ClientRequirementsTab";
-import { TeamAssignmentTab } from "./TeamAssignmentTab";
+import { TeamAssignmentTab } from "../pre-production/TeamAssignmentTab";
 
 interface EventDetailsTabsProps {
   selectedEvent: ScheduledEvent | null;
@@ -19,6 +19,7 @@ interface EventDetailsTabsProps {
   handleSaveRequirements: () => void;
   handleAssignTeamMember: (teamMemberId: string, role: "photographer" | "videographer") => void;
   handleMoveToProduction: () => void;
+  handleUpdateAssignmentStatus?: (eventId: string, teamMemberId: string, status: "accepted" | "declined") => void;
 }
 
 export function EventDetailsTabs({
@@ -33,7 +34,8 @@ export function EventDetailsTabs({
   loading,
   handleSaveRequirements,
   handleAssignTeamMember,
-  handleMoveToProduction
+  handleMoveToProduction,
+  handleUpdateAssignmentStatus
 }: EventDetailsTabsProps) {
   return (
     <div className="lg:col-span-2">
@@ -70,6 +72,7 @@ export function EventDetailsTabs({
               loading={loading}
               handleAssignTeamMember={handleAssignTeamMember}
               handleMoveToProduction={handleMoveToProduction}
+              handleUpdateAssignmentStatus={handleUpdateAssignmentStatus}
             />
           </TabsContent>
         </Tabs>
