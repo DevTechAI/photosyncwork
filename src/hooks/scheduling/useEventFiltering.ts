@@ -1,54 +1,21 @@
 
-import { ScheduledEvent, WorkflowStage, TeamMember, EventAssignment } from "@/components/scheduling/types";
+import { ScheduledEvent, TeamMember } from "@/components/scheduling/types";
+import { getAssignmentCounts } from "@/utils/eventAssignmentUtils";
+import { getEventsByStage as filterEventsByStage } from "@/utils/eventFilteringUtils";
 
 export function useEventFiltering(events: ScheduledEvent[], teamMembers: TeamMember[]) {
-  // Get assignment counts by role and status
-  const getAssignmentCounts = (event: ScheduledEvent) => {
-    const acceptedPhotographers = event.assignments.filter(
-      a => {
-        const member = teamMembers.find(m => m.id === a.teamMemberId);
-        return member?.role === "photographer" && a.status === "accepted";
-      }
-    ).length;
-
-    const acceptedVideographers = event.assignments.filter(
-      a => {
-        const member = teamMembers.find(m => m.id === a.teamMemberId);
-        return member?.role === "videographer" && a.status === "accepted";
-      }
-    ).length;
-
-    const pendingPhotographers = event.assignments.filter(
-      a => {
-        const member = teamMembers.find(m => m.id === a.teamMemberId);
-        return member?.role === "photographer" && a.status === "pending";
-      }
-    ).length;
-
-    const pendingVideographers = event.assignments.filter(
-      a => {
-        const member = teamMembers.find(m => m.id === a.teamMemberId);
-        return member?.role === "videographer" && a.status === "pending";
-      }
-    ).length;
-
-    return {
-      acceptedPhotographers,
-      acceptedVideographers,
-      pendingPhotographers,
-      pendingVideographers,
-      totalPhotographers: acceptedPhotographers + pendingPhotographers,
-      totalVideographers: acceptedVideographers + pendingVideographers
-    };
+  // Use utility function to get assignment counts
+  const getEventAssignmentCounts = (event: ScheduledEvent) => {
+    return getAssignmentCounts(event, teamMembers);
   };
 
-  // Filter events by workflow stage
+  // Use utility function to filter events by stage
   const getEventsByStage = (stage: WorkflowStage) => {
-    return events.filter(event => event.stage === stage);
+    return filterEventsByStage(events, stage);
   };
   
   return {
-    getAssignmentCounts,
+    getAssignmentCounts: getEventAssignmentCounts,
     getEventsByStage
   };
 }
