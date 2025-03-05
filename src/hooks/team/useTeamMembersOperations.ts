@@ -2,6 +2,7 @@
 import { TeamMember } from "@/components/scheduling/types";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import { v4 as uuidv4 } from 'uuid';
 
 export function useTeamMembersOperations(
   teamMembers: TeamMember[],
@@ -12,10 +13,25 @@ export function useTeamMembersOperations(
   // Handle adding a team member
   const handleAddTeamMember = async (member: TeamMember) => {
     try {
+      // Generate a proper UUID for the team member
+      const memberWithUuid = {
+        ...member,
+        id: uuidv4() // Generate a valid UUID
+      };
+      
       // Add to Supabase
       const { error } = await supabase
         .from('team_members')
-        .insert(member);
+        .insert({
+          id: memberWithUuid.id,
+          name: memberWithUuid.name,
+          role: memberWithUuid.role,
+          email: memberWithUuid.email,
+          phone: memberWithUuid.phone,
+          whatsapp: memberWithUuid.whatsapp,
+          availability: memberWithUuid.availability || {},
+          is_freelancer: memberWithUuid.isFreelancer || false
+        });
       
       if (error) {
         console.error('Error adding team member to Supabase:', error);
@@ -28,11 +44,11 @@ export function useTeamMembersOperations(
       }
       
       // Update local state
-      setTeamMembers([...teamMembers, member]);
+      setTeamMembers([...teamMembers, memberWithUuid]);
       
       toast({
         title: "Success",
-        description: `${member.name} added to team successfully.`
+        description: `${memberWithUuid.name} added to team successfully.`
       });
     } catch (error) {
       console.error('Error in handleAddTeamMember:', error);
@@ -50,7 +66,15 @@ export function useTeamMembersOperations(
       // Update in Supabase
       const { error } = await supabase
         .from('team_members')
-        .update(updatedMember)
+        .update({
+          name: updatedMember.name,
+          role: updatedMember.role,
+          email: updatedMember.email,
+          phone: updatedMember.phone,
+          whatsapp: updatedMember.whatsapp,
+          availability: updatedMember.availability || {},
+          is_freelancer: updatedMember.isFreelancer || false
+        })
         .eq('id', updatedMember.id);
       
       if (error) {

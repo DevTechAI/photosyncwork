@@ -15,15 +15,19 @@ export const getApprovedEstimates = () => {
  * Creates a partial event object from an approved estimate
  */
 export function createEventFromEstimate(estimate) {
+  console.log("Creating event from estimate:", estimate);
+  
   // Initialize event data with client info
   const eventData = {
     clientName: estimate.clientName || "",
     clientEmail: estimate.clientEmail || "",
+    clientPhone: estimate.clientPhone || "",
     name: "",
     date: "",
     // Default values for required fields
     photographersCount: 1,
-    videographersCount: 1,
+    videographersCount: 0,
+    guestCount: "0",
     estimatePackage: "",
     deliverables: []
   };
@@ -33,16 +37,21 @@ export function createEventFromEstimate(estimate) {
     // Use the specifically selected package
     const selectedPackage = estimate.packages[estimate.selectedPackageIndex];
     
+    console.log("Using selected package:", selectedPackage);
+    
     // Extract services from the selected package
     if (selectedPackage && selectedPackage.services && selectedPackage.services.length > 0) {
       // Use the first service event for the initial event
       const firstService = selectedPackage.services[0];
       
+      console.log("Using first service:", firstService);
+      
       // Add the event name and date from the service
       eventData.name = firstService.event || "";
       eventData.date = firstService.date || "";
       eventData.photographersCount = parseInt(firstService.photographers) || 1;
-      eventData.videographersCount = parseInt(firstService.cinematographers) || 1;
+      eventData.videographersCount = parseInt(firstService.cinematographers) || 0;
+      eventData.guestCount = firstService.guests || "0";
     }
     
     // Extract deliverables from the selected package
@@ -51,6 +60,8 @@ export function createEventFromEstimate(estimate) {
       const deliverablesArray = Array.isArray(selectedPackage.deliverables) 
         ? selectedPackage.deliverables 
         : estimate.deliverables || [];
+      
+      console.log("Using deliverables:", deliverablesArray);
       
       // Map deliverables to the required format
       eventData.deliverables = deliverablesArray.map((item, index) => ({
@@ -68,11 +79,14 @@ export function createEventFromEstimate(estimate) {
     // Legacy format - no packages, use services directly
     const firstService = estimate.services[0];
     
+    console.log("Using legacy format service:", firstService);
+    
     // Add the event name and date from the service
     eventData.name = firstService.event || "";
     eventData.date = firstService.date || "";
     eventData.photographersCount = parseInt(firstService.photographers) || 1;
-    eventData.videographersCount = parseInt(firstService.cinematographers) || 1;
+    eventData.videographersCount = parseInt(firstService.cinematographers) || 0;
+    eventData.guestCount = firstService.guests || "0";
     
     // Extract deliverables from main estimate
     if (estimate.deliverables && Array.isArray(estimate.deliverables)) {
@@ -88,5 +102,6 @@ export function createEventFromEstimate(estimate) {
     eventData.estimatePackage = `Standard Package: ${estimate.amount}`;
   }
   
+  console.log("Final event data created:", eventData);
   return eventData;
 }

@@ -3,11 +3,12 @@ import { useState, useEffect } from "react";
 import { TeamMember } from "@/components/scheduling/types";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import { v4 as uuidv4 } from 'uuid';
 
 // Mock data for demonstration - used as fallback if database fetch fails
 export const mockTeamMembers: TeamMember[] = [
   {
-    id: "tm-1",
+    id: uuidv4(),
     name: "Ankit Patel",
     role: "photographer",
     email: "ankit@example.com",
@@ -20,7 +21,7 @@ export const mockTeamMembers: TeamMember[] = [
     }
   },
   {
-    id: "tm-2",
+    id: uuidv4(),
     name: "Priya Singh",
     role: "videographer",
     email: "priya@example.com",
@@ -32,7 +33,7 @@ export const mockTeamMembers: TeamMember[] = [
     }
   },
   {
-    id: "tm-3",
+    id: uuidv4(),
     name: "Raj Kumar",
     role: "photographer",
     email: "raj@example.com",
