@@ -1,6 +1,6 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScheduledEvent } from "@/components/scheduling/types";
+import { ScheduledEvent, TeamMember } from "@/components/scheduling/types";
 import { Card } from "@/components/ui/card";
 import { ProductionNotesTab } from "./ProductionNotesTab";
 import { TimeTrackingTab } from "./TimeTrackingTab";
@@ -8,21 +8,38 @@ import { Badge } from "@/components/ui/badge";
 import { Check, Clock, MapPin, Users, Package } from "lucide-react";
 
 interface ProductionDetailsTabsProps {
-  selectedEvent: ScheduledEvent;
-  handleAddTimeEntry: () => void;
-  handleSaveNotes: (notes: string) => void;
+  selectedEvent: ScheduledEvent | null;
+  events: ScheduledEvent[];
+  teamMembers: TeamMember[];
+  activeTab: string;
+  setActiveTab: (value: string) => void;
+  onLogTime: (eventId: string, teamMemberId: string, hours: number) => void;
+  onUpdateNotes: (eventId: string, notes: string) => void;
 }
 
 export function ProductionDetailsTabs({
   selectedEvent,
-  handleAddTimeEntry,
-  handleSaveNotes
+  events,
+  teamMembers,
+  activeTab,
+  setActiveTab,
+  onLogTime,
+  onUpdateNotes
 }: ProductionDetailsTabsProps) {
+  // If no event is selected, show a placeholder
+  if (!selectedEvent) {
+    return (
+      <Card className="p-6 text-center">
+        <p className="text-muted-foreground">Select an event to view details</p>
+      </Card>
+    );
+  }
+
   return (
-    <Tabs defaultValue="details">
+    <Tabs value={activeTab} onValueChange={setActiveTab}>
       <TabsList className="w-full">
         <TabsTrigger value="details">Event Details</TabsTrigger>
-        <TabsTrigger value="timetracking">Time Tracking</TabsTrigger>
+        <TabsTrigger value="tracking">Time Tracking</TabsTrigger>
         <TabsTrigger value="notes">Production Notes</TabsTrigger>
         <TabsTrigger value="deliverables">Deliverables</TabsTrigger>
       </TabsList>
@@ -90,29 +107,32 @@ export function ProductionDetailsTabs({
             <h3 className="text-sm font-medium">Assigned Team Members</h3>
             <div className="mt-2 space-y-2">
               {selectedEvent.assignments && selectedEvent.assignments.length > 0 ? (
-                selectedEvent.assignments.map((assignment, index) => (
-                  <div key={index} className="flex items-center justify-between p-2 border rounded-md">
-                    <div className="flex items-center gap-2">
-                      <Users className="h-4 w-4 text-muted-foreground" />
-                      <span>{assignment.teamMemberName}</span>
+                selectedEvent.assignments.map((assignment, index) => {
+                  const teamMember = teamMembers.find(tm => tm.id === assignment.teamMemberId);
+                  return (
+                    <div key={index} className="flex items-center justify-between p-2 border rounded-md">
+                      <div className="flex items-center gap-2">
+                        <Users className="h-4 w-4 text-muted-foreground" />
+                        <span>{teamMember?.name || "Unknown Team Member"}</span>
+                      </div>
+                      {assignment.status === 'accepted' && (
+                        <Badge variant="outline" className="bg-green-50 text-green-700">
+                          <Check className="h-3 w-3 mr-1" /> Accepted
+                        </Badge>
+                      )}
+                      {assignment.status === 'declined' && (
+                        <Badge variant="outline" className="bg-red-50 text-red-700">
+                          Declined
+                        </Badge>
+                      )}
+                      {assignment.status === 'pending' && (
+                        <Badge variant="outline" className="bg-yellow-50 text-yellow-700">
+                          Pending
+                        </Badge>
+                      )}
                     </div>
-                    {assignment.status === 'accepted' && (
-                      <Badge variant="outline" className="bg-green-50 text-green-700">
-                        <Check className="h-3 w-3 mr-1" /> Accepted
-                      </Badge>
-                    )}
-                    {assignment.status === 'declined' && (
-                      <Badge variant="outline" className="bg-red-50 text-red-700">
-                        Declined
-                      </Badge>
-                    )}
-                    {assignment.status === 'pending' && (
-                      <Badge variant="outline" className="bg-yellow-50 text-yellow-700">
-                        Pending
-                      </Badge>
-                    )}
-                  </div>
-                ))
+                  );
+                })
               ) : (
                 <p className="text-sm text-muted-foreground">No team members assigned</p>
               )}
@@ -122,18 +142,19 @@ export function ProductionDetailsTabs({
       </TabsContent>
       
       {/* Time Tracking Tab */}
-      <TabsContent value="timetracking">
+      <TabsContent value="tracking">
         <TimeTrackingTab 
-          timeEntries={selectedEvent.timeTracking || []}
-          onAddTimeEntry={handleAddTimeEntry}
+          event={selectedEvent}
+          teamMembers={teamMembers}
+          onLogTime={(teamMemberId, hours) => onLogTime(selectedEvent.id, teamMemberId, hours)}
         />
       </TabsContent>
       
       {/* Production Notes Tab */}
       <TabsContent value="notes">
         <ProductionNotesTab 
-          notes={selectedEvent.notes || ""}
-          onSaveNotes={handleSaveNotes}
+          event={selectedEvent}
+          onUpdateNotes={(notes) => onUpdateNotes(selectedEvent.id, notes)}
         />
       </TabsContent>
       
@@ -150,7 +171,17 @@ export function ProductionDetailsTabs({
               {selectedEvent.deliverables.map((deliverable, index) => (
                 <li key={index} className="flex items-start gap-2 p-3 border rounded-md">
                   <Check className="h-4 w-4 text-green-500 mt-0.5" />
-                  <span>{deliverable}</span>
+                  <div>
+                    <span className="font-medium">{deliverable.type}</span>
+                    <span className="ml-2 px-2 py-0.5 bg-gray-100 rounded text-xs">
+                      {deliverable.status}
+                    </span>
+                    {deliverable.deliveryDate && (
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Due: {new Date(deliverable.deliveryDate).toLocaleDateString()}
+                      </p>
+                    )}
+                  </div>
                 </li>
               ))}
             </ul>

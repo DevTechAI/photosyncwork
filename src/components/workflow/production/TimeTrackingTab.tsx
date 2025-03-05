@@ -72,11 +72,6 @@ export function TimeTrackingTab({
     
     onLogTime(selectedTeamMember, hours);
     
-    toast({
-      title: "Time Logged",
-      description: `Successfully logged ${hours} hours`,
-    });
-    
     // Reset form
     setHoursLogged("1");
   };

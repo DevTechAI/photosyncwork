@@ -19,7 +19,11 @@ export default function ProductionPage() {
     const savedEvents = localStorage.getItem("scheduledEvents");
     if (savedEvents) {
       const parsedEvents = JSON.parse(savedEvents);
-      setEvents(parsedEvents);
+      // Filter only production events
+      const productionEvents = parsedEvents.filter(
+        (event: ScheduledEvent) => event.stage === "production"
+      );
+      setEvents(productionEvents);
     }
     
     // Load team members
@@ -32,7 +36,18 @@ export default function ProductionPage() {
   // Save events to localStorage whenever they change
   useEffect(() => {
     if (events.length > 0) {
-      localStorage.setItem("scheduledEvents", JSON.stringify(events));
+      // Get all other events that are not in production stage
+      const savedEvents = localStorage.getItem("scheduledEvents");
+      if (savedEvents) {
+        const parsedEvents = JSON.parse(savedEvents);
+        const otherEvents = parsedEvents.filter(
+          (event: ScheduledEvent) => event.stage !== "production"
+        );
+        
+        // Combine with our production events
+        const allEvents = [...otherEvents, ...events];
+        localStorage.setItem("scheduledEvents", JSON.stringify(allEvents));
+      }
     }
   }, [events]);
   
@@ -82,6 +97,11 @@ export default function ProductionPage() {
     if (selectedEvent && selectedEvent.id === eventId) {
       setSelectedEvent(events.find(e => e.id === eventId) || null);
     }
+    
+    toast({
+      title: "Time Logged",
+      description: `Successfully logged ${hours} hours.`,
+    });
   };
   
   // Update event notes
@@ -94,6 +114,11 @@ export default function ProductionPage() {
     if (selectedEvent && selectedEvent.id === eventId) {
       setSelectedEvent(prev => prev ? { ...prev, notes } : null);
     }
+    
+    toast({
+      title: "Notes Saved",
+      description: "Production notes have been updated.",
+    });
   };
   
   // Move event to post-production
@@ -106,10 +131,23 @@ export default function ProductionPage() {
       event.id === eventId ? { ...event, stage: "post-production" as const } : event
     );
     
-    setEvents(updatedEvents);
+    setEvents(prev => prev.filter(event => event.id !== eventId));
+    
+    // Update all events in localStorage
+    const savedEvents = localStorage.getItem("scheduledEvents");
+    if (savedEvents) {
+      const parsedEvents = JSON.parse(savedEvents);
+      const filteredEvents = parsedEvents.filter(
+        (event: ScheduledEvent) => event.id !== eventId
+      );
+      const allEvents = [...filteredEvents, {...eventToMove, stage: "post-production"}];
+      localStorage.setItem("scheduledEvents", JSON.stringify(allEvents));
+    }
     
     // Update selected event or clear selection if it was moved
-    setSelectedEvent(null);
+    if (selectedEvent && selectedEvent.id === eventId) {
+      setSelectedEvent(null);
+    }
     
     toast({
       title: "Event Moved",
