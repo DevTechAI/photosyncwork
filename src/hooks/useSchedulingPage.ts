@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { ScheduledEvent, TeamMember, WorkflowStage, EventAssignment } from "@/components/scheduling/types";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import { scheduledEventToDb, dbToScheduledEvent } from "@/utils/supabaseConverters";
 
 export function useSchedulingPage(initialEvents: ScheduledEvent[], initialTeamMembers: TeamMember[]) {
   const { toast } = useToast();
@@ -13,10 +14,13 @@ export function useSchedulingPage(initialEvents: ScheduledEvent[], initialTeamMe
   
   const handleCreateEvent = async (newEvent: ScheduledEvent) => {
     try {
+      // Convert the event to database format before inserting
+      const dbEvent = scheduledEventToDb(newEvent);
+      
       // Insert into Supabase
       const { error } = await supabase
         .from('scheduled_events')
-        .insert(newEvent);
+        .insert(dbEvent);
       
       if (error) {
         console.error("Error creating event in Supabase:", error);
@@ -73,19 +77,25 @@ export function useSchedulingPage(initialEvents: ScheduledEvent[], initialTeamMe
         });
         
         // Update in Supabase
-        const { error } = await supabase
-          .from('scheduled_events')
-          .update(updatedEvents.find(e => e.id === eventId) || {})
-          .eq('id', eventId);
-        
-        if (error) {
-          console.error("Error updating assignments in Supabase:", error);
-          toast({
-            title: "Error",
-            description: "Failed to assign team member. Please try again.",
-            variant: "destructive"
-          });
-          return;
+        const updatedEvent = updatedEvents.find(e => e.id === eventId);
+        if (updatedEvent) {
+          // Convert to database format before updating
+          const dbEvent = scheduledEventToDb(updatedEvent);
+          
+          const { error } = await supabase
+            .from('scheduled_events')
+            .update(dbEvent)
+            .eq('id', eventId);
+          
+          if (error) {
+            console.error("Error updating assignments in Supabase:", error);
+            toast({
+              title: "Error",
+              description: "Failed to assign team member. Please try again.",
+              variant: "destructive"
+            });
+            return;
+          }
         }
         
         // Update local state
@@ -126,9 +136,12 @@ export function useSchedulingPage(initialEvents: ScheduledEvent[], initialTeamMe
       // Update in Supabase
       const updatedEvent = updatedEvents.find(e => e.id === eventId);
       if (updatedEvent) {
+        // Convert to database format before updating
+        const dbEvent = scheduledEventToDb(updatedEvent);
+        
         const { error } = await supabase
           .from('scheduled_events')
-          .update(updatedEvent)
+          .update(dbEvent)
           .eq('id', eventId);
         
         if (error) {
