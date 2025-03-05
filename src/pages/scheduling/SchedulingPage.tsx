@@ -11,7 +11,11 @@ import { getAllEvents } from "@/components/scheduling/utils/eventLoaders";
 import { useLocation } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 
-export default function SchedulingPage() {
+interface SchedulingPageProps {
+  embedded?: boolean;
+}
+
+export function SchedulingPage({ embedded = false }: SchedulingPageProps) {
   const location = useLocation();
   const { toast } = useToast();
   const queryParams = new URLSearchParams(location.search);
@@ -93,8 +97,10 @@ export default function SchedulingPage() {
   };
   
   return (
-    <div className="container mx-auto py-6 space-y-8">
-      <SchedulingHeader onCreateEvent={() => setShowCreateEventModal(true)} />
+    <div className={embedded ? "" : "container mx-auto py-6 space-y-8"}>
+      {!embedded && (
+        <SchedulingHeader onCreateEvent={() => setShowCreateEventModal(true)} />
+      )}
       
       <SchedulingTabs
         activeTab={mainTab}
@@ -108,6 +114,8 @@ export default function SchedulingPage() {
         onUpdateTeamMember={handleUpdateTeamMember}
         onAddTeamMember={handleAddTeamMember}
         onDeleteTeamMember={handleDeleteTeamMember}
+        showCreateEventButton={!embedded}
+        onCreateEvent={() => setShowCreateEventModal(true)}
       />
       
       {showCreateEventModal && (
@@ -121,3 +129,5 @@ export default function SchedulingPage() {
     </div>
   );
 }
+
+export default SchedulingPage;

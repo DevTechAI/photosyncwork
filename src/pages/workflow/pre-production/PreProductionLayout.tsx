@@ -1,12 +1,11 @@
+
 import { useState, useEffect } from "react";
 import Layout from "@/components/Layout";
 import { usePreProductionEvents } from "@/hooks/usePreProductionEvents";
 import { useClientRequirements } from "@/hooks/useClientRequirements";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { EventAssignments } from "@/components/scheduling/assignments/EventAssignments";
 import { PreProductionContent } from "./PreProductionContent";
 import { useTeamAssignmentsTab } from "@/hooks/useTeamAssignmentsTab";
-import { useSchedulingTab } from "@/hooks/useSchedulingTab";
 import { useTabState } from "@/hooks/useTabState";
 import { TeamManagement } from "@/components/team/TeamManagement";
 import { LoadingSkeleton } from "@/components/workflow/pre-production/LoadingSkeleton";
@@ -15,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 import { createEventsFromApprovedEstimates } from "@/components/scheduling/utils/estimateConversion";
 import { useToast } from "@/components/ui/use-toast";
+import { SchedulingPage } from "@/pages/scheduling/SchedulingPage";
 
 export default function PreProductionPage() {
   // Tab state management
@@ -58,13 +58,6 @@ export default function PreProductionPage() {
     handleMoveToProduction,
     handleUpdateAssignmentStatus
   } = useTeamAssignmentsTab(events, setEvents, selectedEvent, setSelectedEvent, teamMembers);
-  
-  // Scheduling tab hook
-  const {
-    getAssignmentCounts,
-    handleAssignTeamMemberForScheduling,
-    handleUpdateSchedulingStatus
-  } = useSchedulingTab(events, setEvents, teamMembers);
   
   // Debug logging
   useEffect(() => {
@@ -168,13 +161,7 @@ export default function PreProductionPage() {
           </TabsContent>
           
           <TabsContent value="scheduling">
-            <EventAssignments 
-              events={events}
-              teamMembers={teamMembers} 
-              onAssign={handleAssignTeamMemberForScheduling}
-              onUpdateStatus={handleUpdateSchedulingStatus}
-              getAssignmentCounts={getAssignmentCounts}
-            />
+            <SchedulingPage embedded={true} />
           </TabsContent>
 
           <TabsContent value="team">
