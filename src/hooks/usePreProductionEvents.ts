@@ -14,7 +14,8 @@ export function usePreProductionEvents() {
     preProductionEvents: events, 
     completedEvents,
     setPreProductionEvents: setEvents,
-    setCompletedEvents
+    setCompletedEvents,
+    loadEvents // Make sure to destructure this
   } = useEventLoader();
   
   const { deleteCompletedEvent } = useEventStorage();
@@ -35,6 +36,7 @@ export function usePreProductionEvents() {
     completedEvents,
     selectedEvent,
     setSelectedEvent,
-    deleteCompletedEvent: handleDeleteCompletedEvent
+    deleteCompletedEvent: handleDeleteCompletedEvent,
+    loadEvents // Add this to the return object
   };
 }
