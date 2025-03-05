@@ -60,7 +60,7 @@ export function ClientDetailsForm({
         <Input
           id="guestCount"
           type="number"
-          {...register("guestCount")}
+          {...register("guestCount", { valueAsNumber: true })}
           placeholder="Approximate number of guests"
         />
         {errors.guestCount && (

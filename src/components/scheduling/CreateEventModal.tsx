@@ -1,6 +1,5 @@
 
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -9,7 +8,7 @@ import { ClientDetailsForm } from "./components/ClientDetailsForm";
 import { TeamRequirementsForm } from "./components/TeamRequirementsForm";
 import { EstimateSelector } from "./components/EstimateSelector";
 import { ScheduledEvent } from "./types";
-import { useCreateEventModal, eventFormSchema, EventFormValues } from "@/hooks/scheduling/useCreateEventModal";
+import { useCreateEventModal } from "@/hooks/scheduling/useCreateEventModal";
 
 interface CreateEventModalProps {
   open: boolean;
@@ -31,29 +30,19 @@ export function CreateEventModal({
     selectedEstimateId,
     setSelectedEstimateId,
     approvedEstimates,
+    register,
+    handleSubmit,
+    setValue,
+    errors,
+    loadEstimates,
     handleSubmitForm,
     handleCreateFromEstimate
   } = useCreateEventModal(initialEstimateId, onCreateEvent, onClose);
   
-  // Form handling with react-hook-form
-  const { register, handleSubmit, setValue, formState: { errors } } = useForm<EventFormValues>({
-    resolver: zodResolver(eventFormSchema),
-    defaultValues: {
-      name: "",
-      date: "",
-      startTime: "",
-      endTime: "",
-      location: "",
-      clientName: "",
-      clientPhone: "",
-      clientEmail: "",
-      guestCount: 1,
-      photographersCount: 1,
-      videographersCount: 0,
-      clientRequirements: "",
-      references: []
-    },
-  });
+  // Load estimates when the component mounts
+  useEffect(() => {
+    loadEstimates();
+  }, []);
   
   return (
     <Dialog open={open} onOpenChange={onClose}>

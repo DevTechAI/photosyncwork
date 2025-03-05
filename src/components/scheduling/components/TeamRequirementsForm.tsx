@@ -23,7 +23,7 @@ export function TeamRequirementsForm({
             id="photographersCount"
             type="number"
             min="0"
-            {...register("photographersCount")}
+            {...register("photographersCount", { valueAsNumber: true })}
           />
           {errors.photographersCount && (
             <p className="text-sm text-destructive">{errors.photographersCount.message}</p>
@@ -36,7 +36,7 @@ export function TeamRequirementsForm({
             id="videographersCount"
             type="number"
             min="0"
-            {...register("videographersCount")}
+            {...register("videographersCount", { valueAsNumber: true })}
           />
           {errors.videographersCount && (
             <p className="text-sm text-destructive">{errors.videographersCount.message}</p>
