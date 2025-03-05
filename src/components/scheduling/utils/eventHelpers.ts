@@ -1,73 +1,149 @@
 
 import { ScheduledEvent, TeamMember, EventAssignment } from "../types";
 import { createEventFromEstimate } from "./estimatesHelpers";
+import { supabase } from "@/integrations/supabase/client";
 
-// Get all scheduled events from localStorage
-export function getAllEvents(): ScheduledEvent[] {
+// Get all scheduled events
+export async function getAllEvents(): Promise<ScheduledEvent[]> {
+  try {
+    const { data, error } = await supabase
+      .from('scheduled_events')
+      .select('*');
+    
+    if (error) {
+      console.error('Error fetching events from Supabase:', error);
+      return [];
+    }
+    
+    return data as ScheduledEvent[];
+  } catch (error) {
+    console.error('Error in getAllEvents:', error);
+    return [];
+  }
+}
+
+// Fallback function for when we need to use localStorage (for compatibility)
+export function getAllEventsFromLocalStorage(): ScheduledEvent[] {
   const savedEvents = localStorage.getItem("scheduledEvents");
   if (!savedEvents) return [];
   return JSON.parse(savedEvents);
 }
 
 // Get events filtered by stage
-export function getEventsByStage(stage: "pre-production" | "production" | "post-production" | "completed"): ScheduledEvent[] {
-  const allEvents = getAllEvents();
-  return allEvents.filter(event => event.stage === stage);
-}
-
-// Save an event to localStorage
-export function saveEvent(event: ScheduledEvent): void {
-  const allEvents = getAllEvents();
-  
-  // Check if event already exists
-  const eventIndex = allEvents.findIndex(e => e.id === event.id);
-  
-  if (eventIndex >= 0) {
-    // Update existing event
-    allEvents[eventIndex] = event;
-  } else {
-    // Add new event
-    allEvents.push(event);
+export async function getEventsByStage(stage: "pre-production" | "production" | "post-production" | "completed"): Promise<ScheduledEvent[]> {
+  try {
+    const { data, error } = await supabase
+      .from('scheduled_events')
+      .select('*')
+      .eq('stage', stage);
+    
+    if (error) {
+      console.error(`Error fetching ${stage} events from Supabase:`, error);
+      return [];
+    }
+    
+    return data as ScheduledEvent[];
+  } catch (error) {
+    console.error(`Error in getEventsByStage for ${stage}:`, error);
+    return [];
   }
-  
-  localStorage.setItem("scheduledEvents", JSON.stringify(allEvents));
 }
 
-// Save multiple events to localStorage
-export function saveEvents(events: ScheduledEvent[]): void {
-  const allEvents = getAllEvents();
-  
-  // Create a map of existing events by ID
-  const eventMap = new Map<string, ScheduledEvent>();
-  allEvents.forEach(event => eventMap.set(event.id, event));
-  
-  // Update or add new events
-  events.forEach(event => eventMap.set(event.id, event));
-  
-  localStorage.setItem("scheduledEvents", JSON.stringify(Array.from(eventMap.values())));
+// Save an event to Supabase
+export async function saveEvent(event: ScheduledEvent): Promise<void> {
+  try {
+    // Check if event already exists
+    const { data, error: fetchError } = await supabase
+      .from('scheduled_events')
+      .select('id')
+      .eq('id', event.id)
+      .maybeSingle();
+    
+    if (fetchError) {
+      console.error('Error checking if event exists in Supabase:', fetchError);
+      return;
+    }
+    
+    if (data) {
+      // Update existing event
+      const { error } = await supabase
+        .from('scheduled_events')
+        .update(event)
+        .eq('id', event.id);
+      
+      if (error) {
+        console.error('Error updating event in Supabase:', error);
+      }
+    } else {
+      // Insert new event
+      const { error } = await supabase
+        .from('scheduled_events')
+        .insert(event);
+      
+      if (error) {
+        console.error('Error inserting event in Supabase:', error);
+      }
+    }
+  } catch (error) {
+    console.error('Error in saveEvent:', error);
+  }
+}
+
+// Save multiple events to Supabase
+export async function saveEvents(events: ScheduledEvent[]): Promise<void> {
+  try {
+    for (const event of events) {
+      await saveEvent(event);
+    }
+  } catch (error) {
+    console.error('Error in saveEvents:', error);
+  }
 }
 
 // Update event stage
-export function updateEventStage(eventId: string, newStage: "pre-production" | "production" | "post-production" | "completed"): ScheduledEvent | null {
-  const allEvents = getAllEvents();
-  const eventIndex = allEvents.findIndex(e => e.id === eventId);
-  
-  if (eventIndex >= 0) {
-    const updatedEvent = {
-      ...allEvents[eventIndex],
-      stage: newStage
-    };
+export async function updateEventStage(
+  eventId: string, 
+  newStage: "pre-production" | "production" | "post-production" | "completed"
+): Promise<ScheduledEvent | null> {
+  try {
+    // Fetch the event first
+    const { data, error: fetchError } = await supabase
+      .from('scheduled_events')
+      .select('*')
+      .eq('id', eventId)
+      .single();
     
-    allEvents[eventIndex] = updatedEvent;
-    localStorage.setItem("scheduledEvents", JSON.stringify(allEvents));
+    if (fetchError) {
+      console.error('Error fetching event from Supabase:', fetchError);
+      return null;
+    }
+    
+    if (!data) {
+      console.error('Event not found in Supabase:', eventId);
+      return null;
+    }
+    
+    // Update the event stage
+    const updatedEvent = { ...data, stage: newStage } as ScheduledEvent;
+    
+    const { error } = await supabase
+      .from('scheduled_events')
+      .update(updatedEvent)
+      .eq('id', eventId);
+    
+    if (error) {
+      console.error('Error updating event stage in Supabase:', error);
+      return null;
+    }
     
     return updatedEvent;
+  } catch (error) {
+    console.error('Error in updateEventStage:', error);
+    return null;
   }
-  
-  return null;
 }
 
-// Convert approved estimates to events
+// Convert approved estimates to events (this still uses localStorage for compatibility)
 export function createEventsFromApprovedEstimates(): ScheduledEvent[] {
   const savedEstimates = localStorage.getItem("estimates");
   if (!savedEstimates) return [];
@@ -75,48 +151,55 @@ export function createEventsFromApprovedEstimates(): ScheduledEvent[] {
   const allEstimates = JSON.parse(savedEstimates);
   const approvedEstimates = allEstimates.filter(estimate => estimate.status === "approved");
   
-  const allEvents = getAllEvents();
   const newEvents: ScheduledEvent[] = [];
   
   // Process each approved estimate
-  approvedEstimates.forEach(estimate => {
-    // Check if this estimate already has an event
-    const existingEvent = allEvents.find(event => event.estimateId === estimate.id);
+  approvedEstimates.forEach(async (estimate) => {
+    // Check if this estimate already has an event in Supabase
+    const { data: existingEvents, error } = await supabase
+      .from('scheduled_events')
+      .select('id')
+      .eq('estimateId', estimate.id);
     
-    if (!existingEvent) {
-      // Create event data from the estimate
-      const eventData = createEventFromEstimate(estimate);
-      
-      // Generate a new event with required fields
-      const newEvent: ScheduledEvent = {
-        id: `evt-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-        estimateId: estimate.id,
-        name: eventData.name || `Event for ${estimate.clientName}`,
-        date: eventData.date || new Date().toISOString().split('T')[0],
-        startTime: "09:00",
-        endTime: "17:00",
-        location: "To be determined",
-        clientName: estimate.clientName,
-        clientPhone: "",
-        clientEmail: estimate.clientEmail || "",
-        photographersCount: eventData.photographersCount || 1,
-        videographersCount: eventData.videographersCount || 1,
-        assignments: [],
-        stage: "pre-production",
-        clientRequirements: "",
-        deliverables: eventData.deliverables || [],
-        estimatePackage: eventData.estimatePackage || ""
-      };
-      
-      newEvents.push(newEvent);
+    if (error) {
+      console.error('Error checking for existing events in Supabase:', error);
+      return;
     }
+    
+    if (existingEvents && existingEvents.length > 0) {
+      // Event already exists for this estimate
+      return;
+    }
+    
+    // Create event data from the estimate
+    const eventData = createEventFromEstimate(estimate);
+    
+    // Generate a new event with required fields
+    const newEvent: ScheduledEvent = {
+      id: `evt-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      estimateId: estimate.id,
+      name: eventData.name || `Event for ${estimate.clientName}`,
+      date: eventData.date || new Date().toISOString().split('T')[0],
+      startTime: "09:00",
+      endTime: "17:00",
+      location: "To be determined",
+      clientName: estimate.clientName,
+      clientPhone: "",
+      clientEmail: estimate.clientEmail || "",
+      photographersCount: eventData.photographersCount || 1,
+      videographersCount: eventData.videographersCount || 1,
+      assignments: [],
+      stage: "pre-production",
+      clientRequirements: "",
+      deliverables: eventData.deliverables || [],
+      estimatePackage: eventData.estimatePackage || ""
+    };
+    
+    // Save the new event to Supabase
+    saveEvent(newEvent);
+    
+    newEvents.push(newEvent);
   });
-  
-  // Save new events if any were created
-  if (newEvents.length > 0) {
-    const updatedAllEvents = [...allEvents, ...newEvents];
-    localStorage.setItem("scheduledEvents", JSON.stringify(updatedAllEvents));
-  }
   
   return newEvents;
 }

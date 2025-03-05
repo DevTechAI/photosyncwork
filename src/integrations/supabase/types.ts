@@ -81,6 +81,87 @@ export type Database = {
         }
         Relationships: []
       }
+      scheduled_events: {
+        Row: {
+          assignments: Json
+          clientemail: string | null
+          clientname: string
+          clientphone: string
+          clientrequirements: string | null
+          created_at: string
+          datacopied: boolean | null
+          date: string
+          deliverables: Json | null
+          endtime: string
+          estimateid: string
+          estimatepackage: string | null
+          guestcount: string | null
+          id: string
+          location: string
+          name: string
+          notes: string | null
+          photographerscount: number
+          reference_images: string[] | null
+          stage: string
+          starttime: string
+          timetracking: Json | null
+          updated_at: string
+          videographerscount: number
+        }
+        Insert: {
+          assignments?: Json
+          clientemail?: string | null
+          clientname: string
+          clientphone: string
+          clientrequirements?: string | null
+          created_at?: string
+          datacopied?: boolean | null
+          date: string
+          deliverables?: Json | null
+          endtime: string
+          estimateid: string
+          estimatepackage?: string | null
+          guestcount?: string | null
+          id: string
+          location: string
+          name: string
+          notes?: string | null
+          photographerscount: number
+          reference_images?: string[] | null
+          stage: string
+          starttime: string
+          timetracking?: Json | null
+          updated_at?: string
+          videographerscount: number
+        }
+        Update: {
+          assignments?: Json
+          clientemail?: string | null
+          clientname?: string
+          clientphone?: string
+          clientrequirements?: string | null
+          created_at?: string
+          datacopied?: boolean | null
+          date?: string
+          deliverables?: Json | null
+          endtime?: string
+          estimateid?: string
+          estimatepackage?: string | null
+          guestcount?: string | null
+          id?: string
+          location?: string
+          name?: string
+          notes?: string | null
+          photographerscount?: number
+          reference_images?: string[] | null
+          stage?: string
+          starttime?: string
+          timetracking?: Json | null
+          updated_at?: string
+          videographerscount?: number
+        }
+        Relationships: []
+      }
       settings: {
         Row: {
           created_at: string | null
