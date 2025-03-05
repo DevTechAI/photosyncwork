@@ -11,6 +11,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { WelcomePage } from "./pages/WelcomePage";
 import { ServicesPage } from "./pages/ServicesPage";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 interface EstimatePreviewProps {
   open: boolean;
@@ -49,6 +50,7 @@ interface EstimatePreviewProps {
 
 export function EstimatePreview({ open, onClose, estimate, onStatusChange }: EstimatePreviewProps) {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [showEmailForm, setShowEmailForm] = useState(false);
   const [showWhatsAppForm, setShowWhatsAppForm] = useState(false);
   const [showApprovalForm, setShowApprovalForm] = useState(false);
@@ -69,6 +71,12 @@ export function EstimatePreview({ open, onClose, estimate, onStatusChange }: Est
     setShowEmailForm(false);
     setShowWhatsAppForm(false);
     setShowApprovalForm(false);
+  };
+  
+  const handleGoToScheduling = () => {
+    onClose();
+    // Navigate to scheduling page with a query parameter for the estimate ID
+    navigate(`/scheduling?estimateId=${estimate.id}`);
   };
 
   // Ensure selectedServices is always an array
@@ -189,6 +197,14 @@ export function EstimatePreview({ open, onClose, estimate, onStatusChange }: Est
                 Next
               </Button>
             </div>
+            
+            {estimate.status === "approved" && (
+              <div className="mt-6 flex justify-center">
+                <Button className="w-full max-w-md" onClick={handleGoToScheduling}>
+                  Schedule Events From This Estimate
+                </Button>
+              </div>
+            )}
           </>
         )}
       </DialogContent>

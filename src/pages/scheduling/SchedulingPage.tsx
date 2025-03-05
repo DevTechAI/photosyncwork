@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { ScheduledEvent } from "@/components/scheduling/types";
 import { CreateEventModal } from "@/components/scheduling/CreateEventModal";
@@ -7,8 +8,20 @@ import { useSchedulingPage } from "@/hooks/scheduling/useSchedulingPage";
 import { useTeamMembersData } from "@/hooks/useTeamMembersData";
 import { createEventsFromApprovedEstimates } from "@/components/scheduling/utils/estimateConversion";
 import { getAllEvents } from "@/components/scheduling/utils/eventLoaders";
+import { useLocation } from "react-router-dom";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function SchedulingPage() {
+  const location = useLocation();
+  const { toast } = useToast();
+  const queryParams = new URLSearchParams(location.search);
+  const estimateIdFromUrl = queryParams.get('estimateId');
+  
+  // State for managing the estimate ID modal flow
+  const [initialEstimateId, setInitialEstimateId] = useState<string | undefined>(
+    estimateIdFromUrl || undefined
+  );
+  
   // Get team members data and handlers
   const { 
     teamMembers, 
@@ -57,6 +70,28 @@ export default function SchedulingPage() {
     loadEvents();
   }, [setEvents]);
   
+  // Open create event modal with the estimate ID when navigated from estimates page
+  useEffect(() => {
+    if (estimateIdFromUrl) {
+      setInitialEstimateId(estimateIdFromUrl);
+      setShowCreateEventModal(true);
+      
+      // Clear the URL parameter after using it
+      window.history.replaceState({}, document.title, "/scheduling");
+      
+      toast({
+        title: "Create Event From Estimate",
+        description: "You've been redirected to create an event from your approved estimate."
+      });
+    }
+  }, [estimateIdFromUrl, setShowCreateEventModal, toast]);
+  
+  // Reset the initialEstimateId when modal is closed
+  const handleCloseModal = () => {
+    setShowCreateEventModal(false);
+    setInitialEstimateId(undefined);
+  };
+  
   return (
     <div className="container mx-auto py-6 space-y-8">
       <SchedulingHeader onCreateEvent={() => setShowCreateEventModal(true)} />
@@ -78,8 +113,9 @@ export default function SchedulingPage() {
       {showCreateEventModal && (
         <CreateEventModal
           open={showCreateEventModal}
-          onClose={() => setShowCreateEventModal(false)}
+          onClose={handleCloseModal}
           onCreateEvent={handleCreateEvent}
+          initialEstimateId={initialEstimateId}
         />
       )}
     </div>

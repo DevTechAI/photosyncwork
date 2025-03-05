@@ -53,16 +53,13 @@ export default function EstimatesPage() {
           selectedPackageIndex: selectedPackageIndex
         };
         
-        // If there's a selected package, update the main amount with that package's amount
         if (selectedPackageIndex !== undefined && updatedEstimate.packages && updatedEstimate.packages[selectedPackageIndex]) {
           updatedEstimate.amount = updatedEstimate.packages[selectedPackageIndex].amount;
         }
         
-        // If there's a negotiated amount, update all package amounts proportionally
         if (negotiatedAmount) {
           updatedEstimate.amount = negotiatedAmount;
           
-          // If there's a selected package, we only need to update that one
           if (selectedPackageIndex !== undefined && updatedEstimate.packages) {
             updatedEstimate.packages = updatedEstimate.packages.map((pkg, idx) => {
               if (idx === selectedPackageIndex) {
@@ -73,9 +70,7 @@ export default function EstimatesPage() {
               }
               return pkg;
             });
-          }
-          // Otherwise update all packages proportionally (legacy behavior)
-          else if (updatedEstimate.packages) {
+          } else if (updatedEstimate.packages) {
             const ratio = parseFloat(negotiatedAmount) / parseFloat(est.amount);
             updatedEstimate.packages = updatedEstimate.packages.map(pkg => ({
               ...pkg,
@@ -92,7 +87,6 @@ export default function EstimatesPage() {
     setEstimates(updatedEstimates);
     setSelectedEstimate(updatedEstimates.find(est => est.id === estimateId));
     
-    // Show appropriate toast message based on status
     const toastMessages = {
       approved: "Estimate has been approved! Proceeding to next steps.",
       declined: "Estimate has been declined.",
@@ -107,13 +101,15 @@ export default function EstimatesPage() {
     });
   };
 
-  // Quick action to approve or decline an estimate
   const handleQuickStatusChange = (estimateId: string, newStatus: string) => {
     handleStatusChange(estimateId, newStatus);
     setShowPreview(false);
   };
 
-  // Filter estimates based on the current tab
+  const handleGoToScheduling = (estimateId: string) => {
+    navigate(`/scheduling?estimateId=${estimateId}`);
+  };
+
   const filteredEstimates = estimates.filter(estimate => {
     if (currentTab === "pending") return estimate.status === "pending" || estimate.status === "negotiating";
     if (currentTab === "approved") return estimate.status === "approved";
@@ -222,7 +218,7 @@ export default function EstimatesPage() {
                             <DropdownMenuItem onClick={() => navigate("/pre-production")}>
                               Pre-Production Tasks
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => navigate("/scheduling")}>
+                            <DropdownMenuItem onClick={() => handleGoToScheduling(estimate.id)}>
                               Schedule Events
                             </DropdownMenuItem>
                           </DropdownMenuContent>

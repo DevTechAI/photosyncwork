@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -11,7 +12,8 @@ import { ClientDetailsForm } from "./components/ClientDetailsForm";
 import { TeamRequirementsForm } from "./components/TeamRequirementsForm";
 import { EstimateSelector } from "./components/EstimateSelector";
 import { ScheduledEvent } from "./types";
-import { eventFromEstimate } from "./utils/estimateToEventConverter";
+import { getApprovedEstimates } from "./utils/approvedEstimatesLoader";
+import { createScheduledEventFromEstimateEvent } from "./utils/eventCreator";
 
 interface CreateEventModalProps {
   open: boolean;
@@ -39,13 +41,13 @@ const eventFormSchema = z.object({
   clientEmail: z.string().email({
     message: "Invalid email address.",
   }).optional(),
-  guestCount: z.number().min(1, {
+  guestCount: z.coerce.number().min(1, {
     message: "Guest count must be at least 1.",
   }),
-  photographersCount: z.number().min(0, {
+  photographersCount: z.coerce.number().min(0, {
     message: "Photographer count must be at least 0.",
   }),
-  videographersCount: z.number().min(0, {
+  videographersCount: z.coerce.number().min(0, {
     message: "Videographer count must be at least 0.",
   }),
   clientRequirements: z.string().optional(),
@@ -60,6 +62,7 @@ export function CreateEventModal({
 }: CreateEventModalProps) {
   const [activeTab, setActiveTab] = useState("details");
   const [selectedEstimateId, setSelectedEstimateId] = useState<string | null>(initialEstimateId || null);
+  const [approvedEstimates, setApprovedEstimates] = useState<any[]>([]);
   const { toast } = useToast();
   
   const { register, handleSubmit, setValue, formState: { errors } } = useForm<z.infer<typeof eventFormSchema>>({
@@ -80,6 +83,20 @@ export function CreateEventModal({
       references: []
     },
   });
+  
+  // Load approved estimates when the component mounts
+  useEffect(() => {
+    const loadApprovedEstimates = async () => {
+      try {
+        const estimates = await getApprovedEstimates();
+        setApprovedEstimates(estimates);
+      } catch (error) {
+        console.error("Error loading approved estimates:", error);
+      }
+    };
+    
+    loadApprovedEstimates();
+  }, []);
   
   useEffect(() => {
     if (initialEstimateId) {
@@ -131,22 +148,46 @@ export function CreateEventModal({
     if (!selectedEstimateId) return;
     
     try {
-      // Use the correct function name from the utility
-      const eventFromEstimate = await eventFromEstimate(selectedEstimateId);
+      // Find the selected estimate from our loaded estimates
+      const selectedEstimate = approvedEstimates.find(est => est.id === selectedEstimateId);
       
-      if (eventFromEstimate) {
-        // Call the onCreateEvent prop with the generated event
-        onCreateEvent(eventFromEstimate);
-        
-        // Close the modal
-        onClose();
-        
-        // Show success message
-        toast({
-          title: "Event Created",
-          description: `${eventFromEstimate.name} has been created from the selected estimate.`,
-        });
+      if (!selectedEstimate) {
+        throw new Error("Selected estimate not found");
       }
+      
+      // Get selected package index or default to first
+      const selectedPackageIndex = selectedEstimate.selectedPackageIndex || 0;
+      
+      // Get the services from the selected package
+      let services = [];
+      if (selectedEstimate.packages && selectedEstimate.packages.length > selectedPackageIndex) {
+        services = selectedEstimate.packages[selectedPackageIndex].services || [];
+      } else {
+        services = selectedEstimate.services || [];
+      }
+      
+      if (!services || services.length === 0) {
+        throw new Error("No services found in the selected estimate");
+      }
+      
+      // Create an event using the first service
+      const newEvent = createScheduledEventFromEstimateEvent(
+        selectedEstimate, 
+        services[0],
+        selectedPackageIndex
+      );
+      
+      // Call the onCreateEvent prop with the generated event
+      onCreateEvent(newEvent);
+      
+      // Close the modal
+      onClose();
+      
+      // Show success message
+      toast({
+        title: "Event Created",
+        description: `${newEvent.name} has been created from the selected estimate.`,
+      });
     } catch (error) {
       console.error("Error creating event from estimate:", error);
       toast({
@@ -189,8 +230,9 @@ export function CreateEventModal({
           
           <TabsContent value="estimate" className="space-y-4">
             <EstimateSelector 
-              selectedEstimateId={selectedEstimateId}
-              onEstimateSelect={(id) => setSelectedEstimateId(id)}
+              selectedEstimateId={selectedEstimateId || ""}
+              approvedEstimates={approvedEstimates}
+              onEstimateChange={(id) => setSelectedEstimateId(id)}
             />
           </TabsContent>
         </Tabs>
