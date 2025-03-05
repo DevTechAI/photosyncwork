@@ -1,5 +1,6 @@
 
-import { ScheduledEvent, TeamMember, EventAssignment } from "@/components/scheduling/types";
+import { useState } from "react";
+import { ScheduledEvent, TeamMember } from "@/components/scheduling/types";
 import { useToast } from "@/components/ui/use-toast";
 
 export function useSchedulingTab(
@@ -9,84 +10,167 @@ export function useSchedulingTab(
 ) {
   const { toast } = useToast();
   
-  // Assignment counts function for the team assignments
-  const getAssignmentCounts = (event: any) => {
-    // Find team members for each assignment to determine their roles
-    const assignments = event.assignments || [];
+  // Function to get assignment counts for each event
+  const getAssignmentCounts = (event: ScheduledEvent) => {
+    const acceptedPhotographers = event.assignments.filter(a => 
+      a.status === "accepted" && teamMembers.find(m => m.id === a.teamMemberId)?.role === "photographer"
+    ).length;
     
-    const photographers = assignments.filter((a: any) => {
-      const member = teamMembers.find(m => m.id === a.teamMemberId);
-      return member?.role === "photographer";
-    });
+    const acceptedVideographers = event.assignments.filter(a => 
+      a.status === "accepted" && teamMembers.find(m => m.id === a.teamMemberId)?.role === "videographer"
+    ).length;
     
-    const videographers = assignments.filter((a: any) => {
-      const member = teamMembers.find(m => m.id === a.teamMemberId);
-      return member?.role === "videographer";
-    });
+    const pendingPhotographers = event.assignments.filter(a => 
+      a.status === "pending" && teamMembers.find(m => m.id === a.teamMemberId)?.role === "photographer"
+    ).length;
+    
+    const pendingVideographers = event.assignments.filter(a => 
+      a.status === "pending" && teamMembers.find(m => m.id === a.teamMemberId)?.role === "videographer"
+    ).length;
+    
+    const totalPhotographers = acceptedPhotographers + pendingPhotographers;
+    const totalVideographers = acceptedVideographers + pendingVideographers;
     
     return {
-      acceptedPhotographers: photographers.filter((a: any) => a.status === "accepted").length,
-      acceptedVideographers: videographers.filter((a: any) => a.status === "accepted").length,
-      pendingPhotographers: photographers.filter((a: any) => a.status === "pending").length,
-      pendingVideographers: videographers.filter((a: any) => a.status === "pending").length,
-      totalPhotographers: event.photographersCount || 0,
-      totalVideographers: event.videographersCount || 0
+      acceptedPhotographers,
+      acceptedVideographers,
+      pendingPhotographers,
+      pendingVideographers,
+      totalPhotographers,
+      totalVideographers
     };
   };
   
-  // Handler for assignment
+  // Function to assign team members to events
   const handleAssignTeamMemberForScheduling = (eventId: string, teamMemberId: string, role: string) => {
-    const eventToUpdate = events.find(e => e.id === eventId);
-    const teamMember = teamMembers.find(m => m.id === teamMemberId);
-    
-    if (eventToUpdate && teamMemberId && teamMember) {
-      const newAssignment: EventAssignment = {
+    try {
+      // Find the event
+      const event = events.find(e => e.id === eventId);
+      if (!event) {
+        console.error("Event not found");
+        return;
+      }
+      
+      // Find the team member
+      const teamMember = teamMembers.find(m => m.id === teamMemberId);
+      if (!teamMember) {
+        console.error("Team member not found");
+        return;
+      }
+      
+      // Create a new assignment
+      const newAssignment = {
         eventId,
+        eventName: event.name,
+        date: event.date,
+        location: event.location,
         teamMemberId,
-        status: "pending",
-        eventName: eventToUpdate.name,
-        date: eventToUpdate.date,
-        location: eventToUpdate.location,
+        status: "pending" as const,
         notes: `Assigned as ${role}`
       };
       
-      const updatedAssignments = [...eventToUpdate.assignments, newAssignment];
+      // Check if member is already assigned
+      const isAlreadyAssigned = event.assignments.some(a => a.teamMemberId === teamMemberId);
+      if (isAlreadyAssigned) {
+        toast({
+          title: "Already assigned",
+          description: `${teamMember.name} is already assigned to this event`,
+          variant: "destructive"
+        });
+        return;
+      }
       
-      const updatedEvent = { ...eventToUpdate, assignments: updatedAssignments };
+      // Add assignment to event
+      const updatedEvent = {
+        ...event,
+        assignments: [...event.assignments, newAssignment]
+      };
+      
+      // Update events array
       const updatedEvents = events.map(e => e.id === eventId ? updatedEvent : e);
+      
+      // Save to localStorage
+      try {
+        localStorage.setItem('preProductionEvents', JSON.stringify(updatedEvents));
+      } catch (error) {
+        console.error('Error saving to localStorage:', error);
+      }
+      
+      // Update state
       setEvents(updatedEvents);
       
+      // Show toast notification
       toast({
         title: "Team member assigned",
-        description: `${teamMember.name} has been notified about this assignment`
+        description: `${teamMember.name} has been assigned to ${event.name}`
+      });
+      
+    } catch (error) {
+      console.error("Error assigning team member:", error);
+      toast({
+        title: "Error",
+        description: "Failed to assign team member",
+        variant: "destructive"
       });
     }
   };
   
-  // Handler for updating assignment status
-  const handleUpdateAssignmentStatus = (eventId: string, teamMemberId: string, status: "accepted" | "declined") => {
-    const eventToUpdate = events.find(e => e.id === eventId);
-    if (eventToUpdate) {
-      const updatedAssignments = eventToUpdate.assignments.map(a => {
-        if (a.teamMemberId === teamMemberId) {
-          return { ...a, status };
+  // Function to update assignment status
+  const handleUpdateSchedulingStatus = (eventId: string, teamMemberId: string, status: "accepted" | "declined") => {
+    try {
+      // Find the event
+      const event = events.find(e => e.id === eventId);
+      if (!event) {
+        console.error("Event not found");
+        return;
+      }
+      
+      // Find the team member
+      const teamMember = teamMembers.find(m => m.id === teamMemberId);
+      if (!teamMember) {
+        console.error("Team member not found");
+        return;
+      }
+      
+      // Update assignment status
+      const updatedAssignments = event.assignments.map(assignment => {
+        if (assignment.teamMemberId === teamMemberId) {
+          return { ...assignment, status };
         }
-        return a;
+        return assignment;
       });
       
-      const updatedEvent = { ...eventToUpdate, assignments: updatedAssignments };
-      const updatedEvents = events.map(e => e.id === eventId ? updatedEvent : e);
-      setEvents(updatedEvents);
+      // Update event
+      const updatedEvent = {
+        ...event,
+        assignments: updatedAssignments
+      };
       
-      // Get team member and event details for notification
-      const teamMember = teamMembers.find(t => t.id === teamMemberId);
+      // Update events array
+      const updatedEvents = events.map(e => e.id === eventId ? updatedEvent : e);
+      
+      // Save to localStorage
+      try {
+        localStorage.setItem('preProductionEvents', JSON.stringify(updatedEvents));
+      } catch (error) {
+        console.error('Error saving to localStorage:', error);
+      }
+      
+      // Update state
+      setEvents(updatedEvents);
       
       // Show toast notification
       toast({
         title: `Assignment ${status}`,
-        description: teamMember ? 
-          `${teamMember.name} has ${status} the assignment for ${eventToUpdate.name}` : 
-          `Assignment for ${eventToUpdate.name} has been ${status}`
+        description: `${teamMember.name} has ${status} the assignment for ${event.name}`
+      });
+      
+    } catch (error) {
+      console.error("Error updating assignment status:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update assignment status",
+        variant: "destructive"
       });
     }
   };
@@ -94,6 +178,6 @@ export function useSchedulingTab(
   return {
     getAssignmentCounts,
     handleAssignTeamMemberForScheduling,
-    handleUpdateAssignmentStatus
+    handleUpdateSchedulingStatus
   };
 }
