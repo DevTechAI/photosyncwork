@@ -5,7 +5,7 @@ import { useToast } from "@/components/ui/use-toast";
 
 export function useEstimatePreview(
   estimate: any,
-  onStatusChange?: (estimateId: string, newStatus: string, negotiatedAmount?: string, selectedPackageIndex?: number) => void,
+  onStatusChange: ((estimateId: string, newStatus: string, negotiatedAmount?: string, selectedPackageIndex?: number) => void) | undefined,
   onClose: () => void
 ) {
   const { toast } = useToast();

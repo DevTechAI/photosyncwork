@@ -1,162 +1,199 @@
-import { useState, useEffect } from "react";
-import { z } from "zod";
+
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { useEstimateToEventConverter } from "./useEstimateToEventConverter";
 import { useToast } from "@/components/ui/use-toast";
-import { ScheduledEvent } from "@/components/scheduling/types";
-import { getApprovedEstimates } from "@/components/scheduling/utils/approvedEstimatesLoader";
-import { createScheduledEventFromEstimateEvent } from "@/components/scheduling/utils/eventCreator";
+import { createEvent } from "@/components/scheduling/utils/eventCreator";
+import { loadApprovedEstimates } from "@/components/scheduling/utils/approvedEstimatesLoader";
+import { checkEventExistence } from "@/components/scheduling/utils/eventExistenceChecker";
+import { convertEstimate } from "@/components/scheduling/utils/estimateConversion";
 
-// Event form validation schema
-export const eventFormSchema = z.object({
-  name: z.string().min(1, "Event name is required"),
-  date: z.string().min(1, "Date is required"),
-  startTime: z.string().min(1, "Start time is required"),
-  endTime: z.string().min(1, "End time is required"),
-  location: z.string().min(1, "Location is required"),
-  clientName: z.string().min(1, "Client name is required"),
-  clientPhone: z.string().optional(),
-  clientEmail: z.string().email("Invalid email").optional().or(z.literal("")),
-  guestCount: z.number().min(1, "Guest count must be at least 1").optional(),
-  photographersCount: z.string().transform(val => parseInt(val) || 0),
-  videographersCount: z.string().transform(val => parseInt(val) || 0),
-  clientRequirements: z.string().optional(),
-  references: z.array(z.string()).default([])
-});
-
-export type EventFormValues = z.infer<typeof eventFormSchema>;
-
-export function useCreateEventModal(
-  initialEstimateId?: string,
-  onCreateEvent?: (event: ScheduledEvent) => void,
-  onClose?: () => void
-) {
-  const [activeTab, setActiveTab] = useState("details");
-  const [selectedEstimateId, setSelectedEstimateId] = useState<string | null>(initialEstimateId || null);
-  const [approvedEstimates, setApprovedEstimates] = useState<any[]>([]);
+export function useCreateEventModal(onClose: () => void, onEventCreated: () => void, initialEstimateId?: string) {
   const { toast } = useToast();
-  
-  // Load approved estimates when the component mounts
-  useEffect(() => {
-    const loadApprovedEstimates = async () => {
-      try {
-        const estimates = await getApprovedEstimates();
-        setApprovedEstimates(estimates);
-      } catch (error) {
-        console.error("Error loading approved estimates:", error);
-      }
-    };
-    
-    loadApprovedEstimates();
-  }, []);
-  
-  useEffect(() => {
-    if (initialEstimateId) {
-      setSelectedEstimateId(initialEstimateId);
+  const [showModal, setShowModal] = useState(true);
+  const [selectedEstimateId, setSelectedEstimateId] = useState(initialEstimateId || "");
+  const [approvedEstimates, setApprovedEstimates] = useState([]);
+  const [step, setStep] = useState(1);
+  const [estimateDetails, setEstimateDetails] = useState<any>(null);
+  const [eventBasicDetails, setEventBasicDetails] = useState<any>(null);
+  const [clientDetails, setClientDetails] = useState<any>(null);
+  const [teamRequirements, setTeamRequirements] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const { convertEstimateToEvent } = useEstimateToEventConverter();
+
+  const eventBasicDetailsForm = useForm({
+    defaultValues: {
+      title: "",
+      eventType: "",
+      eventDate: undefined,
+      startTime: "",
+      endTime: "",
+      location: "",
+      notes: ""
     }
-  }, [initialEstimateId]);
-  
-  const handleSubmitForm = (data: EventFormValues) => {
-    if (!onCreateEvent) return;
+  });
+
+  const clientDetailsForm = useForm({
+    defaultValues: {
+      clientName: "",
+      clientEmail: "",
+      clientPhone: "",
+      additionalContacts: []
+    }
+  });
+
+  const teamRequirementsForm = useForm({
+    defaultValues: {
+      photographers: "1",
+      videographers: "1",
+      assistants: "0",
+      coordinators: "0",
+      editors: "0"
+    }
+  });
+
+  const loadEstimates = async () => {
+    try {
+      const estimates = await loadApprovedEstimates();
+      setApprovedEstimates(estimates);
+      
+      if (initialEstimateId) {
+        handleEstimateSelection(initialEstimateId);
+      }
+    } catch (error) {
+      console.error("Error loading estimates:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load approved estimates.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleEstimateSelection = (estimateId: string) => {
+    setSelectedEstimateId(estimateId);
     
-    // Create a new event object
-    const newEvent: ScheduledEvent = {
-      id: crypto.randomUUID(),
-      estimateId: selectedEstimateId || null,
-      name: data.name,
-      date: data.date,
-      startTime: data.startTime,
-      endTime: data.endTime,
-      location: data.location,
-      clientName: data.clientName,
-      clientPhone: data.clientPhone,
-      clientEmail: data.clientEmail || "",
-      guestCount: data.guestCount,
-      photographersCount: data.photographersCount,
-      videographersCount: data.videographersCount,
-      assignments: [],
-      notes: "",
-      stage: "pre-production",
-      clientRequirements: data.clientRequirements || "",
-      references: data.references || [],
-      timeTracking: [],
-      deliverables: [],
-      dataCopied: false,
-      estimatePackage: ""
-    };
+    if (!estimateId) {
+      setEstimateDetails(null);
+      return;
+    }
     
-    // Call the onCreateEvent prop with the new event
-    onCreateEvent(newEvent);
-    
-    // Close the modal
-    if (onClose) onClose();
-    
-    // Show success message
-    toast({
-      title: "Event Created",
-      description: `${data.name} has been created.`,
+    const selectedEstimate = approvedEstimates.find(est => est.id === estimateId);
+    if (selectedEstimate) {
+      const convertedEstimate = convertEstimate(selectedEstimate);
+      setEstimateDetails(convertedEstimate);
+      
+      // Pre-fill the event details from the estimate
+      eventBasicDetailsForm.setValue("title", convertedEstimate.title || "");
+      eventBasicDetailsForm.setValue("eventType", convertedEstimate.eventType || "");
+      
+      // Pre-fill client details
+      clientDetailsForm.setValue("clientName", convertedEstimate.client?.name || "");
+      clientDetailsForm.setValue("clientEmail", convertedEstimate.client?.email || "");
+    }
+  };
+
+  const handleNext = () => {
+    setStep(prev => prev + 1);
+  };
+
+  const handlePrevious = () => {
+    setStep(prev => prev - 1);
+  };
+
+  const handleEventBasicDetailsSubmit = (data: any) => {
+    setEventBasicDetails(data);
+    handleNext();
+  };
+
+  const handleClientDetailsSubmit = (data: any) => {
+    setClientDetails(data);
+    handleNext();
+  };
+
+  const handleTeamRequirementsSubmit = async (data: any) => {
+    setTeamRequirements(data);
+    await handleCreateEvent({
+      ...eventBasicDetails,
+      client: clientDetails,
+      team: data
     });
   };
-  
-  const handleCreateFromEstimate = async () => {
-    if (!selectedEstimateId || !onCreateEvent || !onClose) return;
+
+  const handleCreateEvent = async (eventData: any) => {
+    setLoading(true);
+    setValidationErrors([]);
     
     try {
-      // Find the selected estimate from our loaded estimates
-      const selectedEstimate = approvedEstimates.find(est => est.id === selectedEstimateId);
+      // Check if event already exists
+      const eventExists = await checkEventExistence(eventData.title, eventData.eventDate);
       
-      if (!selectedEstimate) {
-        throw new Error("Selected estimate not found");
+      if (eventExists) {
+        toast({
+          title: "Event Already Exists",
+          description: "An event with the same title and date already exists.",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
       }
       
-      // Get selected package index or default to first
-      const selectedPackageIndex = selectedEstimate.selectedPackageIndex || 0;
+      const newEvent = {
+        ...eventData,
+        estimateId: selectedEstimateId,
+        status: "scheduled"
+      };
       
-      // Get the services from the selected package
-      let services = [];
-      if (selectedEstimate.packages && selectedEstimate.packages.length > selectedPackageIndex) {
-        services = selectedEstimate.packages[selectedPackageIndex].services || [];
-      } else {
-        services = selectedEstimate.services || [];
-      }
+      await createEvent(newEvent);
       
-      if (!services || services.length === 0) {
-        throw new Error("No services found in the selected estimate");
-      }
-      
-      // Create an event using the first service
-      const newEvent = createScheduledEventFromEstimateEvent(
-        selectedEstimate, 
-        services[0],
-        selectedPackageIndex
-      );
-      
-      // Call the onCreateEvent prop with the generated event
-      onCreateEvent(newEvent);
-      
-      // Close the modal
-      onClose();
-      
-      // Show success message
       toast({
         title: "Event Created",
-        description: `${newEvent.name} has been created from the selected estimate.`,
+        description: "Event has been successfully created and scheduled.",
       });
+      
+      onEventCreated();
+      handleClose();
     } catch (error) {
-      console.error("Error creating event from estimate:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to create event from estimate.",
-      });
+      console.error("Error creating event:", error);
+      
+      if (error.message && Array.isArray(error.message)) {
+        setValidationErrors(error.message);
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to create event. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handleClose = () => {
+    setShowModal(false);
+    onClose();
   };
 
   return {
-    activeTab,
-    setActiveTab,
+    showModal,
+    step,
     selectedEstimateId,
-    setSelectedEstimateId,
     approvedEstimates,
-    handleSubmitForm,
-    handleCreateFromEstimate
+    estimateDetails,
+    loading,
+    validationErrors,
+    eventBasicDetailsForm,
+    clientDetailsForm,
+    teamRequirementsForm,
+    loadEstimates,
+    handleEstimateSelection,
+    handleNext,
+    handlePrevious,
+    handleEventBasicDetailsSubmit,
+    handleClientDetailsSubmit,
+    handleTeamRequirementsSubmit,
+    handleClose
   };
 }
