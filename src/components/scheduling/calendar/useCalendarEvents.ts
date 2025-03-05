@@ -1,8 +1,8 @@
 
 import { useState, useEffect } from 'react';
 import { ScheduledEvent } from "../types";
-import { addDays, startOfWeek, endOfWeek, eachDayOfInterval, parseISO, isAfter } from 'date-fns';
-import { processEventsWorkflow } from "@/utils/teamAssignmentUtils";
+import { addDays, startOfWeek, endOfWeek, eachDayOfInterval, parseISO, isAfter, isSameDay } from 'date-fns';
+import { processEventsWorkflow } from "@/utils/workflowProcessUtils";
 
 export function useCalendarEvents(events: ScheduledEvent[]) {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -64,5 +64,3 @@ export function useCalendarEvents(events: ScheduledEvent[]) {
     getEventStatus,
   };
 }
-
-import { isSameDay } from 'date-fns';

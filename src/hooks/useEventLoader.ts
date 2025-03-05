@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { ScheduledEvent } from "@/components/scheduling/types";
 import { useToast } from "@/components/ui/use-toast";
 import { createEventsFromApprovedEstimates, getEventsByStage, getAllEvents } from "@/components/scheduling/utils/eventHelpers";
-import { processEventsWorkflow } from "@/utils/teamAssignmentUtils";
+import { processEventsWorkflow } from "@/utils/workflowProcessUtils";
 
 export function useEventLoader() {
   const { toast } = useToast();

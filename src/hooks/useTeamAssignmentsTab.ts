@@ -1,6 +1,6 @@
 
 import { ScheduledEvent, TeamMember } from "@/components/scheduling/types";
-import { useTeamAssignmentHandlers } from "@/utils/teamAssignmentUtils";
+import { useTeamAssignmentHandlers } from "@/hooks/useTeamAssignmentHandlers";
 import { useTeamMemberFiltering } from "./useTeamMemberFiltering";
 import { useAssignmentStatusUpdater } from "./useAssignmentStatusUpdater";
 
