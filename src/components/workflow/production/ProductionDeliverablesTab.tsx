@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { UserCircle, Calendar, Clock, CheckCircle } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
 interface Deliverable {
   id: string;
@@ -23,21 +24,49 @@ interface Deliverable {
 interface ProductionDeliverablesTabProps {
   deliverables: Deliverable[];
   eventId: string;
+  onUpdateDeliverable?: (eventId: string, updatedDeliverable: Deliverable) => void;
 }
 
-export function ProductionDeliverablesTab({ deliverables, eventId }: ProductionDeliverablesTabProps) {
+export function ProductionDeliverablesTab({ 
+  deliverables, 
+  eventId, 
+  onUpdateDeliverable 
+}: ProductionDeliverablesTabProps) {
+  const { toast } = useToast();
   const [editingDeliverable, setEditingDeliverable] = useState<Deliverable | null>(null);
   const [showEditDialog, setShowEditDialog] = useState(false);
   
   const handleStatusChange = (deliverable: Deliverable, newStatus: Deliverable['status']) => {
-    // Implementation will be added later
-    console.log(`Changing status of deliverable ${deliverable.id} to ${newStatus}`);
+    const updatedDeliverable = {
+      ...deliverable,
+      status: newStatus,
+      completedDate: newStatus === 'completed' ? new Date().toISOString().split('T')[0] : deliverable.completedDate
+    };
+    
+    if (onUpdateDeliverable) {
+      onUpdateDeliverable(eventId, updatedDeliverable);
+      toast({
+        title: `Status Updated`,
+        description: `Deliverable has been marked as ${newStatus.replace('-', ' ')}.`
+      });
+    } else {
+      console.warn("Update handler not provided to ProductionDeliverablesTab");
+    }
   };
   
   const handleSaveDeliverable = () => {
-    // Implementation will be added later
-    console.log('Saving deliverable changes:', editingDeliverable);
-    setShowEditDialog(false);
+    if (!editingDeliverable) return;
+    
+    if (onUpdateDeliverable) {
+      onUpdateDeliverable(eventId, editingDeliverable);
+      toast({
+        title: "Deliverable Updated",
+        description: "The deliverable has been successfully updated."
+      });
+      setShowEditDialog(false);
+    } else {
+      console.warn("Update handler not provided to ProductionDeliverablesTab");
+    }
   };
   
   const getStatusBadgeVariant = (status: Deliverable['status']) => {
@@ -88,7 +117,7 @@ export function ProductionDeliverablesTab({ deliverables, eventId }: ProductionD
                     {getDeliverableTypeLabel(deliverable.type)}
                   </CardTitle>
                   <Badge variant={getStatusBadgeVariant(deliverable.status)}>
-                    {deliverable.status}
+                    {deliverable.status.replace('-', ' ')}
                   </Badge>
                 </div>
               </CardHeader>
@@ -117,6 +146,61 @@ export function ProductionDeliverablesTab({ deliverables, eventId }: ProductionD
                 </div>
                 
                 <div className="mt-4 space-y-2">
+                  {/* Status update buttons based on current status */}
+                  {deliverable.status === 'pending' && (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="w-full"
+                      onClick={() => handleStatusChange(deliverable, 'in-progress')}
+                    >
+                      Start Working
+                    </Button>
+                  )}
+                  
+                  {deliverable.status === 'in-progress' && (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="w-full"
+                      onClick={() => handleStatusChange(deliverable, 'delivered')}
+                    >
+                      Mark as Delivered
+                    </Button>
+                  )}
+                  
+                  {deliverable.status === 'delivered' && (
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex-1"
+                        onClick={() => handleStatusChange(deliverable, 'revision-requested')}
+                      >
+                        Request Revision
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex-1 bg-green-50 border-green-200 hover:bg-green-100"
+                        onClick={() => handleStatusChange(deliverable, 'completed')}
+                      >
+                        Approve
+                      </Button>
+                    </div>
+                  )}
+                  
+                  {deliverable.status === 'revision-requested' && (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="w-full"
+                      onClick={() => handleStatusChange(deliverable, 'in-progress')}
+                    >
+                      Resume Work
+                    </Button>
+                  )}
+                  
                   <Button 
                     variant="outline" 
                     size="sm" 
@@ -126,7 +210,7 @@ export function ProductionDeliverablesTab({ deliverables, eventId }: ProductionD
                       setShowEditDialog(true);
                     }}
                   >
-                    Update Status
+                    Edit Details
                   </Button>
                 </div>
               </CardContent>
@@ -140,7 +224,7 @@ export function ProductionDeliverablesTab({ deliverables, eventId }: ProductionD
         <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle>Update Deliverable Status</DialogTitle>
+              <DialogTitle>Update Deliverable</DialogTitle>
             </DialogHeader>
             
             <div className="space-y-4 py-4">
@@ -207,6 +291,7 @@ export function ProductionDeliverablesTab({ deliverables, eventId }: ProductionD
             </div>
             
             <DialogFooter>
+              <Button variant="outline" onClick={() => setShowEditDialog(false)}>Cancel</Button>
               <Button onClick={handleSaveDeliverable}>Save Changes</Button>
             </DialogFooter>
           </DialogContent>

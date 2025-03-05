@@ -16,6 +16,7 @@ interface ProductionDetailsTabsProps {
   setActiveTab: (tab: string) => void;
   onLogTime: (eventId: string, teamMemberId: string, hours: number) => void;
   onUpdateNotes: (eventId: string, notes: string) => void;
+  onUpdateEvent?: (updatedEvent: ScheduledEvent) => void;
 }
 
 export function ProductionDetailsTabs({
@@ -24,7 +25,8 @@ export function ProductionDetailsTabs({
   activeTab,
   setActiveTab,
   onLogTime,
-  onUpdateNotes
+  onUpdateNotes,
+  onUpdateEvent
 }: ProductionDetailsTabsProps) {
   const [showRequirementsDialog, setShowRequirementsDialog] = useState(false);
   
@@ -54,6 +56,25 @@ export function ProductionDetailsTabs({
     if (selectedEvent) {
       onUpdateNotes(selectedEvent.id, notes);
     }
+  };
+  
+  // Handle updating deliverable
+  const handleUpdateDeliverable = (eventId: string, updatedDeliverable: any) => {
+    if (!selectedEvent || !onUpdateEvent) return;
+    
+    // Find and update the deliverable in the event
+    const updatedDeliverables = selectedEvent.deliverables?.map(deliverable =>
+      deliverable.id === updatedDeliverable.id ? updatedDeliverable : deliverable
+    ) || [];
+    
+    // Create updated event object
+    const updatedEvent = {
+      ...selectedEvent,
+      deliverables: updatedDeliverables
+    };
+    
+    // Call the parent handler to update the event
+    onUpdateEvent(updatedEvent);
   };
   
   return (
@@ -121,13 +142,14 @@ export function ProductionDetailsTabs({
           <ProductionDeliverablesTab 
             deliverables={selectedEvent.deliverables || []}
             eventId={selectedEvent.id}
+            onUpdateDeliverable={handleUpdateDeliverable}
           />
         </TabsContent>
       </Tabs>
       
       {showRequirementsDialog && (
         <ClientRequirementsDialog
-          isOpen={showRequirementsDialog} // Changed from open to isOpen
+          isOpen={showRequirementsDialog}
           onClose={() => setShowRequirementsDialog(false)}
           requirements={selectedEvent.clientRequirements || "No requirements have been added."}
           references={selectedEvent.references || []}

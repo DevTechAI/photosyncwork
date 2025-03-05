@@ -1,133 +1,70 @@
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
-import { ScheduledEvent } from "./types";
-import { getApprovedEstimates } from "./utils/estimatesHelpers";
-import { EstimateSelector } from "./components/EstimateSelector";
+import { useToast } from "@/components/ui/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EventBasicDetailsForm } from "./components/EventBasicDetailsForm";
 import { ClientDetailsForm } from "./components/ClientDetailsForm";
 import { TeamRequirementsForm } from "./components/TeamRequirementsForm";
+import { EstimateSelector } from "./components/EstimateSelector";
+import { ScheduledEvent } from "./types";
+import { eventFromEstimate } from "./utils/estimateToEventConverter";
 
 interface CreateEventModalProps {
   open: boolean;
   onClose: () => void;
   onCreateEvent: (event: ScheduledEvent) => void;
-  defaultValues?: Partial<ScheduledEvent>;
+  initialEstimateId?: string;
 }
 
-export function CreateEventModal({ 
-  open, 
-  onClose, 
+const eventFormSchema = z.object({
+  name: z.string().min(3, {
+    message: "Event name must be at least 3 characters.",
+  }),
+  date: z.string(),
+  startTime: z.string(),
+  endTime: z.string(),
+  location: z.string().min(3, {
+    message: "Location must be at least 3 characters.",
+  }),
+  clientName: z.string().min(3, {
+    message: "Client name must be at least 3 characters.",
+  }),
+  clientPhone: z.string().min(10, {
+    message: "Phone number must be at least 10 digits.",
+  }),
+  clientEmail: z.string().email({
+    message: "Invalid email address.",
+  }).optional(),
+  guestCount: z.number().min(1, {
+    message: "Guest count must be at least 1.",
+  }),
+  photographersCount: z.number().min(0, {
+    message: "Photographer count must be at least 0.",
+  }),
+  videographersCount: z.number().min(0, {
+    message: "Videographer count must be at least 0.",
+  }),
+  clientRequirements: z.string().optional(),
+  references: z.array(z.string()).optional(),
+});
+
+export function CreateEventModal({
+  open,
+  onClose,
   onCreateEvent,
-  defaultValues 
+  initialEstimateId
 }: CreateEventModalProps) {
+  const [activeTab, setActiveTab] = useState("details");
+  const [selectedEstimateId, setSelectedEstimateId] = useState<string | null>(initialEstimateId || null);
   const { toast } = useToast();
-  const [eventData, setEventData] = useState<Partial<ScheduledEvent>>({
-    name: "",
-    date: "",
-    startTime: "",
-    endTime: "",
-    location: "",
-    clientName: "",
-    clientPhone: "",
-    clientEmail: "",
-    photographersCount: 1,
-    videographersCount: 1,
-    stage: "pre-production"
-  });
   
-  const [approvedEstimates, setApprovedEstimates] = useState<any[]>([]);
-  const [selectedEstimateId, setSelectedEstimateId] = useState<string>("");
-  
-  useEffect(() => {
-    if (open) {
-      const estimates = getApprovedEstimates();
-      setApprovedEstimates(estimates);
-    }
-  }, [open]);
-
-  useEffect(() => {
-    if (defaultValues) {
-      setEventData(prev => ({
-        ...prev,
-        ...defaultValues
-      }));
-      
-      if (defaultValues.estimateId) {
-        setSelectedEstimateId(defaultValues.estimateId);
-      }
-    }
-  }, [defaultValues]);
-  
-  const handleEstimateChange = (estimateId: string) => {
-    setSelectedEstimateId(estimateId);
-    
-    if (!estimateId) {
-      setEventData(prev => ({
-        ...prev,
-        clientName: "",
-        clientPhone: "",
-        clientEmail: "",
-        photographersCount: 1,
-        videographersCount: 1,
-        clientRequirements: "",
-        deliverables: []
-      }));
-      return;
-    }
-    
-    const selectedEstimate = approvedEstimates.find(est => est.id === estimateId);
-    if (selectedEstimate) {
-      const eventFromEstimate = createEventFromEstimate(selectedEstimate);
-      
-      setEventData(prev => ({
-        ...prev,
-        ...eventFromEstimate,
-        estimateId: selectedEstimate.id
-      }));
-    }
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!eventData.name || !eventData.date || !eventData.location || !eventData.clientName) {
-      toast({
-        title: "Missing information",
-        description: "Please fill in all required fields",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    const newEvent: ScheduledEvent = {
-      id: `evt-${Date.now()}`,
-      estimateId: selectedEstimateId || `est-${Date.now()}`,
-      name: eventData.name || "",
-      date: eventData.date || "",
-      startTime: eventData.startTime || "09:00",
-      endTime: eventData.endTime || "17:00",
-      location: eventData.location || "",
-      clientName: eventData.clientName || "",
-      clientPhone: eventData.clientPhone || "",
-      clientEmail: eventData.clientEmail || "",
-      photographersCount: eventData.photographersCount || 1,
-      videographersCount: eventData.videographersCount || 1,
-      assignments: [],
-      stage: "pre-production",
-      clientRequirements: eventData.clientRequirements || "",
-      deliverables: eventData.deliverables || [],
-      estimatePackage: eventData.estimatePackage || ""
-    };
-    
-    onCreateEvent(newEvent);
-    toast({
-      title: "Event Created",
-      description: "The event has been scheduled successfully",
-    });
-    
-    setEventData({
+  const { register, handleSubmit, setValue, formState: { errors } } = useForm<z.infer<typeof eventFormSchema>>({
+    resolver: zodResolver(eventFormSchema),
+    defaultValues: {
       name: "",
       date: "",
       startTime: "",
@@ -136,48 +73,142 @@ export function CreateEventModal({
       clientName: "",
       clientPhone: "",
       clientEmail: "",
+      guestCount: 1,
       photographersCount: 1,
-      videographersCount: 1,
-      stage: "pre-production"
-    });
-    setSelectedEstimateId("");
+      videographersCount: 0,
+      clientRequirements: "",
+      references: []
+    },
+  });
+  
+  useEffect(() => {
+    if (initialEstimateId) {
+      setSelectedEstimateId(initialEstimateId);
+    }
+  }, [initialEstimateId]);
+  
+  const onSubmit = (data: z.infer<typeof eventFormSchema>) => {
+    // Create a new event object
+    const newEvent: ScheduledEvent = {
+      id: crypto.randomUUID(),
+      estimateId: selectedEstimateId || null,
+      name: data.name,
+      date: data.date,
+      startTime: data.startTime,
+      endTime: data.endTime,
+      location: data.location,
+      clientName: data.clientName,
+      clientPhone: data.clientPhone,
+      clientEmail: data.clientEmail || "",
+      guestCount: data.guestCount,
+      photographersCount: data.photographersCount,
+      videographersCount: data.videographersCount,
+      assignments: [],
+      notes: "",
+      stage: "pre-production",
+      clientRequirements: data.clientRequirements || "",
+      references: data.references || [],
+      timeTracking: [],
+      deliverables: [],
+      dataCopied: false,
+      estimatePackage: ""
+    };
     
+    // Call the onCreateEvent prop with the new event
+    onCreateEvent(newEvent);
+    
+    // Close the modal
     onClose();
+    
+    // Show success message
+    toast({
+      title: "Event Created",
+      description: `${data.name} has been created.`,
+    });
+  };
+  
+  const handleCreateFromEstimate = async () => {
+    if (!selectedEstimateId) return;
+    
+    try {
+      // Use the correct function name from the utility
+      const eventFromEstimate = await eventFromEstimate(selectedEstimateId);
+      
+      if (eventFromEstimate) {
+        // Call the onCreateEvent prop with the generated event
+        onCreateEvent(eventFromEstimate);
+        
+        // Close the modal
+        onClose();
+        
+        // Show success message
+        toast({
+          title: "Event Created",
+          description: `${eventFromEstimate.name} has been created from the selected estimate.`,
+        });
+      }
+    } catch (error) {
+      console.error("Error creating event from estimate:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to create event from estimate.",
+      });
+    }
   };
   
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[550px]">
+      <DialogContent className="sm:max-w-[625px]">
         <DialogHeader>
-          <DialogTitle>Schedule New Event</DialogTitle>
+          <DialogTitle>Create New Event</DialogTitle>
+          <DialogDescription>
+            Fill in the information below to create a new event.
+          </DialogDescription>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <EstimateSelector 
-            selectedEstimateId={selectedEstimateId}
-            approvedEstimates={approvedEstimates}
-            onEstimateChange={handleEstimateChange}
-          />
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="w-full justify-start mb-4">
+            <TabsTrigger value="details">Event Details</TabsTrigger>
+            <TabsTrigger value="client">Client Details</TabsTrigger>
+            <TabsTrigger value="team">Team Requirements</TabsTrigger>
+            <TabsTrigger value="estimate">From Estimate</TabsTrigger>
+          </TabsList>
           
-          <EventBasicDetailsForm 
-            eventData={eventData}
-            setEventData={setEventData}
-          />
+          <TabsContent value="details" className="space-y-4">
+            <EventBasicDetailsForm register={register} errors={errors} setValue={setValue} />
+          </TabsContent>
           
-          <ClientDetailsForm 
-            eventData={eventData}
-            setEventData={setEventData}
-          />
+          <TabsContent value="client" className="space-y-4">
+            <ClientDetailsForm register={register} errors={errors} setValue={setValue} />
+          </TabsContent>
           
-          <TeamRequirementsForm 
-            eventData={eventData}
-            setEventData={setEventData}
-          />
+          <TabsContent value="team" className="space-y-4">
+            <TeamRequirementsForm register={register} errors={errors} setValue={setValue} />
+          </TabsContent>
           
-          <DialogFooter>
-            <Button type="submit">Create Event</Button>
-          </DialogFooter>
-        </form>
+          <TabsContent value="estimate" className="space-y-4">
+            <EstimateSelector 
+              selectedEstimateId={selectedEstimateId}
+              onEstimateSelect={(id) => setSelectedEstimateId(id)}
+            />
+          </TabsContent>
+        </Tabs>
+        
+        <DialogFooter>
+          <Button type="button" variant="secondary" onClick={onClose}>
+            Cancel
+          </Button>
+          {activeTab === "estimate" ? (
+            <Button type="button" onClick={handleCreateFromEstimate} disabled={!selectedEstimateId}>
+              Create Event
+            </Button>
+          ) : (
+            <Button type="button" onClick={handleSubmit(onSubmit)}>
+              Create Event
+            </Button>
+          )}
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

@@ -51,6 +51,18 @@ export default function ProductionPage() {
     }
   }, [events]);
   
+  // Update an event
+  const handleUpdateEvent = (updatedEvent: ScheduledEvent) => {
+    setEvents(prev => prev.map(event => 
+      event.id === updatedEvent.id ? updatedEvent : event
+    ));
+    
+    // Update selected event as well
+    if (selectedEvent && selectedEvent.id === updatedEvent.id) {
+      setSelectedEvent(updatedEvent);
+    }
+  };
+  
   // Log additional time for a team member
   const handleLogTime = (eventId: string, teamMemberId: string, hours: number) => {
     setEvents(prev => prev.map(event => {
@@ -185,6 +197,7 @@ export default function ProductionPage() {
               setActiveTab={setActiveTab}
               onLogTime={handleLogTime}
               onUpdateNotes={handleUpdateNotes}
+              onUpdateEvent={handleUpdateEvent}
             />
           </div>
         </div>
