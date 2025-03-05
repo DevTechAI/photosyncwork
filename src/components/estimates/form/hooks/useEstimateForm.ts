@@ -75,8 +75,11 @@ export function useEstimateForm(editingEstimate?: any) {
         preview.status = editingEstimate.status;
         preview.clientEmail = formData.clientEmail || editingEstimate.clientEmail || "";
         preview.clientName = editingEstimate.clientName; // Keep original client name when editing
+        preview.selectedPackageIndex = editingEstimate.selectedPackageIndex; // Keep selected package index
       } else {
         preview.clientEmail = formData.clientEmail || "";
+        // Default to the first package if not editing
+        preview.selectedPackageIndex = 0;
       }
       
       // Add selectedServices to the preview

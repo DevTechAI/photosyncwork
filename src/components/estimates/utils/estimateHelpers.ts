@@ -73,6 +73,9 @@ export function generatePreviewEstimate(formData: any, toast: any) {
     deliverables: estimate.deliverables
   }));
   
+  // Default to the first package as selected
+  const selectedPackageIndex = 0;
+  
   const previewData = {
     id: Math.floor(Math.random() * 10000).toString(),
     clientName: formData.clientName,
@@ -91,6 +94,8 @@ export function generatePreviewEstimate(formData: any, toast: any) {
     deliverables: estimates[0].deliverables,
     // Add the new packages array with all estimate options
     packages: packages,
+    // Set the selected package index
+    selectedPackageIndex: selectedPackageIndex,
     // Add the selected services
     selectedServices: formData.selectedServices,
     // Add custom terms

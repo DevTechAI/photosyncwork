@@ -95,11 +95,22 @@ export function EstimatePreview({ open, onClose, estimate, onStatusChange }: Est
     />
   ];
 
+  // Check if the estimate has multiple packages or if a specific package is selected
+  const hasMultiplePackages = estimate.packages && estimate.packages.length > 1;
+  const selectedPackage = estimate.selectedPackageIndex !== undefined && 
+    estimate.packages && 
+    estimate.packages[estimate.selectedPackageIndex];
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader className="flex flex-row items-center justify-between">
           <DialogTitle>Estimate Preview</DialogTitle>
+          {hasMultiplePackages && selectedPackage && (
+            <div className="text-sm text-muted-foreground">
+              Selected Package: <span className="font-medium">{selectedPackage.name || `Option ${estimate.selectedPackageIndex! + 1}`}</span>
+            </div>
+          )}
           <HeaderActions 
             onShowEmailForm={() => {
               hideAllForms();
