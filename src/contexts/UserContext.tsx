@@ -64,6 +64,7 @@ interface UserContextType {
   logout: () => void;
   hasAccess: (module: string) => boolean;
   loading: boolean; // Added loading property
+  getTeamManagementPath: () => string; // Added helper function for finding team management
 }
 
 // Create the context
@@ -107,6 +108,13 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     setCurrentUser(null);
   };
   
+  // Function to provide path to team management based on user role
+  const getTeamManagementPath = (): string => {
+    // Different paths based on user role could be implemented here
+    // For now, we'll return the main team management paths
+    return "/workflow/pre-production"; // Team tab is available here
+  };
+  
   // Function to check if user has access to a specific module
   const hasAccess = (module: string): boolean => {
     if (!currentUser) return false;
@@ -136,7 +144,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     login,
     logout,
     hasAccess,
-    loading
+    loading,
+    getTeamManagementPath
   };
   
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
