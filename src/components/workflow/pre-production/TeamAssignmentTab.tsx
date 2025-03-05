@@ -32,6 +32,10 @@ export function TeamAssignmentTab({
   const photographersAssigned = assignedTeamMembers.filter(a => a.teamMember?.role === "photographer").length;
   const videographersAssigned = assignedTeamMembers.filter(a => a.teamMember?.role === "videographer").length;
   
+  console.log("TeamAssignmentTab - Available photographers:", availablePhotographers);
+  console.log("TeamAssignmentTab - Available videographers:", availableVideographers);
+  console.log("TeamAssignmentTab - Assigned team members:", assignedTeamMembers);
+  
   // Function to handle accepting/declining assignments with better error handling
   const onUpdateStatus = (eventId: string, teamMemberId: string, status: "accepted" | "declined") => {
     console.log(`Updating assignment status: ${eventId}, ${teamMemberId}, ${status}`);
@@ -40,6 +44,12 @@ export function TeamAssignmentTab({
     } else {
       console.error("handleUpdateAssignmentStatus is not defined");
     }
+  };
+  
+  // Function to handle assigning a team member
+  const onAssignTeamMember = (teamMemberId: string, role: "photographer" | "videographer") => {
+    console.log(`Assigning team member ${teamMemberId} as ${role}`);
+    handleAssignTeamMember(teamMemberId, role);
   };
   
   return (
@@ -59,7 +69,7 @@ export function TeamAssignmentTab({
             members={availablePhotographers}
             assignedCount={photographersAssigned}
             requiredCount={selectedEvent.photographersCount}
-            onAssign={handleAssignTeamMember}
+            onAssign={(teamMemberId) => onAssignTeamMember(teamMemberId, "photographer")}
             loading={loading}
           />
           
@@ -68,7 +78,7 @@ export function TeamAssignmentTab({
             members={availableVideographers}
             assignedCount={videographersAssigned}
             requiredCount={selectedEvent.videographersCount}
-            onAssign={handleAssignTeamMember}
+            onAssign={(teamMemberId) => onAssignTeamMember(teamMemberId, "videographer")}
             loading={loading}
           />
         </div>

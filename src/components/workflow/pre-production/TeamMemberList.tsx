@@ -8,7 +8,7 @@ interface TeamMemberListProps {
   members: TeamMember[];
   assignedCount: number;
   requiredCount: number;
-  onAssign: (teamMemberId: string, role: "photographer" | "videographer") => void;
+  onAssign: (teamMemberId: string) => void;
   loading: boolean;
 }
 
@@ -20,10 +20,8 @@ export function TeamMemberList({
   onAssign,
   loading
 }: TeamMemberListProps) {
-  const role = title.toLowerCase().includes("photographer") 
-    ? "photographer" as const 
-    : "videographer" as const;
-
+  console.log(`TeamMemberList ${title} - Members:`, members);
+  
   return (
     <div>
       <h3 className="text-sm font-medium mb-2">{title} ({assignedCount} / {requiredCount})</h3>
@@ -45,7 +43,10 @@ export function TeamMemberList({
               </div>
               <Button 
                 size="sm" 
-                onClick={() => onAssign(member.id, role)}
+                onClick={() => {
+                  console.log(`Assigning team member: ${member.id} (${member.name})`);
+                  onAssign(member.id);
+                }}
                 disabled={loading}
               >
                 <UserCheck className="h-4 w-4 mr-1" />
