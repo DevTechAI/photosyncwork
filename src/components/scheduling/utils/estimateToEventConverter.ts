@@ -17,7 +17,11 @@ export async function createEventsFromApprovedEstimates(): Promise<ScheduledEven
     console.log("Starting conversion of approved estimates to events");
     
     // Get all approved estimates
-    const approvedEstimates = getApprovedEstimates();
+    const approvedEstimates = await getApprovedEstimates().catch(error => {
+      console.error("Error fetching approved estimates:", error);
+      return [];
+    });
+    
     console.log(`Found ${approvedEstimates.length} approved estimates`);
     
     if (approvedEstimates.length === 0) {

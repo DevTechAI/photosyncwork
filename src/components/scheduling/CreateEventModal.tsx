@@ -1,10 +1,9 @@
-
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { ScheduledEvent } from "./types";
-import { getApprovedEstimates, createEventFromEstimate } from "./utils/estimatesHelpers";
+import { getApprovedEstimates } from "./utils/estimatesHelpers";
 import { EstimateSelector } from "./components/EstimateSelector";
 import { EventBasicDetailsForm } from "./components/EventBasicDetailsForm";
 import { ClientDetailsForm } from "./components/ClientDetailsForm";
@@ -38,10 +37,9 @@ export function CreateEventModal({
     stage: "pre-production"
   });
   
-  const [approvedEstimates, setApprovedEstimates] = useState([]);
+  const [approvedEstimates, setApprovedEstimates] = useState<any[]>([]);
   const [selectedEstimateId, setSelectedEstimateId] = useState<string>("");
   
-  // Load approved estimates
   useEffect(() => {
     if (open) {
       const estimates = getApprovedEstimates();
@@ -49,7 +47,6 @@ export function CreateEventModal({
     }
   }, [open]);
 
-  // Load default values if provided
   useEffect(() => {
     if (defaultValues) {
       setEventData(prev => ({
@@ -63,12 +60,10 @@ export function CreateEventModal({
     }
   }, [defaultValues]);
   
-  // Handle estimate selection
   const handleEstimateChange = (estimateId: string) => {
     setSelectedEstimateId(estimateId);
     
     if (!estimateId) {
-      // If no estimate selected, clear relevant fields but keep others
       setEventData(prev => ({
         ...prev,
         clientName: "",
@@ -86,11 +81,9 @@ export function CreateEventModal({
     if (selectedEstimate) {
       const eventFromEstimate = createEventFromEstimate(selectedEstimate);
       
-      // Update the event data with estimate information
       setEventData(prev => ({
         ...prev,
         ...eventFromEstimate,
-        // Make sure the estimate ID is preserved
         estimateId: selectedEstimate.id
       }));
     }
@@ -99,7 +92,6 @@ export function CreateEventModal({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate form
     if (!eventData.name || !eventData.date || !eventData.location || !eventData.clientName) {
       toast({
         title: "Missing information",
@@ -109,7 +101,6 @@ export function CreateEventModal({
       return;
     }
     
-    // Generate unique ID
     const newEvent: ScheduledEvent = {
       id: `evt-${Date.now()}`,
       estimateId: selectedEstimateId || `est-${Date.now()}`,
@@ -136,7 +127,6 @@ export function CreateEventModal({
       description: "The event has been scheduled successfully",
     });
     
-    // Reset form
     setEventData({
       name: "",
       date: "",

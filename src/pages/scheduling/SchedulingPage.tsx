@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { ScheduledEvent } from "@/components/scheduling/types";
 import { CreateEventModal } from "@/components/scheduling/CreateEventModal";
