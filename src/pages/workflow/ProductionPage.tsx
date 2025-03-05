@@ -179,9 +179,8 @@ export default function ProductionPage() {
           
           <div className="lg:col-span-3">
             <ProductionDetailsTabs
-              events={events}
-              teamMembers={teamMembers}
               selectedEvent={selectedEvent}
+              teamMembers={teamMembers}
               activeTab={activeTab}
               setActiveTab={setActiveTab}
               onLogTime={handleLogTime}

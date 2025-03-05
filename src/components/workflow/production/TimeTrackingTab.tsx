@@ -32,14 +32,18 @@ export function TimeTrackingTab({
   
   // Filter team members who are assigned to this event
   const assignedTeamMembers = event.assignments
-    .map(assignment => {
-      const teamMember = teamMembers.find(tm => tm.id === assignment.teamMemberId);
-      return teamMember ? {
-        ...teamMember,
-        assignmentStatus: assignment.status
-      } : null;
-    })
-    .filter(tm => tm !== null) as (TeamMember & { assignmentStatus: string })[];
+    ? event.assignments
+        .map(assignment => {
+          const teamMember = teamMembers.find(tm => tm.id === assignment.teamMemberId);
+          return teamMember 
+            ? { 
+                ...teamMember, 
+                assignmentStatus: assignment.status 
+              } 
+            : null;
+        })
+        .filter(tm => tm !== null) as (TeamMember & { assignmentStatus: string })[]
+    : [];
   
   // Get total hours logged for each team member
   const getTeamMemberHours = (teamMemberId: string) => {

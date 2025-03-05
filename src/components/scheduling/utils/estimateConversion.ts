@@ -86,13 +86,13 @@ function createScheduledEventFromEstimateEvent(
       estimateId: estimate.id,
       name: serviceEvent.event,
       date: serviceEvent.date || new Date().toISOString().split('T')[0],
-      startTime: "09:00",
-      endTime: "17:00",
-      location: "To be determined",
+      startTime: serviceEvent.startTime || "09:00",
+      endTime: serviceEvent.endTime || "17:00",
+      location: serviceEvent.location || "To be determined",
       clientName: estimate.clientName,
       clientPhone: estimate.clientPhone || "",
       clientEmail: estimate.clientEmail || "",
-      guestCount: "0",
+      guestCount: serviceEvent.guests || "0",
       photographersCount: parseInt(serviceEvent.photographers) || 1,
       videographersCount: parseInt(serviceEvent.cinematographers) || 0,
       assignments: [],
@@ -147,7 +147,7 @@ export async function createEventsFromApprovedEstimates(): Promise<ScheduledEven
         // Get the services from the selected package
         let services = [];
         if (estimate.packages && estimate.packages.length > selectedPackageIndex) {
-          services = estimate.packages[selectedPackageIndex].services;
+          services = estimate.packages[selectedPackageIndex].services || [];
         } else {
           services = estimate.services || [];
         }
