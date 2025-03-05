@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { z } from "zod";
 import { useToast } from "@/components/ui/use-toast";
@@ -8,35 +7,19 @@ import { createScheduledEventFromEstimateEvent } from "@/components/scheduling/u
 
 // Event form validation schema
 export const eventFormSchema = z.object({
-  name: z.string().min(3, {
-    message: "Event name must be at least 3 characters.",
-  }),
-  date: z.string(),
-  startTime: z.string(),
-  endTime: z.string(),
-  location: z.string().min(3, {
-    message: "Location must be at least 3 characters.",
-  }),
-  clientName: z.string().min(3, {
-    message: "Client name must be at least 3 characters.",
-  }),
-  clientPhone: z.string().min(10, {
-    message: "Phone number must be at least 10 digits.",
-  }),
-  clientEmail: z.string().email({
-    message: "Invalid email address.",
-  }).optional(),
-  guestCount: z.coerce.number().min(1, {
-    message: "Guest count must be at least 1.",
-  }),
-  photographersCount: z.coerce.number().min(0, {
-    message: "Photographer count must be at least 0.",
-  }),
-  videographersCount: z.coerce.number().min(0, {
-    message: "Videographer count must be at least 0.",
-  }),
+  name: z.string().min(1, "Event name is required"),
+  date: z.string().min(1, "Date is required"),
+  startTime: z.string().min(1, "Start time is required"),
+  endTime: z.string().min(1, "End time is required"),
+  location: z.string().min(1, "Location is required"),
+  clientName: z.string().min(1, "Client name is required"),
+  clientPhone: z.string().optional(),
+  clientEmail: z.string().email("Invalid email").optional().or(z.literal("")),
+  guestCount: z.number().min(1, "Guest count must be at least 1").optional(),
+  photographersCount: z.string().transform(val => parseInt(val) || 0),
+  videographersCount: z.string().transform(val => parseInt(val) || 0),
   clientRequirements: z.string().optional(),
-  references: z.array(z.string()).optional(),
+  references: z.array(z.string()).default([])
 });
 
 export type EventFormValues = z.infer<typeof eventFormSchema>;

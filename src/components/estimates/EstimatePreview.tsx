@@ -1,17 +1,12 @@
 
-import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { EmailForm } from "./preview/EmailForm";
-import { WhatsAppForm } from "./preview/WhatsAppForm";
-import { ApprovalForm } from "./preview/ApprovalForm";
-import { EstimateDetails } from "./preview/EstimateDetails";
-import { HeaderActions } from "./preview/HeaderActions";
 import { StatusChecker } from "./preview/StatusChecker";
-import { useToast } from "@/components/ui/use-toast";
-import { WelcomePage } from "./pages/WelcomePage";
-import { ServicesPage } from "./pages/ServicesPage";
-import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { HeaderActions } from "./preview/HeaderActions";
+import { useEstimatePreview } from "@/hooks/estimates/useEstimatePreview";
+import { PreviewContent } from "./preview/PreviewContent";
+import { PreviewPagination } from "./preview/PreviewPagination";
+import { ScheduleButton } from "./preview/ScheduleButton";
+import { PreviewFormDisplay } from "./preview/PreviewFormDisplay";
 
 interface EstimatePreviewProps {
   open: boolean;
@@ -49,59 +44,18 @@ interface EstimatePreviewProps {
 }
 
 export function EstimatePreview({ open, onClose, estimate, onStatusChange }: EstimatePreviewProps) {
-  const { toast } = useToast();
-  const navigate = useNavigate();
-  const [showEmailForm, setShowEmailForm] = useState(false);
-  const [showWhatsAppForm, setShowWhatsAppForm] = useState(false);
-  const [showApprovalForm, setShowApprovalForm] = useState(false);
-  const [currentPageIndex, setCurrentPageIndex] = useState(0);
-
-  const handleStatusChange = (estimateId: string, newStatus: string, negotiatedAmount?: string, selectedPackageIndex?: number) => {
-    if (onStatusChange) {
-      onStatusChange(estimateId, newStatus, negotiatedAmount, selectedPackageIndex);
-      
-      toast({
-        title: "Estimate Updated",
-        description: `Estimate status changed to ${newStatus}`,
-      });
-    }
-  };
-
-  const hideAllForms = () => {
-    setShowEmailForm(false);
-    setShowWhatsAppForm(false);
-    setShowApprovalForm(false);
-  };
-  
-  const handleGoToScheduling = () => {
-    onClose();
-    // Navigate to scheduling page with a query parameter for the estimate ID
-    navigate(`/scheduling?estimateId=${estimate.id}`);
-  };
-
-  // Ensure selectedServices is always an array
-  const selectedServices = estimate?.selectedServices || [];
-
-  const pages = [
-    <WelcomePage 
-      key="welcome" 
-      clientName={estimate.clientName}
-      clientEmail={estimate.clientEmail || ""}
-      onClientNameChange={() => {}} // No-op function since this is read-only
-      onClientEmailChange={() => {}} // No-op function since this is read-only
-      isReadOnly={true}
-    />,
-    <ServicesPage 
-      key="services"
-      selectedServices={selectedServices}
-      onServicesChange={() => {}} // No-op function since this is read-only
-      isReadOnly={true}
-    />,
-    <EstimateDetails 
-      key="details"
-      estimate={estimate} 
-    />
-  ];
+  const {
+    showEmailForm,
+    showWhatsAppForm,
+    showApprovalForm,
+    currentPageIndex,
+    setShowEmailForm,
+    setShowWhatsAppForm,
+    setShowApprovalForm,
+    setCurrentPageIndex,
+    handleStatusChange,
+    handleGoToScheduling
+  } = useEstimatePreview(estimate, onStatusChange, onClose);
 
   // Check if the estimate has multiple packages or if a specific package is selected
   const hasMultiplePackages = estimate.packages && estimate.packages.length > 1;
@@ -120,18 +74,9 @@ export function EstimatePreview({ open, onClose, estimate, onStatusChange }: Est
             </div>
           )}
           <HeaderActions 
-            onShowEmailForm={() => {
-              hideAllForms();
-              setShowEmailForm(true);
-            }}
-            onShowWhatsAppForm={() => {
-              hideAllForms();
-              setShowWhatsAppForm(true);
-            }}
-            onShowApprovalForm={() => {
-              hideAllForms();
-              setShowApprovalForm(true);
-            }}
+            onShowEmailForm={() => setShowEmailForm(true)}
+            onShowWhatsAppForm={() => setShowWhatsAppForm(true)}
+            onShowApprovalForm={() => setShowApprovalForm(true)}
             isApproved={estimate.status === "approved"}
           />
         </DialogHeader>
@@ -142,69 +87,33 @@ export function EstimatePreview({ open, onClose, estimate, onStatusChange }: Est
           onStatusChange={handleStatusChange} 
         />
 
-        {showEmailForm && (
-          <EmailForm 
-            onClose={() => setShowEmailForm(false)} 
-            estimate={estimate} 
-          />
-        )}
-
-        {showWhatsAppForm && (
-          <WhatsAppForm 
-            onClose={() => setShowWhatsAppForm(false)} 
-            estimate={estimate}
-          />
-        )}
-
-        {showApprovalForm && (
-          <ApprovalForm 
-            onClose={() => setShowApprovalForm(false)} 
-            estimate={estimate} 
-            onStatusChange={handleStatusChange}
-          />
-        )}
+        <PreviewFormDisplay 
+          showEmailForm={showEmailForm}
+          showWhatsAppForm={showWhatsAppForm}
+          showApprovalForm={showApprovalForm}
+          onCloseEmailForm={() => setShowEmailForm(false)}
+          onCloseWhatsAppForm={() => setShowWhatsAppForm(false)}
+          onCloseApprovalForm={() => setShowApprovalForm(false)}
+          estimate={estimate}
+          onStatusChange={handleStatusChange}
+        />
 
         {!showEmailForm && !showWhatsAppForm && !showApprovalForm && (
           <>
-            {pages[currentPageIndex]}
+            <PreviewContent 
+              currentPageIndex={currentPageIndex} 
+              estimate={estimate} 
+            />
             
-            <div className="flex justify-between mt-6">
-              <Button
-                onClick={() => setCurrentPageIndex(prev => Math.max(0, prev - 1))}
-                disabled={currentPageIndex === 0}
-                variant="outline"
-              >
-                Previous
-              </Button>
-              <div className="flex space-x-2">
-                {[0, 1, 2].map((index) => (
-                  <Button
-                    key={index}
-                    variant={currentPageIndex === index ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setCurrentPageIndex(index)}
-                    className="px-3 py-1"
-                  >
-                    {index === 0 ? "Intro" : index === 1 ? "Services" : "Estimate"}
-                  </Button>
-                ))}
-              </div>
-              <Button
-                onClick={() => setCurrentPageIndex(prev => Math.min(2, prev + 1))}
-                disabled={currentPageIndex === 2}
-                variant="outline"
-              >
-                Next
-              </Button>
-            </div>
+            <PreviewPagination 
+              currentPageIndex={currentPageIndex}
+              setCurrentPageIndex={setCurrentPageIndex}
+            />
             
-            {estimate.status === "approved" && (
-              <div className="mt-6 flex justify-center">
-                <Button className="w-full max-w-md" onClick={handleGoToScheduling}>
-                  Schedule Events From This Estimate
-                </Button>
-              </div>
-            )}
+            <ScheduleButton 
+              isApproved={estimate.status === "approved"}
+              onSchedule={handleGoToScheduling}
+            />
           </>
         )}
       </DialogContent>
