@@ -9,8 +9,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useSettings } from "@/contexts/SettingsContext";
-import { useEffect, useState } from "react";
 
 interface ClientDetailsCardProps {
   invoiceType: "proforma" | "paid";
@@ -18,28 +16,6 @@ interface ClientDetailsCardProps {
 }
 
 export function ClientDetailsCard({ invoiceType, onInvoiceTypeChange }: ClientDetailsCardProps) {
-  const { company } = useSettings();
-  const [companyName, setCompanyName] = useState("");
-  const [companyEmail, setCompanyEmail] = useState("");
-  const [companyPhone, setCompanyPhone] = useState("");
-  const [companyAddress, setCompanyAddress] = useState("");
-  const [companyGst, setCompanyGst] = useState("");
-  
-  // Load company details when available
-  useEffect(() => {
-    if (company) {
-      setCompanyName(company.name || "");
-      setCompanyEmail(company.email || "");
-      setCompanyPhone(company.phone || "");
-      setCompanyAddress(
-        [company.address, company.city, company.state, company.pincode]
-          .filter(Boolean)
-          .join(", ")
-      );
-      setCompanyGst(company.gst_number || "");
-    }
-  }, [company]);
-
   return (
     <Card className="p-4">
       <h3 className="font-medium mb-4">Client & Company Details</h3>
@@ -102,41 +78,19 @@ export function ClientDetailsCard({ invoiceType, onInvoiceTypeChange }: ClientDe
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="companyName">Company Name</Label>
-              <Input 
-                id="companyName" 
-                placeholder="Enter company name" 
-                value={companyName}
-                onChange={(e) => setCompanyName(e.target.value)}
-              />
+              <Input id="companyName" placeholder="Enter company name" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="companyEmail">Company Email</Label>
-              <Input 
-                id="companyEmail" 
-                type="email" 
-                placeholder="company@example.com" 
-                value={companyEmail}
-                onChange={(e) => setCompanyEmail(e.target.value)}
-              />
+              <Input id="companyEmail" type="email" placeholder="company@example.com" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="companyPhone">Company Phone</Label>
-              <Input 
-                id="companyPhone" 
-                type="tel" 
-                placeholder="+91 98765 43210" 
-                value={companyPhone}
-                onChange={(e) => setCompanyPhone(e.target.value)}
-              />
+              <Input id="companyPhone" type="tel" placeholder="+91 98765 43210" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="companyAddress">Company Address</Label>
-              <Input 
-                id="companyAddress" 
-                placeholder="Enter company address"
-                value={companyAddress}
-                onChange={(e) => setCompanyAddress(e.target.value)}
-              />
+              <Input id="companyAddress" placeholder="Enter company address" />
             </div>
             {invoiceType === "paid" && (
               <div className="space-y-2 md:col-span-2">
@@ -145,8 +99,6 @@ export function ClientDetailsCard({ invoiceType, onInvoiceTypeChange }: ClientDe
                   id="companyGst" 
                   placeholder="Enter company's GST number"
                   className="uppercase"
-                  value={companyGst}
-                  onChange={(e) => setCompanyGst(e.target.value)}
                 />
               </div>
             )}
