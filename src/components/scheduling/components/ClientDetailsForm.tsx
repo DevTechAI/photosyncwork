@@ -1,57 +1,71 @@
 
+import { UseFormRegister, FormState, UseFormSetValue } from "react-hook-form";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { ScheduledEvent } from "../types";
+import { EventFormValues } from "@/hooks/scheduling/useCreateEventModal";
 
 interface ClientDetailsFormProps {
-  eventData: Partial<ScheduledEvent>;
-  setEventData: (data: Partial<ScheduledEvent>) => void;
+  register: UseFormRegister<EventFormValues>;
+  errors: FormState<EventFormValues>['errors'];
+  setValue: UseFormSetValue<EventFormValues>;
 }
 
-export function ClientDetailsForm({ eventData, setEventData }: ClientDetailsFormProps) {
+export function ClientDetailsForm({ 
+  register, 
+  errors 
+}: ClientDetailsFormProps) {
   return (
     <>
       <div className="space-y-2">
-        <Label htmlFor="client-name">Client Name</Label>
+        <Label htmlFor="clientName">Client Name</Label>
         <Input
-          id="client-name"
-          value={eventData.clientName || ""}
-          onChange={(e) => setEventData({ ...eventData, clientName: e.target.value })}
+          id="clientName"
+          {...register("clientName")}
           placeholder="Enter client name"
         />
+        {errors.clientName && (
+          <p className="text-sm text-destructive">{errors.clientName.message}</p>
+        )}
       </div>
       
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="client-phone">Phone</Label>
+          <Label htmlFor="clientPhone">Phone</Label>
           <Input
-            id="client-phone"
-            value={eventData.clientPhone || ""}
-            onChange={(e) => setEventData({ ...eventData, clientPhone: e.target.value })}
+            id="clientPhone"
+            {...register("clientPhone")}
             placeholder="Client phone number"
           />
+          {errors.clientPhone && (
+            <p className="text-sm text-destructive">{errors.clientPhone.message}</p>
+          )}
         </div>
         
         <div className="space-y-2">
-          <Label htmlFor="client-email">Email</Label>
+          <Label htmlFor="clientEmail">Email</Label>
           <Input
-            id="client-email"
+            id="clientEmail"
             type="email"
-            value={eventData.clientEmail || ""}
-            onChange={(e) => setEventData({ ...eventData, clientEmail: e.target.value })}
+            {...register("clientEmail")}
             placeholder="Client email address"
           />
+          {errors.clientEmail && (
+            <p className="text-sm text-destructive">{errors.clientEmail.message}</p>
+          )}
         </div>
       </div>
       
       <div className="space-y-2">
-        <Label htmlFor="event-guests">Estimated Guest Count</Label>
+        <Label htmlFor="guestCount">Estimated Guest Count</Label>
         <Input
-          id="event-guests"
-          value={eventData.guestCount || ""}
-          onChange={(e) => setEventData({ ...eventData, guestCount: e.target.value })}
+          id="guestCount"
+          type="number"
+          {...register("guestCount")}
           placeholder="Approximate number of guests"
         />
+        {errors.guestCount && (
+          <p className="text-sm text-destructive">{errors.guestCount.message}</p>
+        )}
       </div>
     </>
   );

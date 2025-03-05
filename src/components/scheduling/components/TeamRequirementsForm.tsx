@@ -1,52 +1,54 @@
 
+import { UseFormRegister, FormState, UseFormSetValue } from "react-hook-form";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { ScheduledEvent } from "../types";
+import { EventFormValues } from "@/hooks/scheduling/useCreateEventModal";
 
 interface TeamRequirementsFormProps {
-  eventData: Partial<ScheduledEvent>;
-  setEventData: (data: Partial<ScheduledEvent>) => void;
+  register: UseFormRegister<EventFormValues>;
+  errors: FormState<EventFormValues>['errors'];
+  setValue: UseFormSetValue<EventFormValues>;
 }
 
-export function TeamRequirementsForm({ eventData, setEventData }: TeamRequirementsFormProps) {
+export function TeamRequirementsForm({ 
+  register, 
+  errors 
+}: TeamRequirementsFormProps) {
   return (
     <>
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="photographers">Number of Photographers</Label>
+          <Label htmlFor="photographersCount">Number of Photographers</Label>
           <Input
-            id="photographers"
+            id="photographersCount"
             type="number"
             min="0"
-            value={eventData.photographersCount}
-            onChange={(e) => setEventData({ 
-              ...eventData, 
-              photographersCount: parseInt(e.target.value) || 0 
-            })}
+            {...register("photographersCount")}
           />
+          {errors.photographersCount && (
+            <p className="text-sm text-destructive">{errors.photographersCount.message}</p>
+          )}
         </div>
         
         <div className="space-y-2">
-          <Label htmlFor="videographers">Number of Videographers</Label>
+          <Label htmlFor="videographersCount">Number of Videographers</Label>
           <Input
-            id="videographers"
+            id="videographersCount"
             type="number"
             min="0"
-            value={eventData.videographersCount}
-            onChange={(e) => setEventData({ 
-              ...eventData, 
-              videographersCount: parseInt(e.target.value) || 0 
-            })}
+            {...register("videographersCount")}
           />
+          {errors.videographersCount && (
+            <p className="text-sm text-destructive">{errors.videographersCount.message}</p>
+          )}
         </div>
       </div>
       
       <div className="space-y-2">
-        <Label htmlFor="client-requirements">Client Requirements</Label>
+        <Label htmlFor="clientRequirements">Client Requirements</Label>
         <Input
-          id="client-requirements"
-          value={eventData.clientRequirements}
-          onChange={(e) => setEventData({ ...eventData, clientRequirements: e.target.value })}
+          id="clientRequirements"
+          {...register("clientRequirements")}
           placeholder="Special requests or requirements"
         />
       </div>
