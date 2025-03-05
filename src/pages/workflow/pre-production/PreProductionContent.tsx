@@ -20,6 +20,7 @@ interface PreProductionContentProps {
   handleSaveRequirements: () => void;
   handleAssignTeamMember: (teamMemberId: string, role: "photographer" | "videographer") => void;
   handleMoveToProduction: () => void;
+  handleUpdateAssignmentStatus: (eventId: string, teamMemberId: string, status: "accepted" | "declined") => void;
 }
 
 export function PreProductionContent({
@@ -37,7 +38,8 @@ export function PreProductionContent({
   loading,
   handleSaveRequirements,
   handleAssignTeamMember,
-  handleMoveToProduction
+  handleMoveToProduction,
+  handleUpdateAssignmentStatus
 }: PreProductionContentProps) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -72,6 +74,7 @@ export function PreProductionContent({
           handleSaveRequirements={handleSaveRequirements}
           handleAssignTeamMember={handleAssignTeamMember}
           handleMoveToProduction={handleMoveToProduction}
+          handleUpdateAssignmentStatus={handleUpdateAssignmentStatus}
         />
       </div>
     </div>

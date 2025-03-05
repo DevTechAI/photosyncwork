@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { TeamManagement } from "@/components/scheduling/TeamManagement";
+import { TeamManagement } from "@/components/team/TeamManagement";
 import { CreateEventModal } from "@/components/scheduling/CreateEventModal";
 import { ScheduledEvent, TeamMember, EventAssignment, WorkflowStage } from "@/components/scheduling/types";
 import { SchedulingOverview } from "./components/SchedulingOverview";

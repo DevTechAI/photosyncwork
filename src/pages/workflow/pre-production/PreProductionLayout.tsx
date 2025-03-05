@@ -1,4 +1,3 @@
-
 import Layout from "@/components/Layout";
 import { useState, useEffect } from "react";
 import { TeamMember } from "@/components/scheduling/types";
@@ -11,7 +10,7 @@ import { PreProductionContent } from "./PreProductionContent";
 import { useTeamAssignmentsTab } from "@/hooks/useTeamAssignmentsTab";
 import { useSchedulingTab } from "@/hooks/useSchedulingTab";
 import { useTabState } from "@/hooks/useTabState";
-import { TeamManagement } from "@/components/scheduling/TeamManagement";
+import { TeamManagement } from "@/components/team/TeamManagement";
 
 // Mock data for demonstration
 const mockTeamMembers: TeamMember[] = [
