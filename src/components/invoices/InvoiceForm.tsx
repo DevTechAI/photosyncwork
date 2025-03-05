@@ -11,6 +11,7 @@ import { useState } from "react";
 import { ClientDetailsCard } from "./components/ClientDetailsCard";
 import { InvoiceItemsCard } from "./components/InvoiceItemsCard";
 import { TotalCard } from "./components/TotalCard";
+import { SettingsProvider } from "@/contexts/SettingsContext";
 
 interface InvoiceFormProps {
   open: boolean;
@@ -33,35 +34,37 @@ export function InvoiceForm({ open, onClose }: InvoiceFormProps) {
             Create a new {invoiceType.toLowerCase()} invoice for your photography services.
           </DialogDescription>
         </DialogHeader>
-        <form className="space-y-6">
-          <ClientDetailsCard 
-            invoiceType={invoiceType}
-            onInvoiceTypeChange={setInvoiceType}
-          />
-          <InvoiceItemsCard items={items} onItemsChange={setItems} />
-          {invoiceType === "paid" ? (
-            <TotalCard
-              items={items}
-              gstRate={gstRate}
-              onGstRateChange={setGstRate}
+        <SettingsProvider>
+          <form className="space-y-6">
+            <ClientDetailsCard 
+              invoiceType={invoiceType}
+              onInvoiceTypeChange={setInvoiceType}
             />
-          ) : (
-            <TotalCard
-              items={items}
-              gstRate="0"
-              onGstRateChange={() => {}}
-              hideGst
-            />
-          )}
-          <div className="flex justify-end gap-4">
-            <Button variant="outline" type="button" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button type="submit">
-              Create {invoiceType === "proforma" ? "Proforma" : "Paid"} Invoice
-            </Button>
-          </div>
-        </form>
+            <InvoiceItemsCard items={items} onItemsChange={setItems} />
+            {invoiceType === "paid" ? (
+              <TotalCard
+                items={items}
+                gstRate={gstRate}
+                onGstRateChange={setGstRate}
+              />
+            ) : (
+              <TotalCard
+                items={items}
+                gstRate="0"
+                onGstRateChange={() => {}}
+                hideGst
+              />
+            )}
+            <div className="flex justify-end gap-4">
+              <Button variant="outline" type="button" onClick={onClose}>
+                Cancel
+              </Button>
+              <Button type="submit">
+                Create {invoiceType === "proforma" ? "Proforma" : "Paid"} Invoice
+              </Button>
+            </div>
+          </form>
+        </SettingsProvider>
       </DialogContent>
     </Dialog>
   );

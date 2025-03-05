@@ -19,9 +19,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Edit, Plus, Trash } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { TeamMember, TeamMemberRole } from "./types";
+import { supabase } from "@/integrations/supabase/client";
 
 interface TeamManagementProps {
   teamMembers: TeamMember[];
@@ -47,6 +48,7 @@ export function TeamManagement({
     phone: "",
     whatsapp: "",
   });
+  const [isSyncing, setIsSyncing] = useState(false);
 
   const roles: TeamMemberRole[] = ["photographer", "videographer", "editor", "production"];
 
@@ -130,15 +132,90 @@ export function TeamManagement({
     });
     setShowEditDialog(true);
   };
+  
+  // Function to sync team members with the database
+  const syncTeamMembersWithDB = async () => {
+    try {
+      setIsSyncing(true);
+      
+      // Get existing team members from the database
+      const { data: existingDbMembers, error: fetchError } = await supabase
+        .from('team_members')
+        .select('id, name, email');
+        
+      if (fetchError) throw fetchError;
+      
+      // For each local team member, check if they exist in the DB
+      for (const member of teamMembers) {
+        // Skip if the ID is already a UUID (already synced)
+        if (member.id && !member.id.startsWith('tm-')) continue;
+        
+        // Check if this member already exists in DB by email
+        const existingMember = existingDbMembers?.find(m => m.email === member.email);
+        
+        if (existingMember) {
+          // Update local ID to match DB ID
+          onUpdateTeamMember({
+            ...member,
+            id: existingMember.id
+          });
+        } else {
+          // Insert into DB
+          const { data: newMember, error: insertError } = await supabase
+            .from('team_members')
+            .insert({
+              name: member.name,
+              email: member.email,
+              phone: member.phone,
+              role: member.role,
+              whatsapp: member.whatsapp,
+              is_freelancer: member.isFreelancer || false,
+              availability: member.availability || {}
+            })
+            .select('id')
+            .single();
+            
+          if (insertError) throw insertError;
+          
+          // Update local ID with the new DB ID
+          if (newMember) {
+            onUpdateTeamMember({
+              ...member,
+              id: newMember.id
+            });
+          }
+        }
+      }
+      
+      toast({
+        title: "Sync completed",
+        description: "Team members have been synchronized with the database",
+      });
+    } catch (error) {
+      console.error('Error syncing team members:', error);
+      toast({
+        title: "Sync failed",
+        description: "There was an error synchronizing team members",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h3 className="font-medium">Team Members</h3>
-        <Button onClick={() => setShowAddDialog(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Add Member
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" disabled={isSyncing} onClick={syncTeamMembersWithDB}>
+            {isSyncing ? "Syncing..." : "Sync with Database"}
+          </Button>
+          <Button onClick={() => setShowAddDialog(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add Member
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
