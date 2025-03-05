@@ -23,8 +23,8 @@ export function usePreProductionEvents() {
   useEventPersistence(events);
   
   // Handle deleting a completed event
-  const handleDeleteCompletedEvent = (eventId: string) => {
-    const updatedCompletedEvents = deleteCompletedEvent(eventId);
+  const handleDeleteCompletedEvent = async (eventId: string) => {
+    const updatedCompletedEvents = await deleteCompletedEvent(eventId);
     setCompletedEvents(updatedCompletedEvents);
   };
 

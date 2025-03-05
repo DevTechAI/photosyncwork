@@ -16,12 +16,12 @@ export function useEventLoader() {
     loadEvents();
   }, [toast]);
   
-  const loadEvents = () => {
+  const loadEvents = async () => {
     setIsLoading(true);
     
     try {
       // First, check for any approved estimates that need to be converted to events
-      const newEvents = createEventsFromApprovedEstimates();
+      const newEvents = await createEventsFromApprovedEstimates();
       
       if (newEvents.length > 0) {
         toast({
@@ -31,10 +31,10 @@ export function useEventLoader() {
       }
       
       // Get all pre-production events
-      let preProductionEvents = getEventsByStage("pre-production");
+      let preProductionEvents = await getEventsByStage("pre-production");
       
       // Get events that were previously in pre-production but have moved to production
-      const allEvents = getAllEvents();
+      const allEvents = await getAllEvents();
       const movedEvents = allEvents.filter(event => 
         event.stage === "production" && 
         event.dataCopied === true

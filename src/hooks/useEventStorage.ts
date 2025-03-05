@@ -7,9 +7,9 @@ export function useEventStorage() {
   const { toast } = useToast();
 
   // Delete a completed pre-production event reference
-  const deleteCompletedEvent = (eventId: string) => {
-    // Get all events from localStorage
-    const allEvents = getAllEvents();
+  const deleteCompletedEvent = async (eventId: string) => {
+    // Get all events from localStorage or Supabase
+    const allEvents = await getAllEvents();
     
     // Update the event in localStorage by setting dataCopied to false
     const updatedAllEvents = allEvents.map(event => {
@@ -19,7 +19,7 @@ export function useEventStorage() {
       return event;
     });
     
-    // Save back to localStorage
+    // Save back to localStorage (this will be updated to use Supabase in a future update)
     localStorage.setItem("scheduledEvents", JSON.stringify(updatedAllEvents));
     
     // Show toast notification
