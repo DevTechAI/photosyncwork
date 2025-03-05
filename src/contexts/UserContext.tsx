@@ -63,6 +63,7 @@ interface UserContextType {
   login: (email: string) => boolean;
   logout: () => void;
   hasAccess: (module: string) => boolean;
+  loading: boolean; // Added loading property
 }
 
 // Create the context
@@ -71,6 +72,7 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 // Provider component
 export function UserProvider({ children }: { children: React.ReactNode }) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true); // Add loading state
   
   // On mount, check for saved user in localStorage
   useEffect(() => {
@@ -78,6 +80,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     if (savedUser) {
       setCurrentUser(JSON.parse(savedUser));
     }
+    setLoading(false); // Set loading to false after we've checked local storage
   }, []);
   
   // Save user to localStorage when it changes
@@ -132,7 +135,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     setCurrentUser,
     login,
     logout,
-    hasAccess
+    hasAccess,
+    loading
   };
   
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;

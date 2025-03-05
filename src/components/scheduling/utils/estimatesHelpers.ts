@@ -28,13 +28,13 @@ export function createEventFromEstimate(estimate) {
     deliverables: []
   };
   
-  // Check if the estimate has packages
-  if (estimate.packages && estimate.packages.length > 0) {
-    // Use the first package for now (in real app, might want to let user choose)
-    const selectedPackage = estimate.packages[0];
+  // Check if the estimate has packages and a selected package index
+  if (estimate.packages && estimate.packages.length > 0 && estimate.selectedPackageIndex !== undefined) {
+    // Use the specifically selected package
+    const selectedPackage = estimate.packages[estimate.selectedPackageIndex];
     
     // Extract services from the selected package
-    if (selectedPackage.services && selectedPackage.services.length > 0) {
+    if (selectedPackage && selectedPackage.services && selectedPackage.services.length > 0) {
       // Use the first service event for the initial event
       const firstService = selectedPackage.services[0];
       
@@ -45,8 +45,8 @@ export function createEventFromEstimate(estimate) {
       eventData.videographersCount = parseInt(firstService.cinematographers) || 1;
     }
     
-    // Extract deliverables - fix the circular reference issue
-    if (selectedPackage.deliverables) {
+    // Extract deliverables from the selected package
+    if (selectedPackage && selectedPackage.deliverables) {
       // Handle both array deliverables and the circular reference case
       const deliverablesArray = Array.isArray(selectedPackage.deliverables) 
         ? selectedPackage.deliverables 
@@ -63,7 +63,7 @@ export function createEventFromEstimate(estimate) {
     }
     
     // Store package name/option for reference
-    eventData.estimatePackage = selectedPackage.name || `Package Option 1: ${selectedPackage.amount}`;
+    eventData.estimatePackage = selectedPackage.name || `Package Option ${estimate.selectedPackageIndex + 1}: ${selectedPackage.amount}`;
   } else if (estimate.services && estimate.services.length > 0) {
     // Legacy format - no packages, use services directly
     const firstService = estimate.services[0];
@@ -90,4 +90,3 @@ export function createEventFromEstimate(estimate) {
   
   return eventData;
 }
-

@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { createEventsFromApprovedEstimates } from "@/components/scheduling/utils/eventHelpers";
 import { useToast } from "@/components/ui/use-toast";
 
 interface ApprovalFormProps {
@@ -31,33 +30,17 @@ export function ApprovalForm({ onClose, estimate, onStatusChange }: ApprovalForm
   const { toast } = useToast();
 
   const handleApprove = () => {
-    // Fix any circular references in deliverables before storing the estimate
-    const savedEstimates = localStorage.getItem("estimates");
-    if (savedEstimates) {
-      const estimates = JSON.parse(savedEstimates);
-      const currentEstimateIndex = estimates.findIndex(est => est.id === estimate.id);
-      
-      if (currentEstimateIndex !== -1) {
-        // Make sure packages have proper deliverables (not circular references)
-        if (estimates[currentEstimateIndex].packages) {
-          estimates[currentEstimateIndex].packages = estimates[currentEstimateIndex].packages.map(pkg => {
-            // If deliverables is a circular reference or invalid, use the main deliverables
-            if (!Array.isArray(pkg.deliverables)) {
-              return {
-                ...pkg,
-                deliverables: estimates[currentEstimateIndex].deliverables
-              };
-            }
-            return pkg;
-          });
-          
-          // Update the storage
-          localStorage.setItem("estimates", JSON.stringify(estimates));
-        }
-      }
+    // Prevent approval if packages exist but none is selected
+    if (estimate.packages && estimate.packages.length > 0 && selectedPackageIndex === undefined) {
+      toast({
+        title: "Package Selection Required",
+        description: "Please select a package before approving the estimate.",
+        variant: "destructive"
+      });
+      return;
     }
-    
-    // Update the status
+
+    // Update the status with the selected package index
     onStatusChange(
       estimate.id, 
       'approved', 
@@ -65,23 +48,19 @@ export function ApprovalForm({ onClose, estimate, onStatusChange }: ApprovalForm
       selectedPackageIndex
     );
     
-    // Create events from approved estimates
-    setTimeout(() => {
-      const newEvents = createEventsFromApprovedEstimates();
-      
-      if (newEvents.length > 0) {
-        toast({
-          title: "Event Created",
-          description: "This estimate has been converted to an event in pre-production.",
-        });
-      }
-    }, 500); // Short delay to ensure estimate status is saved first
+    // Show success toast
+    toast({
+      title: "Estimate Approved",
+      description: selectedPackageIndex !== undefined 
+        ? `Package Option ${selectedPackageIndex + 1} has been approved.` 
+        : "The estimate has been approved."
+    });
     
     onClose();
   };
 
-  // Only show package selection if there are multiple packages
-  const showPackageSelector = estimate.packages && estimate.packages.length > 1;
+  // Only show package selection if there are packages
+  const showPackageSelector = estimate.packages && estimate.packages.length > 0;
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
@@ -89,7 +68,8 @@ export function ApprovalForm({ onClose, estimate, onStatusChange }: ApprovalForm
         <DialogHeader>
           <DialogTitle>Approve Estimate</DialogTitle>
           <DialogDescription>
-            Mark this estimate as approved by the client.
+            Mark this estimate as approved by the client. 
+            {showPackageSelector && " Please select which package option the client has approved."}
           </DialogDescription>
         </DialogHeader>
         
