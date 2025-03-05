@@ -1,24 +1,19 @@
 
 import { useState } from "react";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Image as ImageIcon, 
-  Video, 
-  BookOpen, 
-  Check, 
-  Clock, 
-  Package, 
-  XCircle,
-  Upload
-} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { UserCircle, Calendar, Clock, CheckCircle } from "lucide-react";
 
 interface Deliverable {
   id: string;
   type: "photos" | "videos" | "album";
-  status: "pending" | "completed" | "in-progress" | "delivered" | "revision-requested";
+  status: "pending" | "in-progress" | "delivered" | "revision-requested" | "completed";
   assignedTo?: string;
   deliveryDate?: string;
   revisionNotes?: string;
@@ -26,170 +21,196 @@ interface Deliverable {
 }
 
 interface ProductionDeliverablesTabProps {
-  deliverables: (Deliverable | string)[];
+  deliverables: Deliverable[];
   eventId: string;
 }
 
-export function ProductionDeliverablesTab({ 
-  deliverables, 
-  eventId 
-}: ProductionDeliverablesTabProps) {
-  const { toast } = useToast();
-  const [localDeliverables, setLocalDeliverables] = useState<(Deliverable | string)[]>(deliverables);
+export function ProductionDeliverablesTab({ deliverables, eventId }: ProductionDeliverablesTabProps) {
+  const [editingDeliverable, setEditingDeliverable] = useState<Deliverable | null>(null);
+  const [showEditDialog, setShowEditDialog] = useState(false);
   
-  // Helper function to get status badge variant and label
-  const getStatusDisplay = (status: string) => {
-    switch(status) {
-      case "pending":
-        return { variant: "outline" as const, label: "Pending" };
-      case "in-progress":
-        return { variant: "secondary" as const, label: "In Progress" };
-      case "completed":
-        return { variant: "default" as const, label: "Completed" };
-      case "delivered":
-        return { variant: "success" as const, label: "Delivered" };
-      case "revision-requested":
-        return { variant: "destructive" as const, label: "Revision Requested" };
+  const handleStatusChange = (deliverable: Deliverable, newStatus: Deliverable['status']) => {
+    // Implementation will be added later
+    console.log(`Changing status of deliverable ${deliverable.id} to ${newStatus}`);
+  };
+  
+  const handleSaveDeliverable = () => {
+    // Implementation will be added later
+    console.log('Saving deliverable changes:', editingDeliverable);
+    setShowEditDialog(false);
+  };
+  
+  const getStatusBadgeVariant = (status: Deliverable['status']) => {
+    switch (status) {
+      case 'pending':
+        return 'outline';
+      case 'in-progress':
+        return 'secondary';
+      case 'delivered':
+        return 'default';
+      case 'revision-requested':
+        return 'destructive';
+      case 'completed':
+        return 'outline'; // Changed from 'success' to 'outline'
       default:
-        return { variant: "outline" as const, label: "Unknown" };
+        return 'outline';
     }
   };
   
-  // Helper function to get icon based on deliverable type
-  const getDeliverableIcon = (type: string) => {
-    switch(type) {
-      case "photos":
-        return <ImageIcon className="h-5 w-5" />;
-      case "videos":
-        return <Video className="h-5 w-5" />;
-      case "album":
-        return <BookOpen className="h-5 w-5" />;
+  const getDeliverableTypeLabel = (type: Deliverable['type']) => {
+    switch (type) {
+      case 'photos':
+        return 'Photography';
+      case 'videos':
+        return 'Videography';
+      case 'album':
+        return 'Album Design';
       default:
-        return <Package className="h-5 w-5" />;
+        return type;
     }
-  };
-  
-  // Determine if the deliverable is a string or object
-  const normalizeDeliverables = () => {
-    return localDeliverables.map(deliverable => {
-      if (typeof deliverable === 'string') {
-        // Display string deliverables as text with default pending status
-        return (
-          <Card key={deliverable} className="p-4 mb-4">
-            <div className="flex justify-between items-start">
-              <div className="flex items-center gap-2">
-                <Package className="h-5 w-5 text-primary" />
-                <div>
-                  <div className="font-medium">{deliverable}</div>
-                  <div className="text-sm text-muted-foreground">From estimate</div>
-                </div>
-              </div>
-              <Badge variant="outline">Pending</Badge>
-            </div>
-            <div className="mt-4 flex justify-end">
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => handleUpdateStatus(deliverable)}
-              >
-                <Clock className="h-4 w-4 mr-2" />
-                Start Work
-              </Button>
-            </div>
-          </Card>
-        );
-      } else {
-        // Display structured deliverable objects
-        const { id, type, status } = deliverable;
-        const statusDisplay = getStatusDisplay(status);
-        
-        return (
-          <Card key={id} className="p-4 mb-4">
-            <div className="flex justify-between items-start">
-              <div className="flex items-center gap-2">
-                {getDeliverableIcon(type)}
-                <div>
-                  <div className="font-medium">{type.charAt(0).toUpperCase() + type.slice(1)}</div>
-                  <div className="text-sm text-muted-foreground">
-                    {deliverable.assignedTo ? `Assigned to: ${deliverable.assignedTo}` : 'Not assigned'}
-                  </div>
-                </div>
-              </div>
-              <Badge variant={statusDisplay.variant}>{statusDisplay.label}</Badge>
-            </div>
-            <div className="mt-4 flex justify-end gap-2">
-              {status === "pending" && (
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => handleUpdateStatus(deliverable, "in-progress")}
-                >
-                  <Clock className="h-4 w-4 mr-2" />
-                  Start Work
-                </Button>
-              )}
-              {status === "in-progress" && (
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => handleUpdateStatus(deliverable, "completed")}
-                >
-                  <Check className="h-4 w-4 mr-2" />
-                  Mark Complete
-                </Button>
-              )}
-              {status === "completed" && (
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => handleUpdateStatus(deliverable, "delivered")}
-                >
-                  <Upload className="h-4 w-4 mr-2" />
-                  Mark as Delivered
-                </Button>
-              )}
-              {status === "delivered" && (
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => handleUpdateStatus(deliverable, "revision-requested")}
-                >
-                  <XCircle className="h-4 w-4 mr-2" />
-                  Request Revision
-                </Button>
-              )}
-            </div>
-          </Card>
-        );
-      }
-    });
-  };
-  
-  // Update the status of a deliverable
-  const handleUpdateStatus = (deliverable: any, newStatus: string = "in-progress") => {
-    toast({
-      title: "Status Updated",
-      description: "This is just a UI mockup. Real status updates will be implemented in a future version.",
-    });
-    
-    // In a real implementation, we would update the deliverable status in the database
-    // For now, just show a toast notification
   };
   
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-medium">Deliverables from Estimate</h3>
-      </div>
+      <h3 className="text-lg font-medium">Project Deliverables</h3>
       
-      {localDeliverables.length > 0 ? (
-        <div>
-          {normalizeDeliverables()}
-        </div>
-      ) : (
-        <Card className="p-4 text-center">
-          <p className="text-muted-foreground">No deliverables found for this event.</p>
+      {deliverables.length === 0 ? (
+        <Card className="p-4">
+          <p className="text-center text-muted-foreground">No deliverables found for this event</p>
         </Card>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2">
+          {deliverables.map((deliverable) => (
+            <Card key={deliverable.id} className="overflow-hidden">
+              <CardHeader className="pb-2">
+                <div className="flex justify-between items-start">
+                  <CardTitle className="text-base">
+                    {getDeliverableTypeLabel(deliverable.type)}
+                  </CardTitle>
+                  <Badge variant={getStatusBadgeVariant(deliverable.status)}>
+                    {deliverable.status}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="pb-4 pt-2">
+                <div className="space-y-2 text-sm">
+                  {deliverable.assignedTo && (
+                    <div className="flex items-center">
+                      <UserCircle className="h-4 w-4 mr-2 opacity-70" />
+                      <span>{deliverable.assignedTo}</span>
+                    </div>
+                  )}
+                  
+                  {deliverable.deliveryDate && (
+                    <div className="flex items-center">
+                      <Calendar className="h-4 w-4 mr-2 opacity-70" />
+                      <span>Due: {deliverable.deliveryDate}</span>
+                    </div>
+                  )}
+                  
+                  {deliverable.completedDate && (
+                    <div className="flex items-center">
+                      <CheckCircle className="h-4 w-4 mr-2 opacity-70" />
+                      <span>Completed: {deliverable.completedDate}</span>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="mt-4 space-y-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full"
+                    onClick={() => {
+                      setEditingDeliverable(deliverable);
+                      setShowEditDialog(true);
+                    }}
+                  >
+                    Update Status
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+      
+      {/* Edit Deliverable Dialog */}
+      {editingDeliverable && (
+        <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Update Deliverable Status</DialogTitle>
+            </DialogHeader>
+            
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="deliverable-status">Status</Label>
+                <Select 
+                  value={editingDeliverable.status}
+                  onValueChange={(value) => setEditingDeliverable({
+                    ...editingDeliverable, 
+                    status: value as Deliverable['status']
+                  })}
+                >
+                  <SelectTrigger id="deliverable-status">
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="in-progress">In Progress</SelectItem>
+                    <SelectItem value="delivered">Delivered</SelectItem>
+                    <SelectItem value="revision-requested">Revision Requested</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="assigned-to">Assigned To</Label>
+                <Input 
+                  id="assigned-to"
+                  placeholder="Team member name"
+                  value={editingDeliverable.assignedTo || ""}
+                  onChange={(e) => setEditingDeliverable({
+                    ...editingDeliverable,
+                    assignedTo: e.target.value
+                  })}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="delivery-date">Delivery Date</Label>
+                <Input 
+                  id="delivery-date"
+                  type="date"
+                  value={editingDeliverable.deliveryDate || ""}
+                  onChange={(e) => setEditingDeliverable({
+                    ...editingDeliverable,
+                    deliveryDate: e.target.value
+                  })}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="revision-notes">Notes</Label>
+                <Textarea 
+                  id="revision-notes"
+                  placeholder="Add any notes or revision requests here"
+                  value={editingDeliverable.revisionNotes || ""}
+                  onChange={(e) => setEditingDeliverable({
+                    ...editingDeliverable,
+                    revisionNotes: e.target.value
+                  })}
+                />
+              </div>
+            </div>
+            
+            <DialogFooter>
+              <Button onClick={handleSaveDeliverable}>Save Changes</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );

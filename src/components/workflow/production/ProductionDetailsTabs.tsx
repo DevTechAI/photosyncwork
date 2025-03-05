@@ -42,9 +42,6 @@ export function ProductionDetailsTabs({
     );
   }
   
-  // Get time entries for this event
-  const timeEntries = selectedEvent.timeTracking || [];
-  
   // Handle adding time entry
   const handleAddTimeEntry = (teamMemberId: string, hours: number) => {
     if (selectedEvent) {
@@ -130,7 +127,7 @@ export function ProductionDetailsTabs({
       
       {showRequirementsDialog && (
         <ClientRequirementsDialog
-          open={showRequirementsDialog}
+          isOpen={showRequirementsDialog} // Changed from open to isOpen
           onClose={() => setShowRequirementsDialog(false)}
           requirements={selectedEvent.clientRequirements || "No requirements have been added."}
           references={selectedEvent.references || []}
