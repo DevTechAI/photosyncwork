@@ -1,5 +1,5 @@
 
-import { ScheduledEvent, TeamMember } from "@/components/scheduling/types";
+import { ScheduledEvent, TeamMember, WorkflowStage } from "@/components/scheduling/types";
 import { getAssignmentCounts } from "@/utils/eventAssignmentUtils";
 import { getEventsByStage as filterEventsByStage } from "@/utils/eventFilteringUtils";
 
