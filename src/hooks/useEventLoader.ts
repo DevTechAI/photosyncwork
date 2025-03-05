@@ -2,7 +2,8 @@
 import { useState, useEffect } from "react";
 import { ScheduledEvent } from "@/components/scheduling/types";
 import { useToast } from "@/components/ui/use-toast";
-import { createEventsFromApprovedEstimates, getEventsByStage, getAllEvents } from "@/components/scheduling/utils/eventHelpers";
+import { supabase } from "@/integrations/supabase/client";
+import { dbToScheduledEvent } from "@/utils/supabaseConverters";
 import { processEventsWorkflow } from "@/utils/workflowProcessUtils";
 
 export function useEventLoader() {
@@ -14,40 +15,52 @@ export function useEventLoader() {
   // Load events on mount
   useEffect(() => {
     loadEvents();
-  }, [toast]);
+  }, []);
   
   const loadEvents = async () => {
     setIsLoading(true);
     
     try {
-      // First, check for any approved estimates that need to be converted to events
-      const newEvents = await createEventsFromApprovedEstimates();
+      // Get pre-production events from Supabase
+      const { data: preProductionData, error: preProductionError } = await supabase
+        .from('scheduled_events')
+        .select('*')
+        .eq('stage', 'pre-production');
       
-      if (newEvents.length > 0) {
+      if (preProductionError) {
+        console.error("Error loading pre-production events:", preProductionError);
         toast({
-          title: "New Events Created",
-          description: `${newEvents.length} new event(s) created from approved estimates.`
+          title: "Error Loading Events",
+          description: "There was a problem loading your events",
+          variant: "destructive"
         });
+        setIsLoading(false);
+        return;
       }
       
-      // Get all pre-production events
-      let preProductionEvents = await getEventsByStage("pre-production");
+      // Get completed events from Supabase
+      const { data: completedData, error: completedError } = await supabase
+        .from('scheduled_events')
+        .select('*')
+        .eq('stage', 'production')
+        .eq('datacopied', true);
       
-      // Get events that were previously in pre-production but have moved to production
-      const allEvents = await getAllEvents();
-      const movedEvents = allEvents.filter(event => 
-        event.stage === "production" && 
-        event.dataCopied === true
-      );
+      if (completedError) {
+        console.error("Error loading completed events:", completedError);
+      }
+      
+      // Convert to frontend models
+      let preProductionEvents = (preProductionData || []).map(record => dbToScheduledEvent(record));
+      const completedEvents = (completedData || []).map(record => dbToScheduledEvent(record));
       
       // Process events based on dates - this will move events to the next stage if needed
       preProductionEvents = processEventsWorkflow(preProductionEvents);
       
-      // Set pre-production events in the state
+      // Set in state
       setPreProductionEvents(preProductionEvents);
-      setCompletedEvents(movedEvents);
+      setCompletedEvents(completedEvents);
     } catch (error) {
-      console.error("Error loading events:", error);
+      console.error("Error in loadEvents:", error);
       toast({
         title: "Error Loading Events",
         description: "There was a problem loading your events",

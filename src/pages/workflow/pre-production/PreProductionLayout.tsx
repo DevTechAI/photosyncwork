@@ -1,3 +1,5 @@
+
+import { useState, useEffect } from "react";
 import Layout from "@/components/Layout";
 import { usePreProductionEvents } from "@/hooks/usePreProductionEvents";
 import { useClientRequirements } from "@/hooks/useClientRequirements";
@@ -58,6 +60,16 @@ export default function PreProductionPage() {
     handleAssignTeamMemberForScheduling,
     handleUpdateSchedulingStatus
   } = useSchedulingTab(events, setEvents, teamMembers);
+  
+  // Debug logging
+  useEffect(() => {
+    if (events?.length > 0) {
+      console.log("Events in PreProductionLayout:", events);
+    }
+    if (teamMembers?.length > 0) {
+      console.log("Team members in PreProductionLayout:", teamMembers);
+    }
+  }, [events, teamMembers]);
   
   return (
     <Layout>

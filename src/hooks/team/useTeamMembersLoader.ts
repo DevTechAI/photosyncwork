@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { TeamMember } from "@/components/scheduling/types";
 import { supabase } from "@/integrations/supabase/client";
@@ -71,12 +72,18 @@ export function useTeamMembersLoader() {
         }
         
         if (data && data.length > 0) {
-          // Process the data to ensure proper types
+          // Convert availability to correct format if needed
           const processedTeamMembers = data.map(member => ({
-            ...member,
+            id: member.id,
+            name: member.name,
+            role: member.role,
+            email: member.email || "",
+            phone: member.phone || "",
+            whatsapp: member.whatsapp,
             availability: typeof member.availability === 'string' 
               ? JSON.parse(member.availability)
-              : member.availability || {}
+              : member.availability || {},
+            isFreelancer: member.is_freelancer
           })) as TeamMember[];
           
           setTeamMembers(processedTeamMembers);
@@ -87,9 +94,21 @@ export function useTeamMembersLoader() {
           
           // Save mock data to Supabase
           for (const member of mockTeamMembers) {
+            // Transform the member to match the database schema
+            const dbMember = {
+              id: member.id,
+              name: member.name,
+              role: member.role,
+              email: member.email,
+              phone: member.phone,
+              whatsapp: member.whatsapp,
+              availability: member.availability,
+              is_freelancer: member.isFreelancer
+            };
+            
             await supabase
               .from('team_members')
-              .insert(member);
+              .insert(dbMember);
           }
         }
       } catch (error) {
@@ -104,7 +123,7 @@ export function useTeamMembersLoader() {
     };
     
     loadTeamMembers();
-  }, []);
+  }, [toast]);
 
   return {
     teamMembers,
