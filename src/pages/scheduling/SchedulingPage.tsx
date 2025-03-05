@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { ScheduledEvent } from "@/components/scheduling/types";
 import { CreateEventModal } from "@/components/scheduling/CreateEventModal";
@@ -5,7 +6,8 @@ import { SchedulingHeader } from "./components/SchedulingHeader";
 import { SchedulingTabs } from "./components/SchedulingTabs";
 import { useSchedulingPage } from "@/hooks/scheduling/useSchedulingPage";
 import { useTeamMembersData } from "@/hooks/useTeamMembersData";
-import { createEventsFromApprovedEstimates, getAllEvents } from "@/components/scheduling/utils/eventHelpers";
+import { createEventsFromApprovedEstimates } from "@/components/scheduling/utils/estimateConversion";
+import { getAllEvents } from "@/components/scheduling/utils/eventLoaders";
 
 export default function SchedulingPage() {
   // Get team members data and handlers

@@ -1,7 +1,7 @@
 
 import { useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
-import { createEventsFromApprovedEstimates } from "@/components/scheduling/utils/eventHelpers";
+import { createEventsFromApprovedEstimates } from "@/components/scheduling/utils/estimateConversion";
 import { supabase } from "@/integrations/supabase/client";
 
 interface StatusCheckerProps {
