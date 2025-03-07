@@ -1,7 +1,6 @@
 
 import { ScheduledEvent, TeamMember } from "@/components/scheduling/types";
-import { TimeLoggingForm } from "../shared/TimeLoggingForm";
-import { TimeLogDisplay } from "../shared/TimeLogDisplay";
+import { TimeTrackingTab as SharedTimeTrackingTab } from "../shared/TimeTrackingTab";
 
 interface TimeTrackingTabProps {
   event: ScheduledEvent;
@@ -14,22 +13,11 @@ export function TimeTrackingTab({
   teamMembers, 
   onLogTime 
 }: TimeTrackingTabProps) {
-  const handleLogTime = (teamMemberId: string, hours: number) => {
-    onLogTime(teamMemberId, hours);
-  };
-  
   return (
-    <div className="space-y-6">
-      <TimeLoggingForm 
-        event={event} 
-        teamMembers={teamMembers} 
-        onLogTime={handleLogTime} 
-      />
-      
-      <TimeLogDisplay 
-        event={event} 
-        teamMembers={teamMembers} 
-      />
-    </div>
+    <SharedTimeTrackingTab
+      event={event}
+      teamMembers={teamMembers}
+      onLogTime={onLogTime}
+    />
   );
 }
