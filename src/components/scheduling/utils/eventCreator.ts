@@ -36,9 +36,7 @@ export function createScheduledEventFromEstimateEvent(
       console.log("Using deliverables from package:", packageInfo.deliverables);
       deliverables = packageInfo.deliverables.map((item: string) => ({
         id: uuidv4(),
-        type: item.toLowerCase().includes('photo') ? 'photos' : 
-              item.toLowerCase().includes('video') ? 'videos' : 
-              item.toLowerCase().includes('album') ? 'album' : 'photos',
+        type: detectDeliverableType(item),
         status: 'pending',
       }));
     } else if (estimate.deliverables && estimate.deliverables.length > 0) {
@@ -46,9 +44,7 @@ export function createScheduledEventFromEstimateEvent(
       console.log("Using deliverables from estimate:", estimate.deliverables);
       deliverables = estimate.deliverables.map((item: string) => ({
         id: uuidv4(),
-        type: item.toLowerCase().includes('photo') ? 'photos' : 
-              item.toLowerCase().includes('video') ? 'videos' : 
-              item.toLowerCase().includes('album') ? 'album' : 'photos',
+        type: detectDeliverableType(item),
         status: 'pending',
       }));
     } else {
@@ -94,5 +90,23 @@ export function createScheduledEventFromEstimateEvent(
   } catch (error) {
     console.error('Error creating scheduled event from estimate event:', error);
     throw new Error('Failed to create event from estimate event');
+  }
+}
+
+/**
+ * Helper function to detect deliverable type from string description
+ * @param deliverableString The deliverable description string
+ * @returns The detected deliverable type (photos, videos, or album)
+ */
+function detectDeliverableType(deliverableString: string): "photos" | "videos" | "album" {
+  const lowerCaseStr = deliverableString.toLowerCase();
+  
+  if (lowerCaseStr.includes('video') || lowerCaseStr.includes('film') || lowerCaseStr.includes('cinemat')) {
+    return 'videos';
+  } else if (lowerCaseStr.includes('album') || lowerCaseStr.includes('book')) {
+    return 'album';
+  } else {
+    // Default to photos for anything else
+    return 'photos';
   }
 }

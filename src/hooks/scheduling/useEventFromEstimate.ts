@@ -59,6 +59,14 @@ export function useEventFromEstimate(
       const eventData = services[0];
       const newEvent = createScheduledEventFromEstimateEvent(estimate, eventData, selectedPackageIndex);
       
+      // Log the event creation details
+      console.log("Creating event from estimate:", {
+        estimateId: selectedEstimateId, 
+        selectedPackageIndex,
+        eventData,
+        deliverables: newEvent.deliverables
+      });
+      
       // Save the event
       await saveEvent(newEvent);
       
