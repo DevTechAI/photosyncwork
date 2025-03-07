@@ -39,47 +39,58 @@ export function ProductionDetailsTabs({
   }
 
   return (
-    <Tabs value={activeTab} onValueChange={setActiveTab}>
-      <TabsList className="mb-4">
-        <TabsTrigger value="tracking">Time Tracking</TabsTrigger>
-        <TabsTrigger value="notes">Production Notes</TabsTrigger>
-        <TabsTrigger value="deliverables">Deliverables</TabsTrigger>
-        <TabsTrigger value="team">Team Management</TabsTrigger>
-      </TabsList>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-medium">{selectedEvent.name}</h2>
+          <p className="text-sm text-muted-foreground">
+            Client: {selectedEvent.clientName} | {new Date(selectedEvent.date).toLocaleDateString()}
+          </p>
+        </div>
+      </div>
       
-      <TabsContent value="tracking">
-        <TimeTrackingTab
-          selectedEvent={selectedEvent}
-          teamMembers={teamMembers}
-          onLogTime={onLogTime}
-        />
-      </TabsContent>
-      
-      <TabsContent value="notes">
-        <ProductionNotesTab
-          selectedEvent={selectedEvent}
-          onUpdateNotes={onUpdateNotes}
-        />
-      </TabsContent>
-      
-      <TabsContent value="deliverables">
-        <ProductionDeliverablesTab
-          selectedEvent={selectedEvent}
-          onUpdateEvent={onUpdateEvent}
-        />
-      </TabsContent>
-      
-      <TabsContent value="team">
-        {onAssignTeamMember && onUpdateAssignmentStatus && (
-          <TeamAssignmentTab
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="mb-4">
+          <TabsTrigger value="tracking">Time Tracking</TabsTrigger>
+          <TabsTrigger value="notes">Production Notes</TabsTrigger>
+          <TabsTrigger value="deliverables">Deliverables</TabsTrigger>
+          <TabsTrigger value="team">Team Management</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="tracking">
+          <TimeTrackingTab
             selectedEvent={selectedEvent}
             teamMembers={teamMembers}
-            onAssignTeamMember={onAssignTeamMember}
-            onUpdateAssignmentStatus={onUpdateAssignmentStatus}
             onLogTime={onLogTime}
           />
-        )}
-      </TabsContent>
-    </Tabs>
+        </TabsContent>
+        
+        <TabsContent value="notes">
+          <ProductionNotesTab
+            selectedEvent={selectedEvent}
+            onUpdateNotes={onUpdateNotes}
+          />
+        </TabsContent>
+        
+        <TabsContent value="deliverables">
+          <ProductionDeliverablesTab
+            selectedEvent={selectedEvent}
+            onUpdateEvent={onUpdateEvent}
+          />
+        </TabsContent>
+        
+        <TabsContent value="team">
+          {onAssignTeamMember && onUpdateAssignmentStatus && (
+            <TeamAssignmentTab
+              selectedEvent={selectedEvent}
+              teamMembers={teamMembers}
+              onAssignTeamMember={onAssignTeamMember}
+              onUpdateAssignmentStatus={onUpdateAssignmentStatus}
+              onLogTime={onLogTime}
+            />
+          )}
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 }

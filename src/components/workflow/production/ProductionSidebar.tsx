@@ -1,7 +1,7 @@
 
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, MapPin, ChevronRight } from "lucide-react";
+import { Calendar, Clock, MapPin, Users, ArrowRight } from "lucide-react";
 import { ScheduledEvent } from "@/components/scheduling/types";
 
 interface ProductionSidebarProps {
@@ -15,76 +15,69 @@ export function ProductionSidebar({
   events, 
   selectedEvent, 
   onSelectEvent,
-  onMoveToPostProduction 
+  onMoveToPostProduction
 }: ProductionSidebarProps) {
-  // Filter to only show production events
-  const productionEvents = events.filter(event => event.stage === "production");
-  
-  const handleMoveToPostProduction = (event: ScheduledEvent) => {
-    // Only allow moving if there's at least some time tracking data
-    if (!event.timeTracking || event.timeTracking.length === 0) {
-      return;
-    }
-    
-    onMoveToPostProduction(event.id);
-  };
-  
   return (
     <div className="space-y-4">
-      <h2 className="text-lg font-medium">Active Production Events</h2>
+      <h3 className="font-medium">Production Events</h3>
       
-      {productionEvents.length > 0 ? (
-        productionEvents.map(event => (
-          <Card
-            key={event.id}
-            className={`p-4 cursor-pointer hover:border-primary transition-colors ${
-              selectedEvent?.id === event.id ? "border-primary" : ""
-            }`}
-            onClick={() => onSelectEvent(event)}
-          >
-            <h3 className="font-medium">{event.name}</h3>
-            <div className="mt-2 space-y-1 text-sm text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
-                <span>{new Date(event.date).toLocaleDateString()}</span>
+      {events.length > 0 ? (
+        <div className="space-y-3">
+          {events.map(event => (
+            <Card
+              key={event.id}
+              className={`p-4 cursor-pointer hover:border-primary transition-colors ${
+                selectedEvent?.id === event.id ? "border-primary" : ""
+              }`}
+              onClick={() => onSelectEvent(event)}
+            >
+              <h4 className="font-medium">{event.name}</h4>
+              <div className="text-sm text-muted-foreground mt-1">
+                Client: {event.clientName}
               </div>
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4" />
-                <span>{event.startTime} - {event.endTime}</span>
+              <div className="mt-2 space-y-1 text-xs text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  <span>{new Date(event.date).toLocaleDateString()}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4" />
+                  <span>{event.startTime} - {event.endTime}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4" />
+                  <span>{event.location}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Users className="h-4 w-4" />
+                  <span>
+                    {event.photographersCount} Photographer{event.photographersCount !== 1 ? "s" : ""}, 
+                    {event.videographersCount} Videographer{event.videographersCount !== 1 ? "s" : ""}
+                  </span>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4" />
-                <span>{event.location}</span>
-              </div>
-            </div>
-            
-            {event.timeTracking && event.timeTracking.length > 0 && (
-              <div className="mt-2 flex items-center justify-between">
-                <span className="text-xs bg-green-50 text-green-700 px-2 py-1 rounded">
-                  {event.timeTracking.length} time entries
-                </span>
-                
-                {selectedEvent?.id === event.id && (
+              
+              {selectedEvent?.id === event.id && (
+                <div className="mt-3">
                   <Button 
-                    variant="ghost" 
-                    size="sm"
+                    size="sm" 
+                    className="w-full"
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleMoveToPostProduction(event);
+                      onMoveToPostProduction(event.id);
                     }}
-                    className="text-xs flex items-center"
                   >
+                    <ArrowRight className="h-4 w-4 mr-2" />
                     Move to Post-Production
-                    <ChevronRight className="h-3 w-3 ml-1" />
                   </Button>
-                )}
-              </div>
-            )}
-          </Card>
-        ))
+                </div>
+              )}
+            </Card>
+          ))}
+        </div>
       ) : (
         <div className="text-center p-8 border rounded-md">
-          <p className="text-muted-foreground">No active production events</p>
+          <p className="text-muted-foreground">No events in production</p>
         </div>
       )}
     </div>

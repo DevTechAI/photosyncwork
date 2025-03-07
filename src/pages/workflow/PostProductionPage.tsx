@@ -4,9 +4,12 @@ import Layout from "@/components/Layout";
 import { ScheduledEvent, TeamMember } from "@/components/scheduling/types";
 import { PostProductionDeliverables } from "@/components/workflow/post-production/PostProductionDeliverables";
 import { PostProductionTimeTrackingTab } from "@/components/workflow/post-production/PostProductionTimeTrackingTab";
+import { PostProductionEventList } from "@/components/workflow/post-production/PostProductionEventList";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { dbToScheduledEvent, scheduledEventToDb } from "@/utils/supabaseConverters";
 
 export default function PostProductionPage() {
   const { toast } = useToast();
@@ -14,44 +17,101 @@ export default function PostProductionPage() {
   const [events, setEvents] = useState<ScheduledEvent[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<ScheduledEvent | null>(null);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   
-  // Load events and team members from localStorage on component mount
+  // Load events and team members
   useEffect(() => {
-    // Load events
-    const savedEvents = localStorage.getItem("scheduledEvents");
-    if (savedEvents) {
-      const parsedEvents = JSON.parse(savedEvents);
-      const postProductionEvents = parsedEvents.filter(
-        (event: ScheduledEvent) => event.stage === "post-production"
-      );
-      setEvents(postProductionEvents);
-      if (postProductionEvents.length > 0) {
-        setSelectedEvent(postProductionEvents[0]);
+    const loadData = async () => {
+      setIsLoading(true);
+      try {
+        // Load post-production events from Supabase
+        const { data: postProductionEvents, error: eventsError } = await supabase
+          .from('scheduled_events')
+          .select('*')
+          .eq('stage', 'post-production');
+          
+        if (eventsError) {
+          console.error("Error loading post-production events:", eventsError);
+          throw eventsError;
+        }
+        
+        if (postProductionEvents && postProductionEvents.length > 0) {
+          // Transform data using converter
+          const transformedEvents = postProductionEvents.map(event => 
+            dbToScheduledEvent(event)
+          ) as ScheduledEvent[];
+          
+          setEvents(transformedEvents);
+          if (transformedEvents.length > 0 && !selectedEvent) {
+            setSelectedEvent(transformedEvents[0]);
+          }
+        }
+        
+        // Load team members
+        const { data: teamMembersData, error: teamError } = await supabase
+          .from('team_members')
+          .select('*');
+          
+        if (teamError) {
+          console.error("Error loading team members:", teamError);
+        } else if (teamMembersData) {
+          setTeamMembers(teamMembersData as TeamMember[]);
+        }
+      } catch (error) {
+        console.error("Error loading data:", error);
+        toast({
+          title: "Error Loading Data",
+          description: "There was a problem loading your events and team members",
+          variant: "destructive"
+        });
+        
+        // Fallback to localStorage
+        const savedEvents = localStorage.getItem("scheduledEvents");
+        if (savedEvents) {
+          const parsedEvents = JSON.parse(savedEvents);
+          const postProductionEvents = parsedEvents.filter(
+            (event: ScheduledEvent) => event.stage === "post-production"
+          );
+          setEvents(postProductionEvents);
+          if (postProductionEvents.length > 0 && !selectedEvent) {
+            setSelectedEvent(postProductionEvents[0]);
+          }
+        }
+        
+        const savedTeamMembers = localStorage.getItem("teamMembers");
+        if (savedTeamMembers) {
+          setTeamMembers(JSON.parse(savedTeamMembers));
+        }
+      } finally {
+        setIsLoading(false);
       }
-    }
-    
-    // Load team members
-    const savedTeamMembers = localStorage.getItem("teamMembers");
-    if (savedTeamMembers) {
-      setTeamMembers(JSON.parse(savedTeamMembers));
-    }
-  }, []);
+    };
+
+    loadData();
+  }, [toast, selectedEvent]);
   
   // Save events whenever they change
   useEffect(() => {
     if (events.length > 0) {
-      // Get all other events that are not in post-production
-      const savedEvents = localStorage.getItem("scheduledEvents");
-      if (savedEvents) {
-        const parsedEvents = JSON.parse(savedEvents);
-        const otherEvents = parsedEvents.filter(
-          (event: ScheduledEvent) => event.stage !== "post-production"
-        );
-        
-        // Combine with post-production events
-        const allEvents = [...otherEvents, ...events];
-        localStorage.setItem("scheduledEvents", JSON.stringify(allEvents));
-      }
+      const saveEvents = async () => {
+        try {
+          for (const event of events) {
+            const dbEvent = scheduledEventToDb(event);
+            const { error } = await supabase
+              .from('scheduled_events')
+              .update(dbEvent)
+              .eq('id', event.id);
+              
+            if (error) {
+              console.error(`Error saving event ${event.id} to Supabase:`, error);
+            }
+          }
+        } catch (error) {
+          console.error("Error saving events to Supabase:", error);
+        }
+      };
+      
+      saveEvents();
     }
   }, [events]);
   
@@ -103,31 +163,6 @@ export default function PostProductionPage() {
     });
   };
   
-  // Render event list
-  const renderEventList = () => {
-    return (
-      <div className="space-y-2">
-        <h3 className="font-medium">Post-Production Events</h3>
-        {events.length === 0 ? (
-          <p className="text-muted-foreground">No events in post-production</p>
-        ) : (
-          <div className="space-y-2">
-            {events.map(event => (
-              <Button
-                key={event.id}
-                variant={selectedEvent?.id === event.id ? "default" : "outline"}
-                className="w-full justify-start"
-                onClick={() => setSelectedEvent(event)}
-              >
-                {event.name} - {new Date(event.date).toLocaleDateString()}
-              </Button>
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  };
-  
   return (
     <Layout>
       <div className="space-y-6">
@@ -140,22 +175,28 @@ export default function PostProductionPage() {
         
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
           <div className="lg:col-span-1">
-            {renderEventList()}
+            <PostProductionEventList
+              events={events}
+              selectedEvent={selectedEvent}
+              onSelectEvent={setSelectedEvent}
+            />
           </div>
           
           <div className="lg:col-span-3">
             {selectedEvent ? (
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <h2 className="text-xl font-medium">{selectedEvent.name}</h2>
-                  <p className="text-sm text-muted-foreground">
-                    {new Date(selectedEvent.date).toLocaleDateString()}
-                  </p>
+                  <div>
+                    <h2 className="text-xl font-medium">{selectedEvent.name}</h2>
+                    <p className="text-sm text-muted-foreground">
+                      Client: {selectedEvent.clientName} | {new Date(selectedEvent.date).toLocaleDateString()}
+                    </p>
+                  </div>
                 </div>
                 
                 <Tabs value={activeTab} onValueChange={setActiveTab}>
                   <TabsList>
-                    <TabsTrigger value="deliverables">Deliverables</TabsTrigger>
+                    <TabsTrigger value="deliverables">Deliverables & Team</TabsTrigger>
                     <TabsTrigger value="time-tracking">Time Tracking</TabsTrigger>
                   </TabsList>
                   
@@ -179,7 +220,9 @@ export default function PostProductionPage() {
               </div>
             ) : (
               <div className="flex items-center justify-center h-32 bg-muted rounded-md">
-                <p className="text-muted-foreground">Select an event to view details</p>
+                <p className="text-muted-foreground">
+                  {isLoading ? "Loading events..." : "Select an event to view details"}
+                </p>
               </div>
             )}
           </div>
