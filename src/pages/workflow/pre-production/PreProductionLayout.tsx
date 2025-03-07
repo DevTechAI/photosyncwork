@@ -14,7 +14,6 @@ import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 import { createEventsFromApprovedEstimates } from "@/components/scheduling/utils/estimateConversion";
 import { useToast } from "@/components/ui/use-toast";
-import { SchedulingPage } from "@/pages/scheduling/SchedulingPage";
 
 export default function PreProductionPage() {
   // Tab state management
@@ -128,41 +127,28 @@ export default function PreProductionPage() {
           </div>
         </div>
         
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="mb-4">
-            <TabsTrigger value="details">Event Details</TabsTrigger>
-            <TabsTrigger value="scheduling">Team Assignment</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="details">
-            {isLoading ? (
-              <LoadingSkeleton />
-            ) : (
-              <PreProductionContent 
-                events={events}
-                completedEvents={completedEvents}
-                selectedEvent={selectedEvent}
-                setSelectedEvent={setSelectedEvent}
-                deleteCompletedEvent={deleteCompletedEvent}
-                clientRequirements={clientRequirements}
-                setClientRequirements={setClientRequirements}
-                teamMembers={teamMembers}
-                assignedTeamMembers={assignedTeamMembers}
-                availablePhotographers={availablePhotographers}
-                availableVideographers={availableVideographers}
-                loading={loading}
-                handleSaveRequirements={handleSaveRequirements}
-                handleAssignTeamMember={handleAssignTeamMember}
-                handleMoveToProduction={handleMoveToProduction}
-                handleUpdateAssignmentStatus={handleUpdateAssignmentStatus}
-              />
-            )}
-          </TabsContent>
-          
-          <TabsContent value="scheduling">
-            <SchedulingPage embedded={true} customTabs={["pre-production"]} />
-          </TabsContent>
-        </Tabs>
+        {isLoading ? (
+          <LoadingSkeleton />
+        ) : (
+          <PreProductionContent 
+            events={events}
+            completedEvents={completedEvents}
+            selectedEvent={selectedEvent}
+            setSelectedEvent={setSelectedEvent}
+            deleteCompletedEvent={deleteCompletedEvent}
+            clientRequirements={clientRequirements}
+            setClientRequirements={setClientRequirements}
+            teamMembers={teamMembers}
+            assignedTeamMembers={assignedTeamMembers}
+            availablePhotographers={availablePhotographers}
+            availableVideographers={availableVideographers}
+            loading={loading}
+            handleSaveRequirements={handleSaveRequirements}
+            handleAssignTeamMember={handleAssignTeamMember}
+            handleMoveToProduction={handleMoveToProduction}
+            handleUpdateAssignmentStatus={handleUpdateAssignmentStatus}
+          />
+        )}
       </div>
     </Layout>
   );
