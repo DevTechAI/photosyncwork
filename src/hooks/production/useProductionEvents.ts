@@ -1,0 +1,78 @@
+
+import { useState, useEffect } from "react";
+import { ScheduledEvent } from "@/components/scheduling/types";
+import { supabase } from "@/integrations/supabase/client";
+
+export function useProductionEvents() {
+  const [events, setEvents] = useState<ScheduledEvent[]>([]);
+  const [selectedEvent, setSelectedEvent] = useState<ScheduledEvent | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Load events from Supabase or localStorage
+  useEffect(() => {
+    const loadEvents = async () => {
+      setLoading(true);
+      try {
+        // Try to load from Supabase first
+        const { data: productionEvents, error } = await supabase
+          .from('scheduled_events')
+          .select('*')
+          .eq('stage', 'production');
+          
+        if (error) {
+          console.error("Error loading events from Supabase:", error);
+          throw error;
+        }
+        
+        if (productionEvents && productionEvents.length > 0) {
+          console.log("Loaded production events from Supabase:", productionEvents);
+          // Transform data if needed
+          const transformedEvents = productionEvents.map(event => ({
+            ...event,
+            assignments: event.assignments || [],
+            timeTracking: event.timetracking || [],
+            deliverables: event.deliverables || []
+          })) as ScheduledEvent[];
+          
+          setEvents(transformedEvents);
+        } else {
+          // Fallback to localStorage
+          const savedEvents = localStorage.getItem("scheduledEvents");
+          if (savedEvents) {
+            const parsedEvents = JSON.parse(savedEvents);
+            // Filter only production events
+            const productionEvents = parsedEvents.filter(
+              (event: ScheduledEvent) => event.stage === "production"
+            );
+            setEvents(productionEvents);
+          }
+        }
+      } catch (error) {
+        console.error("Error loading events:", error);
+        
+        // Fallback to localStorage
+        const savedEvents = localStorage.getItem("scheduledEvents");
+        if (savedEvents) {
+          const parsedEvents = JSON.parse(savedEvents);
+          // Filter only production events
+          const productionEvents = parsedEvents.filter(
+            (event: ScheduledEvent) => event.stage === "production"
+          );
+          setEvents(productionEvents);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadEvents();
+  }, []);
+
+  return {
+    events,
+    setEvents,
+    selectedEvent,
+    setSelectedEvent,
+    loading
+  };
+}

@@ -1,23 +1,37 @@
 
 import { ScheduledEvent, TeamMember } from "@/components/scheduling/types";
-import { TimeTrackingTab as SharedTimeTrackingTab } from "../shared/TimeTrackingTab";
+import { Card } from "@/components/ui/card";
+import { useEffect, useState } from "react";
+import { TimeLoggingForm } from "../shared/TimeLoggingForm";
+import { TimeLogDisplay } from "../shared/TimeLogDisplay";
 
 interface TimeTrackingTabProps {
-  event: ScheduledEvent;
+  selectedEvent: ScheduledEvent;
   teamMembers: TeamMember[];
-  onLogTime: (teamMemberId: string, hours: number) => void;
+  onLogTime: (eventId: string, teamMemberId: string, hours: number) => void;
 }
 
 export function TimeTrackingTab({ 
-  event, 
+  selectedEvent, 
   teamMembers, 
   onLogTime 
 }: TimeTrackingTabProps) {
+  const handleLogTime = (teamMemberId: string, hours: number) => {
+    onLogTime(selectedEvent.id, teamMemberId, hours);
+  };
+  
   return (
-    <SharedTimeTrackingTab
-      event={event}
-      teamMembers={teamMembers}
-      onLogTime={onLogTime}
-    />
+    <div className="space-y-6">
+      <TimeLoggingForm 
+        event={selectedEvent} 
+        teamMembers={teamMembers} 
+        onLogTime={handleLogTime} 
+      />
+      
+      <TimeLogDisplay 
+        event={selectedEvent} 
+        teamMembers={teamMembers} 
+      />
+    </div>
   );
 }

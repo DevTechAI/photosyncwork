@@ -4,17 +4,18 @@ import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Save } from "lucide-react";
+import { ScheduledEvent } from "@/components/scheduling/types";
 
 interface ProductionNotesTabProps {
-  initialNotes: string;
-  onSave: (notes: string) => void;
+  selectedEvent: ScheduledEvent;
+  onUpdateNotes: (eventId: string, notes: string) => void;
 }
 
-export function ProductionNotesTab({ initialNotes, onSave }: ProductionNotesTabProps) {
-  const [notes, setNotes] = useState(initialNotes || "");
+export function ProductionNotesTab({ selectedEvent, onUpdateNotes }: ProductionNotesTabProps) {
+  const [notes, setNotes] = useState(selectedEvent.notes || "");
   
   const handleSave = () => {
-    onSave(notes);
+    onUpdateNotes(selectedEvent.id, notes);
   };
   
   return (

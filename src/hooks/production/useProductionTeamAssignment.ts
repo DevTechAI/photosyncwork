@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { ScheduledEvent, TeamMember } from "@/components/scheduling/types";
+import { ScheduledEvent, TeamMember, EventAssignment } from "@/components/scheduling/types";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { scheduledEventToDb } from "@/utils/supabaseConverters";
@@ -45,7 +45,7 @@ export function useProductionTeamAssignment(
       }
       
       // Create new assignment
-      const newAssignment = {
+      const newAssignment: EventAssignment = {
         eventId,
         eventName: event.name,
         date: event.date,

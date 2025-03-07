@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { UserCircle, Calendar, Clock, CheckCircle } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { ScheduledEvent } from "@/components/scheduling/types";
 
 interface Deliverable {
   id: string;
@@ -22,19 +23,19 @@ interface Deliverable {
 }
 
 interface ProductionDeliverablesTabProps {
-  deliverables: Deliverable[];
-  eventId: string;
-  onUpdateDeliverable?: (eventId: string, updatedDeliverable: Deliverable) => void;
+  selectedEvent: ScheduledEvent;
+  onUpdateEvent: (event: ScheduledEvent) => void;
 }
 
 export function ProductionDeliverablesTab({ 
-  deliverables, 
-  eventId, 
-  onUpdateDeliverable 
+  selectedEvent,
+  onUpdateEvent
 }: ProductionDeliverablesTabProps) {
   const { toast } = useToast();
   const [editingDeliverable, setEditingDeliverable] = useState<Deliverable | null>(null);
   const [showEditDialog, setShowEditDialog] = useState(false);
+  
+  const deliverables = selectedEvent.deliverables || [];
   
   const handleStatusChange = (deliverable: Deliverable, newStatus: Deliverable['status']) => {
     const updatedDeliverable = {
@@ -43,30 +44,38 @@ export function ProductionDeliverablesTab({
       completedDate: newStatus === 'completed' ? new Date().toISOString().split('T')[0] : deliverable.completedDate
     };
     
-    if (onUpdateDeliverable) {
-      onUpdateDeliverable(eventId, updatedDeliverable);
-      toast({
-        title: `Status Updated`,
-        description: `Deliverable has been marked as ${newStatus.replace('-', ' ')}.`
-      });
-    } else {
-      console.warn("Update handler not provided to ProductionDeliverablesTab");
-    }
+    const updatedDeliverables = deliverables.map(d => 
+      d.id === deliverable.id ? updatedDeliverable : d
+    );
+    
+    onUpdateEvent({
+      ...selectedEvent,
+      deliverables: updatedDeliverables
+    });
+    
+    toast({
+      title: `Status Updated`,
+      description: `Deliverable has been marked as ${newStatus.replace('-', ' ')}.`
+    });
   };
   
   const handleSaveDeliverable = () => {
     if (!editingDeliverable) return;
     
-    if (onUpdateDeliverable) {
-      onUpdateDeliverable(eventId, editingDeliverable);
-      toast({
-        title: "Deliverable Updated",
-        description: "The deliverable has been successfully updated."
-      });
-      setShowEditDialog(false);
-    } else {
-      console.warn("Update handler not provided to ProductionDeliverablesTab");
-    }
+    const updatedDeliverables = deliverables.map(d => 
+      d.id === editingDeliverable.id ? editingDeliverable : d
+    );
+    
+    onUpdateEvent({
+      ...selectedEvent,
+      deliverables: updatedDeliverables
+    });
+    
+    toast({
+      title: "Deliverable Updated",
+      description: "The deliverable has been successfully updated."
+    });
+    setShowEditDialog(false);
   };
   
   const getStatusBadgeVariant = (status: Deliverable['status']) => {
@@ -80,7 +89,7 @@ export function ProductionDeliverablesTab({
       case 'revision-requested':
         return 'destructive';
       case 'completed':
-        return 'outline'; // Changed from 'success' to 'outline'
+        return 'outline'; 
       default:
         return 'outline';
     }
