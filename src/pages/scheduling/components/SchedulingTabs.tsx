@@ -30,6 +30,7 @@ interface SchedulingTabsProps {
   onDeleteTeamMember: (id: string) => void;
   showCreateEventButton?: boolean;
   onCreateEvent?: () => void;
+  customTabs?: string[];
 }
 
 export function SchedulingTabs({
@@ -45,8 +46,16 @@ export function SchedulingTabs({
   onAddTeamMember,
   onDeleteTeamMember,
   showCreateEventButton = true,
-  onCreateEvent
+  onCreateEvent,
+  customTabs
 }: SchedulingTabsProps) {
+  // Define which tabs should be shown
+  const showOverviewTab = !customTabs || customTabs.includes("overview");
+  const showPreProductionTab = !customTabs || customTabs.includes("pre-production");
+  const showProductionTab = !customTabs || customTabs.includes("production");
+  const showPostProductionTab = !customTabs || customTabs.includes("post-production");
+  const showTeamTab = !customTabs || customTabs.includes("team");
+  
   return (
     <div className="space-y-4">
       {showCreateEventButton && onCreateEvent && (
@@ -60,57 +69,67 @@ export function SchedulingTabs({
       
       <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
         <TabsList className="w-full justify-start mb-4">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="pre-production">Pre-Production</TabsTrigger>
-          <TabsTrigger value="production">Production</TabsTrigger>
-          <TabsTrigger value="post-production">Post-Production</TabsTrigger>
-          <TabsTrigger value="team">Team</TabsTrigger>
+          {showOverviewTab && <TabsTrigger value="overview">Overview</TabsTrigger>}
+          {showPreProductionTab && <TabsTrigger value="pre-production">Pre-Production</TabsTrigger>}
+          {showProductionTab && <TabsTrigger value="production">Production</TabsTrigger>}
+          {showPostProductionTab && <TabsTrigger value="post-production">Post-Production</TabsTrigger>}
+          {showTeamTab && <TabsTrigger value="team">Team</TabsTrigger>}
         </TabsList>
         
         {/* Overview Tab */}
-        <TabsContent value="overview" className="space-y-4">
-          <SchedulingOverview 
-            events={events} 
-            getEventsByStage={getEventsByStage} 
-          />
-        </TabsContent>
+        {showOverviewTab && (
+          <TabsContent value="overview" className="space-y-4">
+            <SchedulingOverview 
+              events={events} 
+              getEventsByStage={getEventsByStage} 
+            />
+          </TabsContent>
+        )}
         
         {/* Pre-Production Tab */}
-        <TabsContent value="pre-production">
-          <PreProductionTab 
-            events={getEventsByStage("pre-production")}
-            teamMembers={teamMembers}
-            onAssignTeamMember={onAssignTeamMember}
-            onUpdateAssignmentStatus={onUpdateAssignmentStatus}
-            getAssignmentCounts={getAssignmentCounts}
-          />
-        </TabsContent>
+        {showPreProductionTab && (
+          <TabsContent value="pre-production">
+            <PreProductionTab 
+              events={getEventsByStage("pre-production")}
+              teamMembers={teamMembers}
+              onAssignTeamMember={onAssignTeamMember}
+              onUpdateAssignmentStatus={onUpdateAssignmentStatus}
+              getAssignmentCounts={getAssignmentCounts}
+            />
+          </TabsContent>
+        )}
         
         {/* Production Tab */}
-        <TabsContent value="production">
-          <ProductionTab 
-            events={getEventsByStage("production")} 
-            teamMembers={teamMembers} 
-          />
-        </TabsContent>
+        {showProductionTab && (
+          <TabsContent value="production">
+            <ProductionTab 
+              events={getEventsByStage("production")} 
+              teamMembers={teamMembers} 
+            />
+          </TabsContent>
+        )}
         
         {/* Post-Production Tab */}
-        <TabsContent value="post-production">
-          <PostProductionTab 
-            events={getEventsByStage("post-production")} 
-            teamMembers={teamMembers} 
-          />
-        </TabsContent>
+        {showPostProductionTab && (
+          <TabsContent value="post-production">
+            <PostProductionTab 
+              events={getEventsByStage("post-production")} 
+              teamMembers={teamMembers} 
+            />
+          </TabsContent>
+        )}
         
         {/* Team Tab */}
-        <TabsContent value="team">
-          <TeamManagement 
-            teamMembers={teamMembers} 
-            onAddTeamMember={onAddTeamMember}
-            onUpdateTeamMember={onUpdateTeamMember}
-            onDeleteTeamMember={onDeleteTeamMember}
-          />
-        </TabsContent>
+        {showTeamTab && (
+          <TabsContent value="team">
+            <TeamManagement 
+              teamMembers={teamMembers} 
+              onAddTeamMember={onAddTeamMember}
+              onUpdateTeamMember={onUpdateTeamMember}
+              onDeleteTeamMember={onDeleteTeamMember}
+            />
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );

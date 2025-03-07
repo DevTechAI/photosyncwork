@@ -131,8 +131,7 @@ export default function PreProductionPage() {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="mb-4">
             <TabsTrigger value="details">Event Details</TabsTrigger>
-            <TabsTrigger value="scheduling">Scheduling</TabsTrigger>
-            <TabsTrigger value="team">Team Management</TabsTrigger>
+            <TabsTrigger value="scheduling">Team Assignment</TabsTrigger>
           </TabsList>
           
           <TabsContent value="details">
@@ -161,16 +160,7 @@ export default function PreProductionPage() {
           </TabsContent>
           
           <TabsContent value="scheduling">
-            <SchedulingPage embedded={true} />
-          </TabsContent>
-
-          <TabsContent value="team">
-            <TeamManagement 
-              teamMembers={teamMembers} 
-              onAddTeamMember={handleAddTeamMember}
-              onUpdateTeamMember={handleUpdateTeamMember}
-              onDeleteTeamMember={handleDeleteTeamMember}
-            />
+            <SchedulingPage embedded={true} customTabs={["pre-production"]} />
           </TabsContent>
         </Tabs>
       </div>

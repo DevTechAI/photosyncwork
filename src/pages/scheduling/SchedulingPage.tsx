@@ -13,9 +13,10 @@ import { useToast } from "@/components/ui/use-toast";
 
 interface SchedulingPageProps {
   embedded?: boolean;
+  customTabs?: string[];
 }
 
-export function SchedulingPage({ embedded = false }: SchedulingPageProps) {
+export function SchedulingPage({ embedded = false, customTabs }: SchedulingPageProps) {
   const location = useLocation();
   const { toast } = useToast();
   const queryParams = new URLSearchParams(location.search);
@@ -116,6 +117,7 @@ export function SchedulingPage({ embedded = false }: SchedulingPageProps) {
         onDeleteTeamMember={handleDeleteTeamMember}
         showCreateEventButton={!embedded}
         onCreateEvent={() => setShowCreateEventModal(true)}
+        customTabs={customTabs}
       />
       
       {showCreateEventModal && (
