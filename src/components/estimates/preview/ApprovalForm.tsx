@@ -16,7 +16,9 @@ interface ApprovalFormProps {
       name?: string;
       amount: string;
       services: any[];
+      deliverables?: string[];
     }>;
+    deliverables?: string[];
   };
   onStatusChange: (estimateId: string, newStatus: string, negotiatedAmount?: string, selectedPackageIndex?: number) => void;
 }
@@ -44,7 +46,11 @@ export function ApprovalForm({ onClose, estimate, onStatusChange }: ApprovalForm
       console.log("Approving estimate with details:", {
         estimateId: estimate.id,
         negotiatedAmount: isNegotiated ? negotiatedAmount : undefined,
-        selectedPackageIndex
+        selectedPackageIndex,
+        // Log deliverables for selected package if available
+        deliverables: selectedPackageIndex !== undefined && estimate.packages 
+          ? estimate.packages[selectedPackageIndex].deliverables
+          : estimate.deliverables
       });
       
       // Update the status with the selected package index
@@ -104,6 +110,11 @@ export function ApprovalForm({ onClose, estimate, onStatusChange }: ApprovalForm
                         <span>Package Option {index + 1} {pkg.name ? `- ${pkg.name}` : ''}</span>
                         <span className="font-semibold">{pkg.amount}</span>
                       </div>
+                      {pkg.deliverables && pkg.deliverables.length > 0 && (
+                        <div className="text-xs text-muted-foreground mt-1">
+                          Deliverables: {pkg.deliverables.join(', ')}
+                        </div>
+                      )}
                     </Label>
                   </div>
                 ))}

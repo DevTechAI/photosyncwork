@@ -18,17 +18,22 @@ export function createScheduledEventFromEstimateEvent(
 ): ScheduledEvent {
   try {
     console.log("Creating scheduled event from estimate event:", serviceEvent);
+    console.log("Using estimate data:", estimate);
+    console.log("Selected package index:", selectedPackageIndex);
     
     // Determine which package we're working with
     const packageInfo = estimate.packages && estimate.packages.length > selectedPackageIndex 
       ? estimate.packages[selectedPackageIndex] 
       : null;
     
+    console.log("Package info:", packageInfo);
+    
     // Find all deliverables from the selected package
     let deliverables = [];
     
-    if (packageInfo && packageInfo.deliverables) {
+    if (packageInfo && packageInfo.deliverables && packageInfo.deliverables.length > 0) {
       // Get deliverables from the selected package
+      console.log("Using deliverables from package:", packageInfo.deliverables);
       deliverables = packageInfo.deliverables.map((item: string) => ({
         id: uuidv4(),
         type: item.toLowerCase().includes('photo') ? 'photos' : 
@@ -36,8 +41,9 @@ export function createScheduledEventFromEstimateEvent(
               item.toLowerCase().includes('album') ? 'album' : 'photos',
         status: 'pending',
       }));
-    } else if (estimate.deliverables) {
+    } else if (estimate.deliverables && estimate.deliverables.length > 0) {
       // Fallback to the estimate's deliverables for backward compatibility
+      console.log("Using deliverables from estimate:", estimate.deliverables);
       deliverables = estimate.deliverables.map((item: string) => ({
         id: uuidv4(),
         type: item.toLowerCase().includes('photo') ? 'photos' : 
@@ -45,7 +51,17 @@ export function createScheduledEventFromEstimateEvent(
               item.toLowerCase().includes('album') ? 'album' : 'photos',
         status: 'pending',
       }));
+    } else {
+      console.log("No deliverables found in estimate or package, using default");
+      // Default fallback - add at least one deliverable if none are specified
+      deliverables = [{
+        id: uuidv4(),
+        type: 'photos',
+        status: 'pending'
+      }];
     }
+    
+    console.log("Final deliverables to be added to event:", deliverables);
     
     // Create a new event with required fields using UUID
     const newEvent: ScheduledEvent = {
