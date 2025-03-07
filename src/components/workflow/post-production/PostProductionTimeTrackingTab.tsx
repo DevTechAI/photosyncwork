@@ -3,17 +3,17 @@ import { ScheduledEvent, TeamMember } from "@/components/scheduling/types";
 import { TimeLoggingForm } from "../shared/TimeLoggingForm";
 import { TimeLogDisplay } from "../shared/TimeLogDisplay";
 
-interface TimeTrackingTabProps {
+interface PostProductionTimeTrackingTabProps {
   event: ScheduledEvent;
   teamMembers: TeamMember[];
   onLogTime: (teamMemberId: string, hours: number) => void;
 }
 
-export function TimeTrackingTab({ 
+export function PostProductionTimeTrackingTab({ 
   event, 
   teamMembers, 
   onLogTime 
-}: TimeTrackingTabProps) {
+}: PostProductionTimeTrackingTabProps) {
   const handleLogTime = (teamMemberId: string, hours: number) => {
     onLogTime(teamMemberId, hours);
   };
@@ -24,11 +24,13 @@ export function TimeTrackingTab({
         event={event} 
         teamMembers={teamMembers} 
         onLogTime={handleLogTime} 
+        role="editor" // Filter for editors in post-production
       />
       
       <TimeLogDisplay 
         event={event} 
         teamMembers={teamMembers} 
+        roleFilter="editor" // Show only editors' time logs
       />
     </div>
   );

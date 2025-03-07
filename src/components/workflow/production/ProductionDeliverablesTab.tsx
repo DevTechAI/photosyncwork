@@ -105,7 +105,7 @@ export function ProductionDeliverablesTab({
       
       {deliverables.length === 0 ? (
         <Card className="p-4">
-          <p className="text-center text-muted-foreground">No deliverables found for this event</p>
+          <p className="text-center text-muted-foreground">No deliverables found for this event. Deliverables should be auto-populated from the approved estimate.</p>
         </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2">

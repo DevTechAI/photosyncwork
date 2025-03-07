@@ -25,7 +25,27 @@ export function createScheduledEventFromEstimateEvent(
       : null;
     
     // Find all deliverables from the selected package
-    const deliverables = packageInfo ? packageInfo.deliverables : estimate.deliverables || [];
+    let deliverables = [];
+    
+    if (packageInfo && packageInfo.deliverables) {
+      // Get deliverables from the selected package
+      deliverables = packageInfo.deliverables.map((item: string) => ({
+        id: uuidv4(),
+        type: item.toLowerCase().includes('photo') ? 'photos' : 
+              item.toLowerCase().includes('video') ? 'videos' : 
+              item.toLowerCase().includes('album') ? 'album' : 'photos',
+        status: 'pending',
+      }));
+    } else if (estimate.deliverables) {
+      // Fallback to the estimate's deliverables for backward compatibility
+      deliverables = estimate.deliverables.map((item: string) => ({
+        id: uuidv4(),
+        type: item.toLowerCase().includes('photo') ? 'photos' : 
+              item.toLowerCase().includes('video') ? 'videos' : 
+              item.toLowerCase().includes('album') ? 'album' : 'photos',
+        status: 'pending',
+      }));
+    }
     
     // Create a new event with required fields using UUID
     const newEvent: ScheduledEvent = {
