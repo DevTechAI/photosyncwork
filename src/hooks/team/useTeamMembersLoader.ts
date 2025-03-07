@@ -5,47 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { v4 as uuidv4 } from 'uuid';
 
-// Mock data for demonstration - used as fallback if database fetch fails
-export const mockTeamMembers: TeamMember[] = [
-  {
-    id: uuidv4(),
-    name: "Ankit Patel",
-    role: "photographer",
-    email: "ankit@example.com",
-    phone: "+91 98765 00001",
-    whatsapp: "+91 98765 00001",
-    availability: {
-      "2023-05-20": "busy",
-      "2023-05-21": "available",
-      "2023-05-22": "available"
-    }
-  },
-  {
-    id: uuidv4(),
-    name: "Priya Singh",
-    role: "videographer",
-    email: "priya@example.com",
-    phone: "+91 98765 00002",
-    availability: {
-      "2023-05-20": "busy",
-      "2023-05-21": "busy",
-      "2023-05-22": "available"
-    }
-  },
-  {
-    id: uuidv4(),
-    name: "Raj Kumar",
-    role: "photographer",
-    email: "raj@example.com",
-    phone: "+91 98765 00003",
-    availability: {
-      "2023-05-20": "available",
-      "2023-05-21": "available",
-      "2023-05-22": "available"
-    },
-    isFreelancer: true
-  }
-];
+// Empty array for mock data
+export const mockTeamMembers: TeamMember[] = [];
 
 export function useTeamMembersLoader() {
   // Team members data
@@ -64,11 +25,10 @@ export function useTeamMembersLoader() {
           console.error('Error loading team members from Supabase:', error);
           toast({
             title: "Error Loading Team Members",
-            description: "Could not load team members from the database. Using demo data.",
+            description: "Could not load team members from the database.",
             variant: "destructive"
           });
-          // Use mock data as fallback
-          setTeamMembers(mockTeamMembers);
+          setTeamMembers([]);
           return;
         }
         
@@ -89,37 +49,17 @@ export function useTeamMembersLoader() {
           
           setTeamMembers(processedTeamMembers);
         } else {
-          console.log("No team members found in Supabase, initializing with mock data");
-          // No data in Supabase, use mock data and save it
-          setTeamMembers(mockTeamMembers);
-          
-          // Save mock data to Supabase
-          for (const member of mockTeamMembers) {
-            // Transform the member to match the database schema
-            const dbMember = {
-              id: member.id,
-              name: member.name,
-              role: member.role,
-              email: member.email,
-              phone: member.phone,
-              whatsapp: member.whatsapp,
-              availability: member.availability,
-              is_freelancer: member.isFreelancer
-            };
-            
-            await supabase
-              .from('team_members')
-              .insert(dbMember);
-          }
+          console.log("No team members found in Supabase");
+          setTeamMembers([]);
         }
       } catch (error) {
         console.error('Error in loadTeamMembers:', error);
         toast({
           title: "Error Loading Team Members",
-          description: "An unexpected error occurred. Using demo data.",
+          description: "An unexpected error occurred.",
           variant: "destructive"
         });
-        setTeamMembers(mockTeamMembers);
+        setTeamMembers([]);
       }
     };
     

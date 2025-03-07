@@ -21,48 +21,26 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-// Temporary mock data
-const mockInvoices = [
-  {
-    id: "INV-001",
-    client: "Sharma Wedding",
-    date: "2024-03-15",
-    amount: "₹45,000",
-    status: "Paid",
-  },
-  {
-    id: "INV-002",
-    client: "Corporate Event - TechCo",
-    date: "2024-03-18",
-    amount: "₹85,000",
-    status: "Pending",
-  },
-  {
-    id: "INV-003",
-    client: "Birthday Photoshoot",
-    date: "2024-03-20",
-    amount: "₹15,000",
-    status: "Draft",
-  },
-];
+// Empty array for mock invoices
+const mockInvoices = [];
 
 export default function InvoicesPage() {
   const [sortBy, setSortBy] = useState<"date" | "amount">("date");
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [showNewInvoice, setShowNewInvoice] = useState(false);
-  const [selectedInvoice, setSelectedInvoice] = useState<typeof mockInvoices[0] | null>(null);
+  const [selectedInvoice, setSelectedInvoice] = useState<any | null>(null);
 
-  // Filter and sort invoices
+  // Filter and sort invoices - kept but will work with empty array
   const filteredInvoices = mockInvoices
-    .filter((invoice) => {
-      const matchesSearch = invoice.client
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
-      const matchesStatus = !statusFilter || invoice.status === statusFilter;
+    .filter((invoice: any) => {
+      const matchesSearch = invoice?.client
+        ?.toLowerCase()
+        ?.includes(searchQuery.toLowerCase());
+      const matchesStatus = !statusFilter || invoice?.status === statusFilter;
       return matchesSearch && matchesStatus;
     })
-    .sort((a, b) => {
+    .sort((a: any, b: any) => {
       if (sortBy === "date") {
         return new Date(b.date).getTime() - new Date(a.date).getTime();
       }
@@ -91,19 +69,19 @@ export default function InvoicesPage() {
             <p className="text-sm font-medium text-muted-foreground">
               Total Outstanding
             </p>
-            <h3 className="text-2xl font-semibold mt-2">₹85,000</h3>
+            <h3 className="text-2xl font-semibold mt-2">₹0</h3>
           </Card>
           <Card className="p-6">
             <p className="text-sm font-medium text-muted-foreground">
               Paid this Month
             </p>
-            <h3 className="text-2xl font-semibold mt-2">₹45,000</h3>
+            <h3 className="text-2xl font-semibold mt-2">₹0</h3>
           </Card>
           <Card className="p-6">
             <p className="text-sm font-medium text-muted-foreground">
               Draft Invoices
             </p>
-            <h3 className="text-2xl font-semibold mt-2">₹15,000</h3>
+            <h3 className="text-2xl font-semibold mt-2">₹0</h3>
           </Card>
         </div>
 
@@ -160,47 +138,53 @@ export default function InvoicesPage() {
               </Button>
             </div>
             <div className="divide-y">
-              {filteredInvoices.map((invoice) => (
-                <div
-                  key={invoice.id}
-                  className="flex items-center justify-between py-4"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="h-10 w-10 rounded-full bg-primary/5 flex items-center justify-center">
-                      <Receipt className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <p className="font-medium">{invoice.client}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {invoice.id} · {invoice.date}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <p className="font-medium">{invoice.amount}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {invoice.status}
-                      </p>
-                    </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => setSelectedInvoice(invoice)}>
-                          View Details
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>Edit Invoice</DropdownMenuItem>
-                        <DropdownMenuItem>Download PDF</DropdownMenuItem>
-                        <DropdownMenuItem>Mark as Paid</DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
+              {filteredInvoices.length === 0 ? (
+                <div className="py-8 text-center">
+                  <p className="text-muted-foreground">No invoices found</p>
                 </div>
-              ))}
+              ) : (
+                filteredInvoices.map((invoice: any) => (
+                  <div
+                    key={invoice.id}
+                    className="flex items-center justify-between py-4"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="h-10 w-10 rounded-full bg-primary/5 flex items-center justify-center">
+                        <Receipt className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-medium">{invoice.client}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {invoice.id} · {invoice.date}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="text-right">
+                        <p className="font-medium">{invoice.amount}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {invoice.status}
+                        </p>
+                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => setSelectedInvoice(invoice)}>
+                            View Details
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>Edit Invoice</DropdownMenuItem>
+                          <DropdownMenuItem>Download PDF</DropdownMenuItem>
+                          <DropdownMenuItem>Mark as Paid</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </Card>
