@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { ScheduledEvent } from "@/components/scheduling/types";
 import { supabase } from "@/integrations/supabase/client";
+import { dbToScheduledEvent } from "@/utils/supabaseConverters";
 
 export function useProductionEvents() {
   const [events, setEvents] = useState<ScheduledEvent[]>([]);
@@ -26,13 +27,8 @@ export function useProductionEvents() {
         
         if (productionEvents && productionEvents.length > 0) {
           console.log("Loaded production events from Supabase:", productionEvents);
-          // Transform data if needed
-          const transformedEvents = productionEvents.map(event => ({
-            ...event,
-            assignments: event.assignments || [],
-            timeTracking: event.timetracking || [],
-            deliverables: event.deliverables || []
-          })) as ScheduledEvent[];
+          // Transform data using the proper converter function
+          const transformedEvents = productionEvents.map(event => dbToScheduledEvent(event)) as ScheduledEvent[];
           
           setEvents(transformedEvents);
         } else {
