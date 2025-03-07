@@ -40,7 +40,7 @@ export function ProductionDetailsTabs({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap">
         <div>
           <h2 className="text-xl font-medium">{selectedEvent.name}</h2>
           <p className="text-sm text-muted-foreground">
@@ -50,11 +50,11 @@ export function ProductionDetailsTabs({
       </div>
       
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="mb-4">
-          <TabsTrigger value="tracking">Time Tracking</TabsTrigger>
-          <TabsTrigger value="notes">Production Notes</TabsTrigger>
-          <TabsTrigger value="deliverables">Deliverables</TabsTrigger>
-          <TabsTrigger value="team">Team Management</TabsTrigger>
+        <TabsList className="mb-4 flex flex-wrap w-full">
+          <TabsTrigger value="tracking" className="flex-grow">Time</TabsTrigger>
+          <TabsTrigger value="notes" className="flex-grow">Notes</TabsTrigger>
+          <TabsTrigger value="deliverables" className="flex-grow">Deliverables</TabsTrigger>
+          <TabsTrigger value="team" className="flex-grow">Team</TabsTrigger>
         </TabsList>
         
         <TabsContent value="tracking">

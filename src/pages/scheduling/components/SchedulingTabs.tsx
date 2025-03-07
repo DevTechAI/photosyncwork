@@ -8,6 +8,7 @@ import { ProductionTab } from "./ProductionTab";
 import { PostProductionTab } from "./PostProductionTab";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
+import { useState, useEffect } from "react";
 
 interface SchedulingTabsProps {
   activeTab: string;
@@ -55,6 +56,23 @@ export function SchedulingTabs({
   const showProductionTab = !customTabs || customTabs.includes("production");
   const showPostProductionTab = !customTabs || customTabs.includes("post-production");
   const showTeamTab = !customTabs || customTabs.includes("team");
+
+  // State to track mobile viewport
+  const [isMobile, setIsMobile] = useState(false);
+  
+  // Check if viewport is mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+    };
+  }, []);
   
   return (
     <div className="space-y-4">
@@ -68,12 +86,12 @@ export function SchedulingTabs({
       )}
       
       <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
-        <TabsList className="w-full justify-start mb-4">
-          {showOverviewTab && <TabsTrigger value="overview">Overview</TabsTrigger>}
-          {showPreProductionTab && <TabsTrigger value="pre-production">Pre-Production</TabsTrigger>}
-          {showProductionTab && <TabsTrigger value="production">Production</TabsTrigger>}
-          {showPostProductionTab && <TabsTrigger value="post-production">Post-Production</TabsTrigger>}
-          {showTeamTab && <TabsTrigger value="team">Team</TabsTrigger>}
+        <TabsList className={`w-full ${isMobile ? 'flex-wrap' : 'justify-start'} mb-4`}>
+          {showOverviewTab && <TabsTrigger value="overview" className={isMobile ? "flex-grow" : ""}>Overview</TabsTrigger>}
+          {showPreProductionTab && <TabsTrigger value="pre-production" className={isMobile ? "flex-grow" : ""}>Pre-Production</TabsTrigger>}
+          {showProductionTab && <TabsTrigger value="production" className={isMobile ? "flex-grow" : ""}>Production</TabsTrigger>}
+          {showPostProductionTab && <TabsTrigger value="post-production" className={isMobile ? "flex-grow" : ""}>Post-Production</TabsTrigger>}
+          {showTeamTab && <TabsTrigger value="team" className={isMobile ? "flex-grow" : ""}>Team</TabsTrigger>}
         </TabsList>
         
         {/* Overview Tab */}

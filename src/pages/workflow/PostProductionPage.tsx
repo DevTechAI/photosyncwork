@@ -18,6 +18,21 @@ export default function PostProductionPage() {
   const [selectedEvent, setSelectedEvent] = useState<ScheduledEvent | null>(null);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
+  
+  // Detect mobile viewport
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+    };
+  }, []);
   
   // Load events and team members
   useEffect(() => {
@@ -185,7 +200,7 @@ export default function PostProductionPage() {
           <div className="lg:col-span-3">
             {selectedEvent ? (
               <div className="space-y-4">
-                <div className="flex justify-between items-center">
+                <div className="flex justify-between items-center flex-wrap">
                   <div>
                     <h2 className="text-xl font-medium">{selectedEvent.name}</h2>
                     <p className="text-sm text-muted-foreground">
@@ -195,9 +210,9 @@ export default function PostProductionPage() {
                 </div>
                 
                 <Tabs value={activeTab} onValueChange={setActiveTab}>
-                  <TabsList>
-                    <TabsTrigger value="deliverables">Deliverables & Team</TabsTrigger>
-                    <TabsTrigger value="time-tracking">Time Tracking</TabsTrigger>
+                  <TabsList className="w-full flex mb-4">
+                    <TabsTrigger value="deliverables" className="flex-1">Deliverables</TabsTrigger>
+                    <TabsTrigger value="time-tracking" className="flex-1">Time Tracking</TabsTrigger>
                   </TabsList>
                   
                   <TabsContent value="deliverables" className="pt-4">

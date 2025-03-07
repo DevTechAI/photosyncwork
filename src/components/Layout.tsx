@@ -75,6 +75,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         size="icon"
         className="fixed top-4 right-4 z-50 lg:hidden"
         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
       >
         {isMobileMenuOpen ? (
           <X className="h-6 w-6" />
@@ -104,7 +105,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   key={item.path}
                   to={item.path}
                   className={cn(
-                    "flex items-center gap-3 px-4 py-2 text-sm rounded-lg transition-colors",
+                    "flex items-center gap-3 px-4 py-3 text-sm rounded-lg transition-colors",
                     location.pathname === item.path
                       ? "bg-accent text-accent-foreground"
                       : "hover:bg-accent/50 text-muted-foreground"
@@ -134,6 +135,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </div>
       </nav>
 
+      {/* Overlay for mobile menu */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/40 z-30 lg:hidden"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
       {/* Top bar for mobile navigation (only visible on mobile) */}
       <header className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-background border-b z-30 flex items-center px-4">
         <div className="flex-1">
@@ -159,7 +168,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       {/* Main Content */}
       <main className={cn(
         "min-h-screen transition-all duration-300 ease-in-out",
-        "lg:pl-64 p-6",
+        "lg:pl-64 p-4 lg:p-6",
         "lg:pt-6 pt-20" // Add top padding on mobile for the header
       )}>
         <div className="max-w-6xl mx-auto">
