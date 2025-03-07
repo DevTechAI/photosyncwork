@@ -13,8 +13,45 @@ export interface User {
   assignedTasks?: string[]; // IDs of assigned events/tasks
 }
 
-// Empty array for sample users
-const sampleUsers: User[] = [];
+// Sample users for demo purposes
+const sampleUsers: User[] = [
+  {
+    id: "1",
+    name: "Admin",
+    email: "admin@example.com",
+    role: "manager"
+  },
+  {
+    id: "2",
+    name: "Finance",
+    email: "finance@example.com",
+    role: "accounts"
+  },
+  {
+    id: "3",
+    name: "CRM Manager",
+    email: "crm@example.com",
+    role: "crm"
+  },
+  {
+    id: "4",
+    name: "Ankit",
+    email: "ankit@example.com",
+    role: "photographer"
+  },
+  {
+    id: "5",
+    name: "Priya",
+    email: "priya@example.com",
+    role: "videographer"
+  },
+  {
+    id: "6",
+    name: "Vikram",
+    email: "vikram@example.com",
+    role: "editor"
+  }
+];
 
 // Define context type
 interface UserContextType {
@@ -55,8 +92,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   
   // Login function - finds user by email
   const login = (email: string): boolean => {
-    // Since we've cleared sample users, this will always return false
-    // You'll need to implement real authentication here
+    const user = sampleUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
+    if (user) {
+      setCurrentUser(user);
+      return true;
+    }
     return false;
   };
   

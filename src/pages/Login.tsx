@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function Login() {
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const { login } = useUser();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -17,6 +18,8 @@ export default function Login() {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
+    // For demo purposes, we only validate the email against our sample users
+    // In a real application, you would also validate the password
     const success = login(email);
     
     if (success) {
@@ -53,6 +56,21 @@ export default function Login() {
               onChange={(e) => setEmail(e.target.value)}
               required
             />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="password">Password</Label>
+            <Input
+              id="password"
+              type="password"
+              placeholder="Enter your password (any password works)"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+            <p className="text-xs text-muted-foreground">
+              For demo purposes, any password will work. Only email is validated.
+            </p>
           </div>
           
           <Button type="submit" className="w-full">
