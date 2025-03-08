@@ -168,8 +168,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       {/* Main Content */}
       <main className={cn(
         "min-h-screen transition-all duration-300 ease-in-out",
-        "lg:pl-64 p-4 lg:p-6",
-        "lg:pt-6 pt-20" // Add top padding on mobile for the header
+        "lg:pl-72 p-4 lg:p-8", // Increased left padding for desktop to accommodate sidebar
+        "lg:pt-8 pt-20" // Add top padding on mobile for the header
       )}>
         <div className="max-w-6xl mx-auto">
           {children}
