@@ -68,7 +68,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   });
   
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex">
       {/* Mobile Menu Button */}
       <Button
         variant="ghost"
@@ -85,19 +85,19 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       </Button>
 
       {/* Sidebar Navigation */}
-      <nav
+      <aside
         className={cn(
-          "fixed top-0 left-0 h-full w-64 bg-card/80 backdrop-blur-xl border-r p-6 transition-transform duration-300 ease-in-out z-40",
+          "fixed top-0 left-0 h-full w-64 bg-card/80 backdrop-blur-xl border-r transition-transform duration-300 ease-in-out z-40",
           isMobileMenuOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}
       >
-        <div className="flex flex-col h-full">
+        <nav className="flex flex-col h-full p-4">
           <div className="space-y-2 py-4">
-            <h1 className="text-2xl font-semibold px-4">StudioSync</h1>
-            <p className="text-sm text-muted-foreground px-4">Studio Success System</p>
+            <h1 className="text-2xl font-semibold px-2">StudioSync</h1>
+            <p className="text-sm text-muted-foreground px-2">Studio Success System</p>
           </div>
           
-          <div className="space-y-1">
+          <div className="space-y-1 py-2 flex-1 overflow-y-auto">
             {filteredNavItems.map((item) => {
               const Icon = item.icon;
               return (
@@ -105,22 +105,22 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   key={item.path}
                   to={item.path}
                   className={cn(
-                    "flex items-center gap-3 px-4 py-3 text-sm rounded-lg transition-colors",
+                    "flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-colors",
                     location.pathname === item.path
                       ? "bg-accent text-accent-foreground"
                       : "hover:bg-accent/50 text-muted-foreground"
                   )}
                 >
-                  <Icon className="h-5 w-5" />
-                  {item.label}
+                  <Icon className="h-5 w-5 flex-shrink-0" />
+                  <span className="truncate">{item.label}</span>
                 </Link>
               );
             })}
           </div>
           
           <div className="mt-auto border-t pt-4">
-            <div className="px-4 py-2 mb-2">
-              <div className="font-medium">{currentUser.name}</div>
+            <div className="px-2 py-2 mb-2">
+              <div className="font-medium truncate">{currentUser.name}</div>
               <div className="text-xs text-muted-foreground capitalize">{currentUser.role}</div>
             </div>
             <Button 
@@ -128,12 +128,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50"
               onClick={handleLogout}
             >
-              <LogOut className="h-4 w-4 mr-2" />
-              Logout
+              <LogOut className="h-4 w-4 mr-2 flex-shrink-0" />
+              <span className="truncate">Logout</span>
             </Button>
           </div>
-        </div>
-      </nav>
+        </nav>
+      </aside>
 
       {/* Overlay for mobile menu */}
       {isMobileMenuOpen && (
@@ -167,11 +167,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
       {/* Main Content */}
       <main className={cn(
-        "min-h-screen transition-all duration-300 ease-in-out",
-        "lg:pl-72 p-4 lg:p-8", // Increased left padding for desktop to accommodate sidebar
-        "lg:pt-8 pt-20" // Add top padding on mobile for the header
+        "flex-1 min-h-screen transition-all duration-300 ease-in-out",
+        "lg:ml-64 p-4 lg:p-6", 
+        "lg:pt-6 pt-20" // Add top padding on mobile for the header
       )}>
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-6xl mx-auto w-full">
           {children}
         </div>
       </main>
