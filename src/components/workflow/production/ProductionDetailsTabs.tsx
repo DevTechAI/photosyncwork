@@ -4,7 +4,6 @@ import { Card } from "@/components/ui/card";
 import { ScheduledEvent, TeamMember } from "@/components/scheduling/types";
 import { TimeTrackingTab } from "./TimeTrackingTab";
 import { ProductionNotesTab } from "./ProductionNotesTab";
-import { ProductionDeliverablesTab } from "./ProductionDeliverablesTab";
 import { TeamAssignmentTab } from "./TeamAssignmentTab";
 import { QualityCheckTab } from "./QualityCheckTab";
 
@@ -54,7 +53,6 @@ export function ProductionDetailsTabs({
         <TabsList className="mb-4 flex flex-wrap w-full">
           <TabsTrigger value="tracking" className="flex-grow">Time</TabsTrigger>
           <TabsTrigger value="notes" className="flex-grow">Notes</TabsTrigger>
-          <TabsTrigger value="deliverables" className="flex-grow">Deliverables</TabsTrigger>
           <TabsTrigger value="team" className="flex-grow">Team</TabsTrigger>
           <TabsTrigger value="quality" className="flex-grow">Quality</TabsTrigger>
         </TabsList>
@@ -71,13 +69,6 @@ export function ProductionDetailsTabs({
           <ProductionNotesTab
             selectedEvent={selectedEvent}
             onUpdateNotes={onUpdateNotes}
-          />
-        </TabsContent>
-        
-        <TabsContent value="deliverables">
-          <ProductionDeliverablesTab
-            selectedEvent={selectedEvent}
-            onUpdateEvent={onUpdateEvent}
           />
         </TabsContent>
         

@@ -22,8 +22,8 @@ export default function ProductionPage() {
 
   return (
     <Layout>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
+      <div className="space-y-4">
+        <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-2xl font-semibold">Production</h1>
             <p className="text-sm text-muted-foreground">
@@ -32,7 +32,7 @@ export default function ProductionPage() {
           </div>
         </div>
         
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
           <div className="lg:col-span-1">
             <ProductionSidebar 
               events={events} 

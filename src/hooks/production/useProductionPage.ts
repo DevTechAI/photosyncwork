@@ -8,6 +8,7 @@ import { useEventUpdates } from "./useEventUpdates";
 import { useEventSync } from "./useEventSync";
 
 export function useProductionPage() {
+  // Initialize with "tracking" tab as default
   const [activeTab, setActiveTab] = useState("tracking");
   
   // Use extracted hooks
