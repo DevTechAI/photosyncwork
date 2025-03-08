@@ -62,6 +62,12 @@ export interface ScheduledEvent {
   }[];
   dataCopied?: boolean;
   estimatePackage?: string;
+  qualityCheck?: {
+    status: "pending" | "passed" | "failed";
+    notes: string;
+    checkedBy: string;
+    lastChecked: string;
+  };
 }
 
 export interface DeliverableAssignment {

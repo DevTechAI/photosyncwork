@@ -6,6 +6,7 @@ import { TimeTrackingTab } from "./TimeTrackingTab";
 import { ProductionNotesTab } from "./ProductionNotesTab";
 import { ProductionDeliverablesTab } from "./ProductionDeliverablesTab";
 import { TeamAssignmentTab } from "./TeamAssignmentTab";
+import { QualityCheckTab } from "./QualityCheckTab";
 
 interface ProductionDetailsTabsProps {
   selectedEvent: ScheduledEvent | null;
@@ -55,6 +56,7 @@ export function ProductionDetailsTabs({
           <TabsTrigger value="notes" className="flex-grow">Notes</TabsTrigger>
           <TabsTrigger value="deliverables" className="flex-grow">Deliverables</TabsTrigger>
           <TabsTrigger value="team" className="flex-grow">Team</TabsTrigger>
+          <TabsTrigger value="quality" className="flex-grow">Quality</TabsTrigger>
         </TabsList>
         
         <TabsContent value="tracking">
@@ -89,6 +91,13 @@ export function ProductionDetailsTabs({
               onLogTime={onLogTime}
             />
           )}
+        </TabsContent>
+        
+        <TabsContent value="quality">
+          <QualityCheckTab
+            selectedEvent={selectedEvent}
+            onUpdateEvent={onUpdateEvent}
+          />
         </TabsContent>
       </Tabs>
     </div>

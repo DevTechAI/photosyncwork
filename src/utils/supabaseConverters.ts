@@ -34,7 +34,8 @@ export function dbToScheduledEvent(dbRecord: any): ScheduledEvent {
         ? JSON.parse(dbRecord.deliverables)
         : [],
     dataCopied: dbRecord.datacopied,
-    estimatePackage: dbRecord.estimatepackage
+    estimatePackage: dbRecord.estimatepackage,
+    qualityCheck: dbRecord.qualitycheck
   };
 }
 
@@ -62,6 +63,7 @@ export function scheduledEventToDb(event: ScheduledEvent): any {
     timetracking: event.timeTracking,
     deliverables: event.deliverables,
     datacopied: event.dataCopied,
-    estimatepackage: event.estimatePackage
+    estimatepackage: event.estimatePackage,
+    qualitycheck: event.qualityCheck
   };
 }
