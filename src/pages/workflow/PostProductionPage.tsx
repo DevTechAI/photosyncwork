@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import Layout from "@/components/Layout";
 import { ScheduledEvent, TeamMember } from "@/components/scheduling/types";
@@ -6,7 +5,6 @@ import { PostProductionDeliverables } from "@/components/workflow/post-productio
 import { PostProductionTimeTrackingTab } from "@/components/workflow/post-production/PostProductionTimeTrackingTab";
 import { PostProductionEventList } from "@/components/workflow/post-production/PostProductionEventList";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { dbToScheduledEvent, scheduledEventToDb } from "@/utils/supabaseConverters";
@@ -20,7 +18,6 @@ export default function PostProductionPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   
-  // Detect mobile viewport
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 1024);
@@ -34,12 +31,10 @@ export default function PostProductionPage() {
     };
   }, []);
   
-  // Load events and team members
   useEffect(() => {
     const loadData = async () => {
       setIsLoading(true);
       try {
-        // Load post-production events from Supabase
         const { data: postProductionEvents, error: eventsError } = await supabase
           .from('scheduled_events')
           .select('*')
@@ -51,7 +46,6 @@ export default function PostProductionPage() {
         }
         
         if (postProductionEvents && postProductionEvents.length > 0) {
-          // Transform data using converter
           const transformedEvents = postProductionEvents.map(event => 
             dbToScheduledEvent(event)
           ) as ScheduledEvent[];
@@ -62,7 +56,6 @@ export default function PostProductionPage() {
           }
         }
         
-        // Load team members
         const { data: teamMembersData, error: teamError } = await supabase
           .from('team_members')
           .select('*');
@@ -80,7 +73,6 @@ export default function PostProductionPage() {
           variant: "destructive"
         });
         
-        // Fallback to localStorage
         const savedEvents = localStorage.getItem("scheduledEvents");
         if (savedEvents) {
           const parsedEvents = JSON.parse(savedEvents);
@@ -105,7 +97,6 @@ export default function PostProductionPage() {
     loadData();
   }, [toast, selectedEvent]);
   
-  // Save events whenever they change
   useEffect(() => {
     if (events.length > 0) {
       const saveEvents = async () => {
@@ -130,7 +121,6 @@ export default function PostProductionPage() {
     }
   }, [events]);
   
-  // Update an event
   const handleUpdateEvents = (updatedEvent: ScheduledEvent) => {
     setEvents(prev => 
       prev.map(event => event.id === updatedEvent.id ? updatedEvent : event)
@@ -139,7 +129,6 @@ export default function PostProductionPage() {
     if (selectedEvent?.id === updatedEvent.id) {
       setSelectedEvent(updatedEvent);
     } else if (updatedEvent.stage !== "post-production") {
-      // If the event is moved to another stage, remove it from the list
       setEvents(prev => prev.filter(event => event.id !== updatedEvent.id));
       if (selectedEvent?.id === updatedEvent.id) {
         setSelectedEvent(events.length > 1 ? events[0] : null);
@@ -147,16 +136,13 @@ export default function PostProductionPage() {
     }
   };
   
-  // Log time for an event
   const handleLogTime = (teamMemberId: string, hours: number) => {
     if (!selectedEvent) return;
     
     const today = new Date().toISOString().split('T')[0];
     
-    // Create a timeTracking entry if it doesn't exist
     const timeTracking = selectedEvent.timeTracking || [];
     
-    // Add the new time entry
     const updatedEvent = {
       ...selectedEvent,
       timeTracking: [
@@ -169,7 +155,6 @@ export default function PostProductionPage() {
       ]
     };
     
-    // Update the events state
     handleUpdateEvents(updatedEvent);
     
     toast({
@@ -180,7 +165,7 @@ export default function PostProductionPage() {
   
   return (
     <Layout>
-      <div className="space-y-6">
+      <div className="space-y-4">
         <div>
           <h1 className="text-2xl font-semibold">Post-Production</h1>
           <p className="text-sm text-muted-foreground">
