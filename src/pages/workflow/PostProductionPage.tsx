@@ -1,167 +1,22 @@
-import { useState, useEffect } from "react";
+
 import Layout from "@/components/Layout";
-import { ScheduledEvent, TeamMember } from "@/components/scheduling/types";
-import { PostProductionDeliverables } from "@/components/workflow/post-production/PostProductionDeliverables";
-import { PostProductionTimeTrackingTab } from "@/components/workflow/post-production/PostProductionTimeTrackingTab";
 import { PostProductionEventList } from "@/components/workflow/post-production/PostProductionEventList";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { dbToScheduledEvent, scheduledEventToDb } from "@/utils/supabaseConverters";
+import { PostProductionContent } from "@/components/workflow/post-production/PostProductionContent";
+import { usePostProductionPage } from "@/hooks/post-production/usePostProductionPage";
 
 export default function PostProductionPage() {
-  const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState("deliverables");
-  const [events, setEvents] = useState<ScheduledEvent[]>([]);
-  const [selectedEvent, setSelectedEvent] = useState<ScheduledEvent | null>(null);
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isMobile, setIsMobile] = useState(false);
-  
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 1024);
-    };
-    
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    
-    return () => {
-      window.removeEventListener('resize', checkMobile);
-    };
-  }, []);
-  
-  useEffect(() => {
-    const loadData = async () => {
-      setIsLoading(true);
-      try {
-        const { data: postProductionEvents, error: eventsError } = await supabase
-          .from('scheduled_events')
-          .select('*')
-          .eq('stage', 'post-production');
-          
-        if (eventsError) {
-          console.error("Error loading post-production events:", eventsError);
-          throw eventsError;
-        }
-        
-        if (postProductionEvents && postProductionEvents.length > 0) {
-          const transformedEvents = postProductionEvents.map(event => 
-            dbToScheduledEvent(event)
-          ) as ScheduledEvent[];
-          
-          setEvents(transformedEvents);
-          if (transformedEvents.length > 0 && !selectedEvent) {
-            setSelectedEvent(transformedEvents[0]);
-          }
-        }
-        
-        const { data: teamMembersData, error: teamError } = await supabase
-          .from('team_members')
-          .select('*');
-          
-        if (teamError) {
-          console.error("Error loading team members:", teamError);
-        } else if (teamMembersData) {
-          setTeamMembers(teamMembersData as TeamMember[]);
-        }
-      } catch (error) {
-        console.error("Error loading data:", error);
-        toast({
-          title: "Error Loading Data",
-          description: "There was a problem loading your events and team members",
-          variant: "destructive"
-        });
-        
-        const savedEvents = localStorage.getItem("scheduledEvents");
-        if (savedEvents) {
-          const parsedEvents = JSON.parse(savedEvents);
-          const postProductionEvents = parsedEvents.filter(
-            (event: ScheduledEvent) => event.stage === "post-production"
-          );
-          setEvents(postProductionEvents);
-          if (postProductionEvents.length > 0 && !selectedEvent) {
-            setSelectedEvent(postProductionEvents[0]);
-          }
-        }
-        
-        const savedTeamMembers = localStorage.getItem("teamMembers");
-        if (savedTeamMembers) {
-          setTeamMembers(JSON.parse(savedTeamMembers));
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadData();
-  }, [toast, selectedEvent]);
-  
-  useEffect(() => {
-    if (events.length > 0) {
-      const saveEvents = async () => {
-        try {
-          for (const event of events) {
-            const dbEvent = scheduledEventToDb(event);
-            const { error } = await supabase
-              .from('scheduled_events')
-              .update(dbEvent)
-              .eq('id', event.id);
-              
-            if (error) {
-              console.error(`Error saving event ${event.id} to Supabase:`, error);
-            }
-          }
-        } catch (error) {
-          console.error("Error saving events to Supabase:", error);
-        }
-      };
-      
-      saveEvents();
-    }
-  }, [events]);
-  
-  const handleUpdateEvents = (updatedEvent: ScheduledEvent) => {
-    setEvents(prev => 
-      prev.map(event => event.id === updatedEvent.id ? updatedEvent : event)
-    );
-    
-    if (selectedEvent?.id === updatedEvent.id) {
-      setSelectedEvent(updatedEvent);
-    } else if (updatedEvent.stage !== "post-production") {
-      setEvents(prev => prev.filter(event => event.id !== updatedEvent.id));
-      if (selectedEvent?.id === updatedEvent.id) {
-        setSelectedEvent(events.length > 1 ? events[0] : null);
-      }
-    }
-  };
-  
-  const handleLogTime = (teamMemberId: string, hours: number) => {
-    if (!selectedEvent) return;
-    
-    const today = new Date().toISOString().split('T')[0];
-    
-    const timeTracking = selectedEvent.timeTracking || [];
-    
-    const updatedEvent = {
-      ...selectedEvent,
-      timeTracking: [
-        ...timeTracking,
-        {
-          teamMemberId,
-          hoursLogged: hours,
-          date: today
-        }
-      ]
-    };
-    
-    handleUpdateEvents(updatedEvent);
-    
-    toast({
-      title: "Time Logged",
-      description: `Successfully logged ${hours} hours.`
-    });
-  };
+  const {
+    activeTab,
+    setActiveTab,
+    events,
+    selectedEvent,
+    setSelectedEvent,
+    teamMembers,
+    isLoading,
+    isMobile,
+    handleUpdateEvents,
+    handleLogTime
+  } = usePostProductionPage();
   
   return (
     <Layout>
@@ -183,48 +38,15 @@ export default function PostProductionPage() {
           </div>
           
           <div className="lg:col-span-3">
-            {selectedEvent ? (
-              <div className="space-y-4">
-                <div className="flex justify-between items-center flex-wrap">
-                  <div>
-                    <h2 className="text-xl font-medium">{selectedEvent.name}</h2>
-                    <p className="text-sm text-muted-foreground">
-                      Client: {selectedEvent.clientName} | {new Date(selectedEvent.date).toLocaleDateString()}
-                    </p>
-                  </div>
-                </div>
-                
-                <Tabs value={activeTab} onValueChange={setActiveTab}>
-                  <TabsList className="w-full flex mb-4">
-                    <TabsTrigger value="deliverables" className="flex-1">Deliverables</TabsTrigger>
-                    <TabsTrigger value="time-tracking" className="flex-1">Time Tracking</TabsTrigger>
-                  </TabsList>
-                  
-                  <TabsContent value="deliverables" className="pt-4">
-                    <PostProductionDeliverables
-                      selectedEvent={selectedEvent}
-                      setSelectedEvent={setSelectedEvent}
-                      updateEvents={handleUpdateEvents}
-                      teamMembers={teamMembers}
-                    />
-                  </TabsContent>
-                  
-                  <TabsContent value="time-tracking" className="pt-4">
-                    <PostProductionTimeTrackingTab
-                      event={selectedEvent}
-                      teamMembers={teamMembers}
-                      onLogTime={handleLogTime}
-                    />
-                  </TabsContent>
-                </Tabs>
-              </div>
-            ) : (
-              <div className="flex items-center justify-center h-32 bg-muted rounded-md">
-                <p className="text-muted-foreground">
-                  {isLoading ? "Loading events..." : "Select an event to view details"}
-                </p>
-              </div>
-            )}
+            <PostProductionContent
+              selectedEvent={selectedEvent}
+              isLoading={isLoading}
+              teamMembers={teamMembers}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              handleUpdateEvents={handleUpdateEvents}
+              handleLogTime={handleLogTime}
+            />
           </div>
         </div>
       </div>
