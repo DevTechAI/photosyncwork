@@ -21,7 +21,9 @@ export function QualityCheckTab({ selectedEvent, onUpdateEvent }: QualityCheckPr
     lastChecked: ""
   };
 
-  const [qualityStatus, setQualityStatus] = useState(existingQualityCheck.status);
+  const [qualityStatus, setQualityStatus] = useState<"pending" | "passed" | "failed">(
+    existingQualityCheck.status as "pending" | "passed" | "failed"
+  );
   const [notes, setNotes] = useState(existingQualityCheck.notes);
   const [checkedBy, setCheckedBy] = useState(existingQualityCheck.checkedBy);
 
@@ -46,7 +48,7 @@ export function QualityCheckTab({ selectedEvent, onUpdateEvent }: QualityCheckPr
           <h3 className="text-lg font-medium mb-2">Quality Check Status</h3>
           <RadioGroup 
             value={qualityStatus} 
-            onValueChange={setQualityStatus}
+            onValueChange={(value: "pending" | "passed" | "failed") => setQualityStatus(value)}
             className="flex flex-col space-y-2"
           >
             <div className="flex items-center space-x-2">
