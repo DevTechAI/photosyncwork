@@ -1,4 +1,3 @@
-
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
@@ -161,6 +160,31 @@ export function EstimateDetailsPage({ estimateDetails, onDetailsChange }: Estima
     return false; // No identical package found
   };
 
+  const deletePackage = (estimateIndex: number) => {
+    // Don't allow deleting if it's the only package
+    if (estimateDetails.estimates.length <= 1) {
+      toast({
+        title: "Cannot Delete Package",
+        description: "You must have at least one package option",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const newEstimates = [...estimateDetails.estimates];
+    newEstimates.splice(estimateIndex, 1);
+    
+    onDetailsChange({
+      ...estimateDetails,
+      estimates: newEstimates
+    });
+    
+    toast({
+      title: "Package Deleted",
+      description: `Package option ${estimateIndex + 1} has been deleted`,
+    });
+  };
+
   return (
     <div className="space-y-8">
       <div className="space-y-4">
@@ -193,6 +217,7 @@ export function EstimateDetailsPage({ estimateDetails, onDetailsChange }: Estima
                 onDeliverableRemove={(deliverableIndex) => 
                   removeDeliverable(estimateIndex, deliverableIndex)}
                 onTotalUpdate={(total) => updateEstimateTotal(estimateIndex, total)}
+                onPackageDelete={() => deletePackage(estimateIndex)}
               />
             ))}
 

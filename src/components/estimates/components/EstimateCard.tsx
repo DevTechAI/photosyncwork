@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { Estimate, Service } from "../types";
 import { ServiceCard } from "./ServiceCard";
 import { Deliverables } from "./Deliverables";
@@ -17,6 +17,7 @@ interface EstimateCardProps {
   onDeliverableUpdate: (deliverableIndex: number, value: string) => void;
   onDeliverableRemove: (deliverableIndex: number) => void;
   onTotalUpdate: (total: string) => void;
+  onPackageDelete?: () => void;
 }
 
 export function EstimateCard({
@@ -29,10 +30,19 @@ export function EstimateCard({
   onDeliverableUpdate,
   onDeliverableRemove,
   onTotalUpdate,
+  onPackageDelete,
 }: EstimateCardProps) {
   return (
     <div className="space-y-4 pt-6 border-t">
-      <h3 className="text-lg font-medium">PACKAGE OPTION {index + 1}</h3>
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-medium">PACKAGE OPTION {index + 1}</h3>
+        {onPackageDelete && (
+          <Button variant="ghost" size="sm" onClick={onPackageDelete} className="text-red-500 h-8">
+            <Trash2 className="h-4 w-4 mr-1" />
+            Delete Package
+          </Button>
+        )}
+      </div>
       
       <div className="space-y-6">
         {estimate.services.map((service, serviceIndex) => (
