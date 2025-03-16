@@ -14,6 +14,7 @@ interface EstimateCardProps {
     status: string;
     selectedPackageIndex?: number;
     packages?: Array<any>;
+    clientEmail?: string;
   };
   onEdit: (estimate: any) => void;
   onPreview: (estimate: any) => void;
@@ -30,6 +31,15 @@ export function EstimateCard({
 }: EstimateCardProps) {
   const navigate = useNavigate();
 
+  // Handle navigation to invoice page with estimate data
+  const handleCreateInvoice = () => {
+    navigate("/invoices", { 
+      state: { 
+        fromEstimate: estimate 
+      } 
+    });
+  };
+
   return (
     <Card key={estimate.id} className="p-6">
       <div className="flex items-center justify-between">
@@ -39,7 +49,8 @@ export function EstimateCard({
             <span>Created: {new Date(estimate.date).toLocaleDateString()}</span>
             <span>Amount: {estimate.amount}</span>
             {estimate.selectedPackageIndex !== undefined && estimate.packages && (
-              <span>Selected Package: Option {estimate.selectedPackageIndex + 1}</span>
+              <span>Selected Package: {estimate.packages[estimate.selectedPackageIndex]?.name || 
+                `Option ${estimate.selectedPackageIndex + 1}`}</span>
             )}
             <span className={`capitalize px-2 py-1 rounded-full text-xs ${
               estimate.status === "approved" ? "bg-green-100 text-green-800" :
@@ -96,7 +107,7 @@ export function EstimateCard({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => navigate("/invoices")}>
+                <DropdownMenuItem onClick={handleCreateInvoice}>
                   Create Invoice
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate("/pre-production")}>

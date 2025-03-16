@@ -20,6 +20,34 @@ interface ClientDetailsCardProps {
   onPaymentDateChange?: (date: string) => void;
   paymentMethod?: string;
   onPaymentMethodChange?: (method: string) => void;
+  
+  // Client details
+  clientName: string;
+  onClientNameChange: (name: string) => void;
+  clientEmail: string;
+  onClientEmailChange: (email: string) => void;
+  clientPhone: string;
+  onClientPhoneChange: (phone: string) => void;
+  clientAddress: string;
+  onClientAddressChange: (address: string) => void;
+  clientGst: string;
+  onClientGstChange: (gst: string) => void;
+  
+  // Company details
+  companyName: string;
+  onCompanyNameChange: (name: string) => void;
+  companyEmail: string;
+  onCompanyEmailChange: (email: string) => void;
+  companyPhone: string;
+  onCompanyPhoneChange: (phone: string) => void;
+  companyAddress: string;
+  onCompanyAddressChange: (address: string) => void;
+  companyGst: string;
+  onCompanyGstChange: (gst: string) => void;
+  
+  // Invoice details
+  invoiceDate: string;
+  onInvoiceDateChange: (date: string) => void;
 }
 
 export function ClientDetailsCard({ 
@@ -30,7 +58,29 @@ export function ClientDetailsCard({
   paymentDate = "",
   onPaymentDateChange = () => {},
   paymentMethod = "bank",
-  onPaymentMethodChange = () => {}
+  onPaymentMethodChange = () => {},
+  clientName,
+  onClientNameChange,
+  clientEmail,
+  onClientEmailChange,
+  clientPhone,
+  onClientPhoneChange,
+  clientAddress,
+  onClientAddressChange,
+  clientGst,
+  onClientGstChange,
+  companyName,
+  onCompanyNameChange,
+  companyEmail,
+  onCompanyEmailChange,
+  companyPhone,
+  onCompanyPhoneChange,
+  companyAddress,
+  onCompanyAddressChange,
+  companyGst,
+  onCompanyGstChange,
+  invoiceDate,
+  onInvoiceDateChange
 }: ClientDetailsCardProps) {
   return (
     <Card className="p-4">
@@ -51,7 +101,12 @@ export function ClientDetailsCard({
           </div>
           <div className="space-y-2">
             <Label htmlFor="date">Invoice Date</Label>
-            <Input id="date" type="date" />
+            <Input 
+              id="date" 
+              type="date" 
+              value={invoiceDate}
+              onChange={(e) => onInvoiceDateChange(e.target.value)}
+            />
           </div>
         </div>
 
@@ -106,19 +161,41 @@ export function ClientDetailsCard({
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="client">Client Name</Label>
-              <Input id="client" placeholder="Enter client name" />
+              <Input 
+                id="client" 
+                placeholder="Enter client name"
+                value={clientName}
+                onChange={(e) => onClientNameChange(e.target.value)}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="client@example.com" />
+              <Input 
+                id="email" 
+                type="email" 
+                placeholder="client@example.com"
+                value={clientEmail}
+                onChange={(e) => onClientEmailChange(e.target.value)}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="phone">Phone Number</Label>
-              <Input id="phone" type="tel" placeholder="+91 98765 43210" />
+              <Input 
+                id="phone" 
+                type="tel" 
+                placeholder="+91 98765 43210"
+                value={clientPhone}
+                onChange={(e) => onClientPhoneChange(e.target.value)}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="clientAddress">Address</Label>
-              <Input id="clientAddress" placeholder="Enter client's address" />
+              <Input 
+                id="clientAddress" 
+                placeholder="Enter client's address"
+                value={clientAddress}
+                onChange={(e) => onClientAddressChange(e.target.value)}
+              />
             </div>
             {invoiceType === "paid" && (
               <div className="space-y-2 md:col-span-2">
@@ -127,6 +204,8 @@ export function ClientDetailsCard({
                   id="clientGst" 
                   placeholder="Enter client's GST number"
                   className="uppercase"
+                  value={clientGst}
+                  onChange={(e) => onClientGstChange(e.target.value)}
                 />
               </div>
             )}
@@ -139,19 +218,41 @@ export function ClientDetailsCard({
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="companyName">Company Name</Label>
-              <Input id="companyName" placeholder="Enter company name" />
+              <Input 
+                id="companyName" 
+                placeholder="Enter company name"
+                value={companyName}
+                onChange={(e) => onCompanyNameChange(e.target.value)}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="companyEmail">Company Email</Label>
-              <Input id="companyEmail" type="email" placeholder="company@example.com" />
+              <Input 
+                id="companyEmail" 
+                type="email" 
+                placeholder="company@example.com"
+                value={companyEmail}
+                onChange={(e) => onCompanyEmailChange(e.target.value)}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="companyPhone">Company Phone</Label>
-              <Input id="companyPhone" type="tel" placeholder="+91 98765 43210" />
+              <Input 
+                id="companyPhone" 
+                type="tel" 
+                placeholder="+91 98765 43210"
+                value={companyPhone}
+                onChange={(e) => onCompanyPhoneChange(e.target.value)}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="companyAddress">Company Address</Label>
-              <Input id="companyAddress" placeholder="Enter company address" />
+              <Input 
+                id="companyAddress" 
+                placeholder="Enter company address"
+                value={companyAddress}
+                onChange={(e) => onCompanyAddressChange(e.target.value)}
+              />
             </div>
             {invoiceType === "paid" && (
               <div className="space-y-2 md:col-span-2">
@@ -160,6 +261,8 @@ export function ClientDetailsCard({
                   id="companyGst" 
                   placeholder="Enter company's GST number"
                   className="uppercase"
+                  value={companyGst}
+                  onChange={(e) => onCompanyGstChange(e.target.value)}
                 />
               </div>
             )}

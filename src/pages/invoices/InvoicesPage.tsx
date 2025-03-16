@@ -21,8 +21,19 @@ export default function InvoicesPage() {
     setShowNewInvoice,
     selectedInvoice,
     setSelectedInvoice,
-    filteredInvoices
+    filteredInvoices,
+    addInvoice,
+    updateInvoice,
+    locationState
   } = useInvoices();
+
+  const handleSaveInvoice = (invoice: any) => {
+    if (selectedInvoice) {
+      updateInvoice(invoice);
+    } else {
+      addInvoice(invoice);
+    }
+  };
 
   return (
     <Layout>
@@ -41,7 +52,7 @@ export default function InvoicesPage() {
         </div>
 
         {/* Statistics Cards */}
-        <InvoiceStats />
+        <InvoiceStats invoices={filteredInvoices} />
 
         {/* Search and Filter Bar */}
         <InvoiceFilters 
@@ -61,11 +72,20 @@ export default function InvoicesPage() {
       </div>
 
       {/* Modals */}
-      <InvoiceForm open={showNewInvoice} onClose={() => setShowNewInvoice(false)} />
+      <InvoiceForm 
+        open={showNewInvoice} 
+        onClose={() => setShowNewInvoice(false)} 
+        onSave={handleSaveInvoice}
+        editingInvoice={null}
+      />
+      
       <InvoiceDetails
         invoice={selectedInvoice}
         open={!!selectedInvoice}
         onClose={() => setSelectedInvoice(null)}
+        onEdit={() => {
+          setShowNewInvoice(true);
+        }}
       />
     </Layout>
   );
