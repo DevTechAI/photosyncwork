@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Eye, Edit, Check, X } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useNavigate } from "react-router-dom";
 
 interface EstimateCardProps {
   estimate: {
@@ -27,6 +28,8 @@ export function EstimateCard({
   onStatusChange,
   onGoToScheduling
 }: EstimateCardProps) {
+  const navigate = useNavigate();
+
   return (
     <Card key={estimate.id} className="p-6">
       <div className="flex items-center justify-between">
@@ -93,10 +96,10 @@ export function EstimateCard({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => window.location.href = "/invoices"}>
+                <DropdownMenuItem onClick={() => navigate("/invoices")}>
                   Create Invoice
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => window.location.href = "/pre-production"}>
+                <DropdownMenuItem onClick={() => navigate("/pre-production")}>
                   Pre-Production Tasks
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => onGoToScheduling(estimate.id)}>
