@@ -8,6 +8,7 @@ import { InvoiceStats } from "@/components/invoices/components/InvoiceStats";
 import { InvoiceFilters } from "@/components/invoices/components/InvoiceFilters";
 import { InvoicesList } from "@/components/invoices/components/InvoicesList";
 import { useInvoices } from "@/hooks/invoices/useInvoices";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function InvoicesPage() {
   const {
@@ -24,7 +25,8 @@ export default function InvoicesPage() {
     filteredInvoices,
     addInvoice,
     updateInvoice,
-    locationState
+    locationState,
+    isLoading
   } = useInvoices();
 
   const handleSaveInvoice = (invoice: any) => {
@@ -38,6 +40,38 @@ export default function InvoicesPage() {
   const handleRecordPayment = (updatedInvoice: any) => {
     updateInvoice(updatedInvoice);
   };
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="space-y-8 animate-in">
+          <div className="flex items-center justify-between">
+            <div>
+              <Skeleton className="h-8 w-48" />
+              <Skeleton className="h-4 w-64 mt-2" />
+            </div>
+            <Skeleton className="h-10 w-32" />
+          </div>
+          
+          {/* Statistics Cards Skeleton */}
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {[...Array(4)].map((_, i) => (
+              <Skeleton key={i} className="h-32 w-full" />
+            ))}
+          </div>
+          
+          {/* Search and Filter Skeleton */}
+          <div className="flex gap-4 items-center">
+            <Skeleton className="h-10 flex-1" />
+            <Skeleton className="h-10 w-32" />
+          </div>
+          
+          {/* Table Skeleton */}
+          <Skeleton className="h-[400px] w-full" />
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>

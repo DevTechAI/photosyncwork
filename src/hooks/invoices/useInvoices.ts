@@ -3,6 +3,8 @@ import { useState, useEffect } from "react";
 import { Invoice } from "@/components/invoices/types";
 import { useLocation } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export function useInvoices() {
   const [sortBy, setSortBy] = useState<"date" | "amount" | "balanceHighToLow" | "balanceLowToHigh">("date");
@@ -10,18 +12,32 @@ export function useInvoices() {
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [showNewInvoice, setShowNewInvoice] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [processedEstimateIds, setProcessedEstimateIds] = useState<string[]>([]);
   const location = useLocation();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  // Load invoices from localStorage on component mount
-  useEffect(() => {
-    const savedInvoices = localStorage.getItem("invoices");
-    if (savedInvoices) {
-      setInvoices(JSON.parse(savedInvoices));
+  // Fetch invoices from Supabase
+  const { data: invoices = [], isLoading } = useQuery({
+    queryKey: ['invoices'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('invoices')
+        .select('*');
+      
+      if (error) {
+        console.error("Error fetching invoices:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load invoices",
+          variant: "destructive"
+        });
+        return [];
+      }
+      
+      return data as Invoice[];
     }
-  }, []);
+  });
 
   // Extract processed estimate IDs from invoices
   useEffect(() => {
@@ -58,10 +74,69 @@ export function useInvoices() {
     }
   }, [location, toast, processedEstimateIds]);
 
-  // Save invoices to localStorage whenever the invoices array changes
-  useEffect(() => {
-    localStorage.setItem("invoices", JSON.stringify(invoices));
-  }, [invoices]);
+  // Add invoice mutation
+  const addInvoiceMutation = useMutation({
+    mutationFn: async (invoice: Invoice) => {
+      // Generate a unique ID if not provided
+      if (!invoice.id) {
+        invoice.id = Math.floor(Math.random() * 100000).toString();
+      }
+      
+      const { data, error } = await supabase
+        .from('invoices')
+        .insert(invoice)
+        .select()
+        .single();
+        
+      if (error) {
+        console.error("Error adding invoice:", error);
+        throw error;
+      }
+      
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+    },
+    onError: (error) => {
+      console.error("Failed to add invoice:", error);
+      toast({
+        title: "Error",
+        description: "Failed to create invoice",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Update invoice mutation
+  const updateInvoiceMutation = useMutation({
+    mutationFn: async (updatedInvoice: Invoice) => {
+      const { data, error } = await supabase
+        .from('invoices')
+        .update(updatedInvoice)
+        .eq('id', updatedInvoice.id)
+        .select()
+        .single();
+        
+      if (error) {
+        console.error("Error updating invoice:", error);
+        throw error;
+      }
+      
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+    },
+    onError: (error) => {
+      console.error("Failed to update invoice:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update invoice",
+        variant: "destructive"
+      });
+    }
+  });
 
   // Filter and sort invoices
   const filteredInvoices = invoices
@@ -86,29 +161,24 @@ export function useInvoices() {
     });
 
   const addInvoice = (invoice: Invoice) => {
-    // Generate a unique ID if not provided
-    if (!invoice.id) {
-      invoice.id = Math.floor(Math.random() * 100000).toString();
-    }
-    
-    setInvoices((prevInvoices) => [invoice, ...prevInvoices]);
-    
-    toast({
-      title: "Invoice Created",
-      description: `Invoice for ${invoice.client} has been created successfully.`,
+    addInvoiceMutation.mutate(invoice, {
+      onSuccess: () => {
+        toast({
+          title: "Invoice Created",
+          description: `Invoice for ${invoice.client} has been created successfully.`,
+        });
+      }
     });
   };
 
   const updateInvoice = (updatedInvoice: Invoice) => {
-    setInvoices((prevInvoices) =>
-      prevInvoices.map((invoice) =>
-        invoice.id === updatedInvoice.id ? updatedInvoice : invoice
-      )
-    );
-    
-    toast({
-      title: "Invoice Updated",
-      description: `Invoice for ${updatedInvoice.client} has been updated.`,
+    updateInvoiceMutation.mutate(updatedInvoice, {
+      onSuccess: () => {
+        toast({
+          title: "Invoice Updated",
+          description: `Invoice for ${updatedInvoice.client} has been updated.`,
+        });
+      }
     });
   };
 
@@ -132,6 +202,7 @@ export function useInvoices() {
     addInvoice,
     updateInvoice,
     locationState: location.state,
-    hasInvoiceForEstimate
+    hasInvoiceForEstimate,
+    isLoading
   };
 }
