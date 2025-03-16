@@ -5,7 +5,7 @@ import { useLocation } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 
 export function useInvoices() {
-  const [sortBy, setSortBy] = useState<"date" | "amount">("date");
+  const [sortBy, setSortBy] = useState<"date" | "amount" | "balanceHighToLow" | "balanceLowToHigh">("date");
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [showNewInvoice, setShowNewInvoice] = useState(false);
@@ -55,8 +55,14 @@ export function useInvoices() {
     .sort((a, b) => {
       if (sortBy === "date") {
         return new Date(b.date).getTime() - new Date(a.date).getTime();
+      } else if (sortBy === "amount") {
+        return parseInt(b.amount.replace(/[₹,]/g, "")) - parseInt(a.amount.replace(/[₹,]/g, ""));
+      } else if (sortBy === "balanceHighToLow") {
+        return parseInt(b.balanceAmount.replace(/[₹,]/g, "")) - parseInt(a.balanceAmount.replace(/[₹,]/g, ""));
+      } else if (sortBy === "balanceLowToHigh") {
+        return parseInt(a.balanceAmount.replace(/[₹,]/g, "")) - parseInt(b.balanceAmount.replace(/[₹,]/g, ""));
       }
-      return parseInt(b.amount.replace(/[₹,]/g, "")) - parseInt(a.amount.replace(/[₹,]/g, ""));
+      return 0;
     });
 
   const addInvoice = (invoice: Invoice) => {
