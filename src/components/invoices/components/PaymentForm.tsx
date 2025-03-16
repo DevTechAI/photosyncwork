@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Invoice } from "../types";
+import { useEffect, useState } from "react";
 
 interface PaymentFormProps {
   paymentDate: string;
@@ -40,6 +41,35 @@ export function PaymentForm({
   handleSubmit,
   onClose
 }: PaymentFormProps) {
+  const [displayAmount, setDisplayAmount] = useState("");
+
+  // Format payment amount for display
+  useEffect(() => {
+    if (paymentAmount) {
+      const numericValue = parseFloat(paymentAmount.replace(/[₹,]/g, ""));
+      if (!isNaN(numericValue)) {
+        setDisplayAmount(`₹${numericValue.toLocaleString('en-IN')}`);
+      } else {
+        setDisplayAmount(paymentAmount);
+      }
+    } else {
+      setDisplayAmount("");
+    }
+  }, [paymentAmount]);
+
+  // Handle input changes and format the currency
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    
+    // Remove any non-numeric characters except dots
+    const numericValue = value.replace(/[^0-9.]/g, "");
+    
+    // Only update if it's empty or a valid number
+    if (numericValue === "" || !isNaN(parseFloat(numericValue))) {
+      handlePaymentAmountChange(numericValue);
+    }
+  };
+
   return (
     <form className="space-y-4" onSubmit={handleSubmit}>
       <div className="space-y-2">
@@ -54,13 +84,13 @@ export function PaymentForm({
       
       <div className="space-y-2">
         <Label htmlFor="paymentAmount">
-          Payment Amount (Max: ₹{maxAllowedPayment.toLocaleString()})
+          Payment Amount (Max: ₹{maxAllowedPayment.toLocaleString('en-IN')})
         </Label>
         <Input 
           id="paymentAmount" 
           type="text" 
-          value={paymentAmount}
-          onChange={(e) => handlePaymentAmountChange(e.target.value)}
+          value={displayAmount}
+          onChange={handleAmountChange}
           placeholder="₹0.00"
           className={amountError ? "border-red-500" : ""}
         />

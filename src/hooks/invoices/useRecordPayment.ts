@@ -15,7 +15,7 @@ export function useRecordPayment(invoice: Invoice, onSave: (invoice: Invoice) =>
 
   // Update payment amount when invoice changes
   useEffect(() => {
-    setPaymentAmount(invoice.balanceAmount || "");
+    setPaymentAmount(invoice.balanceAmount.replace(/[₹,]/g, "") || "");
     setPaymentMethod(invoice.paymentMethod || "bank");
     setPaymentDate(new Date().toISOString().split('T')[0]);
     setCollectedBy("");
@@ -38,7 +38,7 @@ export function useRecordPayment(invoice: Invoice, onSave: (invoice: Invoice) =>
     }
 
     if (numValue > maxAllowedPayment) {
-      setAmountError(`Payment cannot exceed balance (₹${maxAllowedPayment.toLocaleString()})`);
+      setAmountError(`Payment cannot exceed balance (₹${maxAllowedPayment.toLocaleString('en-IN')})`);
       return false;
     }
 
@@ -91,8 +91,8 @@ export function useRecordPayment(invoice: Invoice, onSave: (invoice: Invoice) =>
       paymentDate: paymentDate,
       paymentMethod: paymentMethod,
       notes: invoice.notes 
-        ? `${invoice.notes}\n${new Date().toLocaleDateString()}: Payment of ${paymentAmount} collected by ${collectedBy || 'staff'}`
-        : `${new Date().toLocaleDateString()}: Payment of ${paymentAmount} collected by ${collectedBy || 'staff'}`
+        ? `${invoice.notes}\n${new Date().toLocaleDateString()}: Payment of ₹${parseFloat(paymentAmount).toLocaleString('en-IN')} collected by ${collectedBy || 'staff'}`
+        : `${new Date().toLocaleDateString()}: Payment of ₹${parseFloat(paymentAmount).toLocaleString('en-IN')} collected by ${collectedBy || 'staff'}`
     };
     
     onSave(updatedInvoice);
