@@ -1,19 +1,21 @@
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Receipt, ArrowUpDown, MoreHorizontal } from "lucide-react";
+import { Receipt, ArrowUpDown, MoreHorizontal, Wallet } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Invoice } from "../types";
 
 interface InvoicesListProps {
-  invoices: any[];
+  invoices: Invoice[];
   sortBy: "date" | "amount";
   setSortBy: (sortBy: "date" | "amount") => void;
-  onViewDetails: (invoice: any) => void;
+  onViewDetails: (invoice: Invoice) => void;
+  onRecordPayment?: (invoice: Invoice) => void;
 }
 
 export function InvoicesList({
@@ -21,7 +23,20 @@ export function InvoicesList({
   sortBy,
   setSortBy,
   onViewDetails,
+  onRecordPayment,
 }: InvoicesListProps) {
+  // Format payment status with appropriate styling
+  const getStatusStyle = (status: string) => {
+    switch (status) {
+      case 'paid':
+        return 'bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs';
+      case 'partial':
+        return 'bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs';
+      default:
+        return 'bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs';
+    }
+  };
+
   return (
     <Card>
       <div className="p-6">
@@ -43,7 +58,7 @@ export function InvoicesList({
               <p className="text-muted-foreground">No invoices found</p>
             </div>
           ) : (
-            invoices.map((invoice: any) => (
+            invoices.map((invoice: Invoice) => (
               <div
                 key={invoice.id}
                 className="flex items-center justify-between py-4"
@@ -62,8 +77,10 @@ export function InvoicesList({
                 <div className="flex items-center gap-4">
                   <div className="text-right">
                     <p className="font-medium">{invoice.amount}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {invoice.status}
+                    <p>
+                      <span className={getStatusStyle(invoice.status)}>
+                        {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
+                      </span>
                     </p>
                   </div>
                   <DropdownMenu>
@@ -76,9 +93,13 @@ export function InvoicesList({
                       <DropdownMenuItem onClick={() => onViewDetails(invoice)}>
                         View Details
                       </DropdownMenuItem>
-                      <DropdownMenuItem>Edit Invoice</DropdownMenuItem>
+                      {onRecordPayment && invoice.status !== "paid" && (
+                        <DropdownMenuItem onClick={() => onRecordPayment(invoice)}>
+                          <Wallet className="h-4 w-4 mr-2" />
+                          Record Payment
+                        </DropdownMenuItem>
+                      )}
                       <DropdownMenuItem>Download PDF</DropdownMenuItem>
-                      <DropdownMenuItem>Mark as Paid</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>

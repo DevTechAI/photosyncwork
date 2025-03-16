@@ -35,6 +35,11 @@ export default function InvoicesPage() {
     }
   };
 
+  const handleRecordPayment = (invoice: any) => {
+    setSelectedInvoice(invoice);
+    setShowNewInvoice(true);
+  };
+
   return (
     <Layout>
       <div className="space-y-8 animate-in">
@@ -68,6 +73,7 @@ export default function InvoicesPage() {
           sortBy={sortBy}
           setSortBy={setSortBy}
           onViewDetails={setSelectedInvoice}
+          onRecordPayment={handleRecordPayment}
         />
       </div>
 
