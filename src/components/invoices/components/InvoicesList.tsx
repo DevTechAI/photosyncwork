@@ -1,14 +1,10 @@
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Receipt, ArrowUpDown, MoreHorizontal, Wallet } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Receipt, ArrowUpDown, Wallet } from "lucide-react";
+import { useState } from "react";
 import { Invoice } from "../types";
+import { RecordPaymentDialog } from "./RecordPaymentDialog";
 
 interface InvoicesListProps {
   invoices: Invoice[];
@@ -25,6 +21,9 @@ export function InvoicesList({
   onViewDetails,
   onRecordPayment,
 }: InvoicesListProps) {
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+
   // Format payment status with appropriate styling
   const getStatusStyle = (status: string) => {
     switch (status) {
@@ -34,6 +33,17 @@ export function InvoicesList({
         return 'bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs';
       default:
         return 'bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs';
+    }
+  };
+
+  const handleRecordPayment = (invoice: Invoice) => {
+    setSelectedInvoice(invoice);
+    setPaymentDialogOpen(true);
+  };
+
+  const handleSavePayment = (updatedInvoice: Invoice) => {
+    if (onRecordPayment) {
+      onRecordPayment(updatedInvoice);
     }
   };
 
@@ -107,7 +117,7 @@ export function InvoicesList({
                         className="text-xs h-8 gap-1"
                         onClick={(e) => {
                           e.stopPropagation();
-                          onRecordPayment(invoice);
+                          handleRecordPayment(invoice);
                         }}
                       >
                         <Wallet className="h-3 w-3" />
@@ -121,6 +131,16 @@ export function InvoicesList({
           </div>
         )}
       </div>
+
+      {/* Payment Dialog */}
+      {selectedInvoice && (
+        <RecordPaymentDialog
+          open={paymentDialogOpen}
+          onClose={() => setPaymentDialogOpen(false)}
+          onSave={handleSavePayment}
+          invoice={selectedInvoice}
+        />
+      )}
     </Card>
   );
 }

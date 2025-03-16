@@ -35,9 +35,8 @@ export default function InvoicesPage() {
     }
   };
 
-  const handleRecordPayment = (invoice: any) => {
-    setSelectedInvoice(invoice);
-    setShowNewInvoice(true);
+  const handleRecordPayment = (updatedInvoice: any) => {
+    updateInvoice(updatedInvoice);
   };
 
   return (
