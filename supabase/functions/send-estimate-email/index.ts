@@ -31,6 +31,13 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     const emailData: EstimateEmailRequest = await req.json();
+    
+    // Validate the email address
+    if (!emailData.to || !emailData.to.includes('@')) {
+      throw new Error('Invalid recipient email address');
+    }
+
+    console.log("Sending email to:", emailData.to);
 
     // Use the complete HTML provided by the client
     const emailResponse = await resend.emails.send({
@@ -38,6 +45,8 @@ const handler = async (req: Request): Promise<Response> => {
       to: [emailData.to],
       subject: `Estimate #${emailData.estimateId} for ${emailData.clientName}`,
       html: emailData.completeHtml,
+      // Adding some additional configurations to help with deliverability
+      reply_to: "noreply@studiosync.app",
     });
 
     console.log("Email sent successfully:", emailResponse);
