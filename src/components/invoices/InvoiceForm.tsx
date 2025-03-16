@@ -11,19 +11,11 @@ import { useState, useEffect } from "react";
 import { ClientDetailsCard } from "./components/ClientDetailsCard";
 import { InvoiceItemsCard } from "./components/InvoiceItemsCard";
 import { TotalCard } from "./components/TotalCard";
+import { PaymentTrackingCard } from "./components/PaymentTrackingCard";
 import { toast } from "sonner";
 import { useLocation } from "react-router-dom";
 import { Invoice, InvoiceItem } from "./types";
-import { Card } from "../ui/card";
-import { Label } from "../ui/label";
-import { Input } from "../ui/input";
-
-interface InvoiceFormProps {
-  open: boolean;
-  onClose: () => void;
-  onSave: (invoice: Invoice) => void;
-  editingInvoice?: Invoice | null;
-}
+import { InvoiceFormProps } from "./types/formTypes";
 
 export function InvoiceForm({ open, onClose, onSave, editingInvoice }: InvoiceFormProps) {
   const location = useLocation();
@@ -225,50 +217,15 @@ export function InvoiceForm({ open, onClose, onSave, editingInvoice }: InvoiceFo
           )}
           
           {/* Payment Tracking Card */}
-          <Card className="p-4">
-            <h3 className="font-medium mb-4">Payment Tracking</h3>
-            <div className="space-y-4">
-              <div className="grid grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="totalAmount">Total Amount</Label>
-                  <Input 
-                    id="totalAmount" 
-                    value={amount || calculateTotal()}
-                    onChange={(e) => setAmount(e.target.value)}
-                    placeholder="₹0.00"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="paidAmount">Paid Amount</Label>
-                  <Input 
-                    id="paidAmount" 
-                    value={paidAmount}
-                    onChange={(e) => setPaidAmount(e.target.value)}
-                    placeholder="₹0.00"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="balanceAmount">Balance</Label>
-                  <Input 
-                    id="balanceAmount" 
-                    value={balanceAmount}
-                    readOnly
-                    className="bg-muted"
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="notes">Notes</Label>
-                <Input
-                  id="notes"
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Additional notes about payment"
-                />
-              </div>
-            </div>
-          </Card>
+          <PaymentTrackingCard
+            amount={amount || calculateTotal()}
+            onAmountChange={setAmount}
+            paidAmount={paidAmount}
+            onPaidAmountChange={setPaidAmount}
+            balanceAmount={balanceAmount}
+            notes={notes}
+            onNotesChange={setNotes}
+          />
           
           <div className="flex justify-end gap-4">
             <Button variant="outline" type="button" onClick={onClose}>
