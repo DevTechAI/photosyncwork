@@ -52,61 +52,74 @@ export function InvoicesList({
             Sort by {sortBy === "date" ? "Amount" : "Date"}
           </Button>
         </div>
-        <div className="divide-y">
-          {invoices.length === 0 ? (
-            <div className="py-8 text-center">
-              <p className="text-muted-foreground">No invoices found</p>
-            </div>
-          ) : (
-            invoices.map((invoice: Invoice) => (
-              <div
-                key={invoice.id}
-                className="flex items-center justify-between py-4"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="h-10 w-10 rounded-full bg-primary/5 flex items-center justify-center">
-                    <Receipt className="h-5 w-5 text-primary" />
+        
+        {invoices.length === 0 ? (
+          <div className="py-8 text-center">
+            <p className="text-muted-foreground">No invoices found</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {invoices.map((invoice: Invoice) => (
+              <Card key={invoice.id} className="hover:bg-card-hover transition-colors duration-200 cursor-pointer">
+                <div className="p-4" onClick={() => onViewDetails(invoice)}>
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="h-10 w-10 rounded-full bg-primary/5 flex items-center justify-center">
+                      <Receipt className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium">{invoice.client}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {invoice.id} · {invoice.date}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-medium">{invoice.client}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {invoice.id} · {invoice.date}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-4">
-                  <div className="text-right">
-                    <p className="font-medium">{invoice.amount}</p>
-                    <p>
+                  
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Amount:</span>
+                      <span className="font-medium">{invoice.amount}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Status:</span>
                       <span className={getStatusStyle(invoice.status)}>
                         {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
                       </span>
-                    </p>
+                    </div>
                   </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <MoreHorizontal className="h-4 w-4" />
+                  
+                  <div className="mt-4 flex justify-between">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="text-xs h-8"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onViewDetails(invoice);
+                      }}
+                    >
+                      View Details
+                    </Button>
+                    
+                    {onRecordPayment && invoice.status !== "paid" && (
+                      <Button 
+                        variant="secondary" 
+                        size="sm" 
+                        className="text-xs h-8 gap-1"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onRecordPayment(invoice);
+                        }}
+                      >
+                        <Wallet className="h-3 w-3" />
+                        Record Payment
                       </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => onViewDetails(invoice)}>
-                        View Details
-                      </DropdownMenuItem>
-                      {onRecordPayment && invoice.status !== "paid" && (
-                        <DropdownMenuItem onClick={() => onRecordPayment(invoice)}>
-                          <Wallet className="h-4 w-4 mr-2" />
-                          Record Payment
-                        </DropdownMenuItem>
-                      )}
-                      <DropdownMenuItem>Download PDF</DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))
-          )}
-        </div>
+              </Card>
+            ))}
+          </div>
+        )}
       </div>
     </Card>
   );
