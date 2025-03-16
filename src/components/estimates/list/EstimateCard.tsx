@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Eye, Edit, Check, X } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
+import { useInvoices } from "@/hooks/invoices/useInvoices";
+import { useToast } from "@/components/ui/use-toast";
 
 interface EstimateCardProps {
   estimate: {
@@ -30,9 +32,21 @@ export function EstimateCard({
   onGoToScheduling
 }: EstimateCardProps) {
   const navigate = useNavigate();
+  const { hasInvoiceForEstimate } = useInvoices();
+  const { toast } = useToast();
 
   // Handle navigation to invoice page with estimate data
   const handleCreateInvoice = () => {
+    // Check if an invoice already exists for this estimate
+    if (hasInvoiceForEstimate(estimate.id)) {
+      toast({
+        title: "Invoice Already Exists",
+        description: "An invoice has already been created for this estimate.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     navigate("/invoices", { 
       state: { 
         fromEstimate: estimate 

@@ -11,6 +11,7 @@ export function useInvoices() {
   const [showNewInvoice, setShowNewInvoice] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [processedEstimateIds, setProcessedEstimateIds] = useState<string[]>([]);
   const location = useLocation();
   const { toast } = useToast();
 
@@ -22,10 +23,29 @@ export function useInvoices() {
     }
   }, []);
 
+  // Extract processed estimate IDs from invoices
+  useEffect(() => {
+    const estimateIds = invoices
+      .filter(invoice => invoice.estimateId)
+      .map(invoice => invoice.estimateId as string);
+    
+    setProcessedEstimateIds([...new Set(estimateIds)]);
+  }, [invoices]);
+
   // Handle estimate data passed through navigation state
   useEffect(() => {
     if (location.state?.fromEstimate) {
       const estimateData = location.state.fromEstimate;
+      
+      // Check if an invoice already exists for this estimate
+      if (estimateData.id && processedEstimateIds.includes(estimateData.id)) {
+        toast({
+          title: "Invoice Already Exists",
+          description: `An invoice for this estimate has already been created.`,
+          variant: "destructive"
+        });
+        return;
+      }
       
       // Open the invoice form and pre-fill with estimate data
       setShowNewInvoice(true);
@@ -36,7 +56,7 @@ export function useInvoices() {
         description: `Creating invoice for ${estimateData.clientName}`,
       });
     }
-  }, [location, toast]);
+  }, [location, toast, processedEstimateIds]);
 
   // Save invoices to localStorage whenever the invoices array changes
   useEffect(() => {
@@ -92,6 +112,11 @@ export function useInvoices() {
     });
   };
 
+  // Check if an estimate already has an invoice
+  const hasInvoiceForEstimate = (estimateId: string) => {
+    return processedEstimateIds.includes(estimateId);
+  };
+
   return {
     sortBy,
     setSortBy,
@@ -106,6 +131,7 @@ export function useInvoices() {
     filteredInvoices,
     addInvoice,
     updateInvoice,
-    locationState: location.state
+    locationState: location.state,
+    hasInvoiceForEstimate
   };
 }

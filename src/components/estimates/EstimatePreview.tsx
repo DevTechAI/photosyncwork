@@ -7,6 +7,9 @@ import { PreviewContent } from "./preview/PreviewContent";
 import { PreviewPagination } from "./preview/PreviewPagination";
 import { ScheduleButton } from "./preview/ScheduleButton";
 import { PreviewFormDisplay } from "./preview/PreviewFormDisplay";
+import { useInvoices } from "@/hooks/invoices/useInvoices";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "@/components/ui/use-toast";
 
 interface EstimatePreviewProps {
   open: boolean;
@@ -44,6 +47,10 @@ interface EstimatePreviewProps {
 }
 
 export function EstimatePreview({ open, onClose, estimate, onStatusChange }: EstimatePreviewProps) {
+  const { hasInvoiceForEstimate } = useInvoices();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  
   const {
     showEmailForm,
     showWhatsAppForm,
@@ -56,6 +63,26 @@ export function EstimatePreview({ open, onClose, estimate, onStatusChange }: Est
     handleStatusChange,
     handleGoToScheduling
   } = useEstimatePreview(estimate, onStatusChange, onClose);
+
+  // Handle navigation to invoice page with estimate data
+  const handleCreateInvoice = () => {
+    // Check if an invoice already exists for this estimate
+    if (hasInvoiceForEstimate(estimate.id)) {
+      toast({
+        title: "Invoice Already Exists",
+        description: "An invoice has already been created for this estimate.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    navigate("/invoices", { 
+      state: { 
+        fromEstimate: estimate 
+      } 
+    });
+    onClose();
+  };
 
   // Check if the estimate has multiple packages or if a specific package is selected
   const hasMultiplePackages = estimate.packages && estimate.packages.length > 1;
@@ -78,6 +105,7 @@ export function EstimatePreview({ open, onClose, estimate, onStatusChange }: Est
             onShowWhatsAppForm={() => setShowWhatsAppForm(true)}
             onShowApprovalForm={() => setShowApprovalForm(true)}
             isApproved={estimate.status === "approved"}
+            onCreateInvoice={handleCreateInvoice}
           />
         </DialogHeader>
 

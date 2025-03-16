@@ -1,74 +1,57 @@
 
 import { Button } from "@/components/ui/button";
-import { Mail, Share2, ThumbsUp } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Mail, Share2, FileText } from "lucide-react";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
 
 interface HeaderActionsProps {
   onShowEmailForm: () => void;
   onShowWhatsAppForm: () => void;
   onShowApprovalForm: () => void;
   isApproved: boolean;
+  onCreateInvoice?: () => void;
 }
 
 export function HeaderActions({ 
   onShowEmailForm, 
   onShowWhatsAppForm, 
   onShowApprovalForm,
-  isApproved 
+  isApproved,
+  onCreateInvoice
 }: HeaderActionsProps) {
   return (
-    <div className="flex items-center gap-2">
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={onShowEmailForm}
-            >
-              <Mail className="h-4 w-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Send via Email</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+    <div className="flex gap-2">
+      {!isApproved && (
+        <Button onClick={onShowApprovalForm} variant="secondary">
+          Approve
+        </Button>
+      )}
       
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={onShowWhatsAppForm}
-            >
-              <Share2 className="h-4 w-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Share via WhatsApp</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+      <Button onClick={onShowEmailForm} variant="outline" size="icon">
+        <Mail className="h-4 w-4" />
+      </Button>
       
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={onShowApprovalForm}
-              className={isApproved ? "bg-green-100 text-green-700" : ""}
-            >
-              <ThumbsUp className="h-4 w-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Client Approval</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+      <Button onClick={onShowWhatsAppForm} variant="outline" size="icon">
+        <Share2 className="h-4 w-4" />
+      </Button>
+      
+      {isApproved && onCreateInvoice && (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button>Next Steps</Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={onCreateInvoice}>
+              <FileText className="h-4 w-4 mr-2" />
+              Create Invoice
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
     </div>
   );
 }
