@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -37,6 +37,40 @@ export function RecordPaymentDialog({
   const [paymentAmount, setPaymentAmount] = useState<string>(invoice.balanceAmount || "");
   const [paymentMethod, setPaymentMethod] = useState<string>("bank");
   const [collectedBy, setCollectedBy] = useState<string>("");
+  const [amountError, setAmountError] = useState<string>("");
+
+  // Get max allowed payment (balance amount)
+  const maxAllowedPayment = parseFloat(invoice.balanceAmount.replace(/[₹,]/g, "")) || 0;
+
+  // Update payment amount when invoice changes
+  useEffect(() => {
+    setPaymentAmount(invoice.balanceAmount || "");
+  }, [invoice]);
+
+  // Validate payment amount when it changes
+  const handlePaymentAmountChange = (value: string) => {
+    setPaymentAmount(value);
+    validatePaymentAmount(value);
+  };
+
+  // Validate payment amount
+  const validatePaymentAmount = (value: string) => {
+    const cleanValue = value.replace(/[₹,]/g, "");
+    const numValue = parseFloat(cleanValue) || 0;
+
+    if (numValue <= 0) {
+      setAmountError("Payment amount must be greater than zero");
+      return false;
+    }
+
+    if (numValue > maxAllowedPayment) {
+      setAmountError(`Payment cannot exceed balance (₹${maxAllowedPayment.toLocaleString()})`);
+      return false;
+    }
+
+    setAmountError("");
+    return true;
+  };
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -49,6 +83,11 @@ export function RecordPaymentDialog({
     
     if (!paymentAmount) {
       toast.error("Please enter a payment amount");
+      return;
+    }
+
+    // Validate payment amount
+    if (!validatePaymentAmount(paymentAmount)) {
       return;
     }
     
@@ -110,14 +149,20 @@ export function RecordPaymentDialog({
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="paymentAmount">Payment Amount</Label>
+            <Label htmlFor="paymentAmount">
+              Payment Amount (Max: ₹{maxAllowedPayment.toLocaleString()})
+            </Label>
             <Input 
               id="paymentAmount" 
               type="text" 
               value={paymentAmount}
-              onChange={(e) => setPaymentAmount(e.target.value)}
+              onChange={(e) => handlePaymentAmountChange(e.target.value)}
               placeholder="₹0.00"
+              className={amountError ? "border-red-500" : ""}
             />
+            {amountError && (
+              <p className="text-red-500 text-sm mt-1">{amountError}</p>
+            )}
           </div>
           
           <div className="space-y-2">
@@ -154,7 +199,7 @@ export function RecordPaymentDialog({
             <Button variant="outline" type="button" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit">
+            <Button type="submit" disabled={!!amountError}>
               Record Payment
             </Button>
           </div>
