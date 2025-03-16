@@ -69,7 +69,7 @@ export function useInvoices() {
       const matchesSearch = invoice.client
         .toLowerCase()
         .includes(searchQuery.toLowerCase());
-      const matchesStatus = !statusFilter || invoice.status === statusFilter;
+      const matchesStatus = !statusFilter || invoice.status.toLowerCase() === statusFilter.toLowerCase();
       return matchesSearch && matchesStatus;
     })
     .sort((a, b) => {

@@ -37,21 +37,21 @@ export function InvoiceFilters({
         <DropdownMenuTrigger asChild>
           <Button variant="outline" className="gap-2">
             <Filter className="h-4 w-4" />
-            {statusFilter || "All Status"}
+            {statusFilter ? statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1) : "All Status"}
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent>
           <DropdownMenuItem onClick={() => setStatusFilter(null)}>
             All Status
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setStatusFilter("Paid")}>
+          <DropdownMenuItem onClick={() => setStatusFilter("paid")}>
             Paid
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setStatusFilter("Pending")}>
-            Pending
+          <DropdownMenuItem onClick={() => setStatusFilter("partial")}>
+            Partial
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setStatusFilter("Draft")}>
-            Draft
+          <DropdownMenuItem onClick={() => setStatusFilter("pending")}>
+            Pending
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
