@@ -76,7 +76,7 @@ export default function InvoicesPage() {
         open={showNewInvoice} 
         onClose={() => setShowNewInvoice(false)} 
         onSave={handleSaveInvoice}
-        editingInvoice={null}
+        editingInvoice={selectedInvoice}
       />
       
       <InvoiceDetails
