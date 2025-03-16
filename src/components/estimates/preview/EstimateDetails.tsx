@@ -116,7 +116,7 @@ export function EstimateDetails({ estimate }: EstimateDetailsProps) {
       {packagesToRender.map((pkg, packageIndex) => (
         <div key={packageIndex} className="border p-4 rounded-md mb-6">
           <h2 className="text-xl font-medium mb-4">
-            {hasPackages ? `Package Option ${packageIndex + 1}${pkg.name ? `: ${pkg.name}` : ''}` : 'Package Details'}
+            {pkg.name || `Package Option ${packageIndex + 1}`}
           </h2>
           
           {pkg.services && pkg.services.length > 0 && (

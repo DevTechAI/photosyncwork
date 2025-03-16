@@ -14,6 +14,7 @@ export interface Event {
 }
 
 export interface Estimate {
+  name?: string; // Added name property for package
   services: Service[];
   total: string;
   deliverables: string[];

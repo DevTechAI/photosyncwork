@@ -17,6 +17,7 @@ interface EstimateCardProps {
   onDeliverableUpdate: (deliverableIndex: number, value: string) => void;
   onDeliverableRemove: (deliverableIndex: number) => void;
   onTotalUpdate: (total: string) => void;
+  onNameUpdate?: (name: string) => void; // Add handler for name updates
   onPackageDelete?: () => void;
 }
 
@@ -30,12 +31,20 @@ export function EstimateCard({
   onDeliverableUpdate,
   onDeliverableRemove,
   onTotalUpdate,
+  onNameUpdate,
   onPackageDelete,
 }: EstimateCardProps) {
   return (
     <div className="space-y-4 pt-6 border-t">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-medium">PACKAGE OPTION {index + 1}</h3>
+        <div className="flex-1">
+          <Input
+            value={estimate.name || ""}
+            onChange={(e) => onNameUpdate && onNameUpdate(e.target.value)}
+            className="text-lg font-medium border-0 p-0 h-auto focus-visible:ring-0 bg-transparent"
+            placeholder={`PACKAGE OPTION ${index + 1}`}
+          />
+        </div>
         {onPackageDelete && (
           <Button variant="ghost" size="sm" onClick={onPackageDelete} className="text-red-500 h-8">
             <Trash2 className="h-4 w-4 mr-1" />

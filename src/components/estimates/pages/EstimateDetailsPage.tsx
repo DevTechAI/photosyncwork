@@ -1,3 +1,4 @@
+
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
@@ -29,6 +30,7 @@ export function EstimateDetailsPage({ estimateDetails, onDetailsChange }: Estima
       estimates: [
         ...estimateDetails.estimates,
         { 
+          name: "",
           services: [], 
           total: "",
           deliverables: [
@@ -133,6 +135,15 @@ export function EstimateDetailsPage({ estimateDetails, onDetailsChange }: Estima
     });
   };
   
+  const updateEstimateName = (estimateIndex: number, name: string) => {
+    const newEstimates = [...estimateDetails.estimates];
+    newEstimates[estimateIndex].name = name;
+    onDetailsChange({
+      ...estimateDetails,
+      estimates: newEstimates
+    });
+  };
+  
   const checkIfIdenticalPackage = (currentIndex: number, updatedPackage: any) => {
     // We'll compare the deliverables list and total amount to check for identical packages
     // Event services are allowed to be the same across packages
@@ -217,6 +228,7 @@ export function EstimateDetailsPage({ estimateDetails, onDetailsChange }: Estima
                 onDeliverableRemove={(deliverableIndex) => 
                   removeDeliverable(estimateIndex, deliverableIndex)}
                 onTotalUpdate={(total) => updateEstimateTotal(estimateIndex, total)}
+                onNameUpdate={(name) => updateEstimateName(estimateIndex, name)}
                 onPackageDelete={() => deletePackage(estimateIndex)}
               />
             ))}

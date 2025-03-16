@@ -62,7 +62,7 @@ export function generatePreviewEstimate(formData: any, toast: any) {
   
   // Create packages array from all estimates
   const packages = estimates.map((estimate, index) => ({
-    name: `Option ${index + 1}`,
+    name: estimate.name || `Option ${index + 1}`,
     amount: estimate.total,
     services: estimate.services.map((service: any) => ({
       event: service.event,
