@@ -45,6 +45,9 @@ export function RecordPaymentDialog({
   // Update payment amount when invoice changes
   useEffect(() => {
     setPaymentAmount(invoice.balanceAmount || "");
+    setPaymentMethod(invoice.paymentMethod || "bank");
+    setPaymentDate(new Date().toISOString().split('T')[0]);
+    setCollectedBy("");
   }, [invoice]);
 
   // Validate payment amount when it changes

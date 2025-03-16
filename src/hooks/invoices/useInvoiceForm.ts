@@ -59,13 +59,16 @@ export function useInvoiceForm(editingInvoice?: Invoice | null, estimateData?: a
       }
     } else if (editingInvoice) {
       // Fill form with editing invoice data
+      const isPaid = editingInvoice.status === "paid";
+      const isPartial = editingInvoice.status === "partial";
+      
       setClientDetails(prevState => ({
         ...prevState,
         clientName: editingInvoice.client || "",
         clientEmail: editingInvoice.clientEmail || "",
         invoiceDate: editingInvoice.date || new Date().toISOString().split('T')[0],
         invoiceType: editingInvoice.status === "pending" ? "proforma" : "paid",
-        paymentReceived: editingInvoice.status === "paid",
+        paymentReceived: isPaid,
         paymentDate: editingInvoice.paymentDate || "",
         paymentMethod: editingInvoice.paymentMethod || "bank"
       }));
@@ -126,11 +129,20 @@ export function useInvoiceForm(editingInvoice?: Invoice | null, estimateData?: a
     }
     
     const finalAmount = amount || calculateTotal();
-    const status = clientDetails.paymentReceived 
-      ? "paid" 
-      : parseFloat(paidAmount) > 0 
-        ? "partial" 
-        : "pending";
+    
+    // Determine status from amount values, not just from form state
+    const paidAmountValue = parseFloat(paidAmount.replace(/[₹,]/g, "")) || 0;
+    const totalAmountValue = parseFloat(finalAmount.replace(/[₹,]/g, "")) || 0;
+    
+    let status: "pending" | "partial" | "paid";
+    
+    if (paidAmountValue >= totalAmountValue) {
+      status = "paid";
+    } else if (paidAmountValue > 0) {
+      status = "partial";
+    } else {
+      status = "pending";
+    }
     
     const newInvoice: Invoice = {
       id: editingInvoice?.id || Math.floor(Math.random() * 100000).toString(),
@@ -144,8 +156,8 @@ export function useInvoiceForm(editingInvoice?: Invoice | null, estimateData?: a
       items,
       estimateId: estimateData?.id,
       notes,
-      paymentDate: clientDetails.paymentReceived ? clientDetails.paymentDate : undefined,
-      paymentMethod: clientDetails.paymentReceived ? clientDetails.paymentMethod : undefined,
+      paymentDate: paidAmountValue > 0 ? (editingInvoice?.paymentDate || clientDetails.paymentDate) : undefined,
+      paymentMethod: paidAmountValue > 0 ? (editingInvoice?.paymentMethod || clientDetails.paymentMethod) : undefined,
       gstRate: clientDetails.invoiceType === "paid" ? gstRate : "0"
     };
     
