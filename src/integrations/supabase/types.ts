@@ -57,6 +57,63 @@ export type Database = {
         }
         Relationships: []
       }
+      invoices: {
+        Row: {
+          amount: string
+          balance_amount: string
+          client: string
+          client_email: string | null
+          created_at: string
+          date: string
+          estimate_id: string | null
+          gst_rate: string | null
+          id: string
+          items: Json
+          notes: string | null
+          paid_amount: string
+          payment_date: string | null
+          payment_method: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount: string
+          balance_amount?: string
+          client: string
+          client_email?: string | null
+          created_at?: string
+          date: string
+          estimate_id?: string | null
+          gst_rate?: string | null
+          id?: string
+          items?: Json
+          notes?: string | null
+          paid_amount?: string
+          payment_date?: string | null
+          payment_method?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: string
+          balance_amount?: string
+          client?: string
+          client_email?: string | null
+          created_at?: string
+          date?: string
+          estimate_id?: string | null
+          gst_rate?: string | null
+          id?: string
+          items?: Json
+          notes?: string | null
+          paid_amount?: string
+          payment_date?: string | null
+          payment_method?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       realtime_messages: {
         Row: {
           created_at: string

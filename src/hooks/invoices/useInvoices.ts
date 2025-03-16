@@ -35,7 +35,23 @@ export function useInvoices() {
         return [];
       }
       
-      return data as Invoice[];
+      // Map database column names to our Invoice type
+      return data.map(item => ({
+        id: item.id,
+        client: item.client,
+        clientEmail: item.client_email,
+        date: item.date,
+        amount: item.amount,
+        paidAmount: item.paid_amount,
+        balanceAmount: item.balance_amount,
+        status: item.status,
+        items: item.items,
+        estimateId: item.estimate_id,
+        notes: item.notes,
+        paymentDate: item.payment_date,
+        paymentMethod: item.payment_method,
+        gstRate: item.gst_rate
+      })) as Invoice[];
     }
   });
 
@@ -77,14 +93,27 @@ export function useInvoices() {
   // Add invoice mutation
   const addInvoiceMutation = useMutation({
     mutationFn: async (invoice: Invoice) => {
-      // Generate a unique ID if not provided
-      if (!invoice.id) {
-        invoice.id = Math.floor(Math.random() * 100000).toString();
-      }
+      // Convert Invoice type to database structure
+      const dbInvoice = {
+        id: invoice.id,
+        client: invoice.client,
+        client_email: invoice.clientEmail,
+        date: invoice.date,
+        amount: invoice.amount,
+        paid_amount: invoice.paidAmount,
+        balance_amount: invoice.balanceAmount,
+        status: invoice.status,
+        items: invoice.items,
+        estimate_id: invoice.estimateId,
+        notes: invoice.notes,
+        payment_date: invoice.paymentDate,
+        payment_method: invoice.paymentMethod,
+        gst_rate: invoice.gstRate
+      };
       
       const { data, error } = await supabase
         .from('invoices')
-        .insert(invoice)
+        .insert(dbInvoice)
         .select()
         .single();
         
@@ -111,9 +140,26 @@ export function useInvoices() {
   // Update invoice mutation
   const updateInvoiceMutation = useMutation({
     mutationFn: async (updatedInvoice: Invoice) => {
+      // Convert Invoice type to database structure
+      const dbInvoice = {
+        client: updatedInvoice.client,
+        client_email: updatedInvoice.clientEmail,
+        date: updatedInvoice.date,
+        amount: updatedInvoice.amount,
+        paid_amount: updatedInvoice.paidAmount,
+        balance_amount: updatedInvoice.balanceAmount,
+        status: updatedInvoice.status,
+        items: updatedInvoice.items,
+        estimate_id: updatedInvoice.estimateId,
+        notes: updatedInvoice.notes,
+        payment_date: updatedInvoice.paymentDate,
+        payment_method: updatedInvoice.paymentMethod,
+        gst_rate: updatedInvoice.gstRate
+      };
+      
       const { data, error } = await supabase
         .from('invoices')
-        .update(updatedInvoice)
+        .update(dbInvoice)
         .eq('id', updatedInvoice.id)
         .select()
         .single();
