@@ -194,9 +194,15 @@ export const fetchTransactions = async (filters?: {
 };
 
 export const addTransaction = async (transaction: Omit<FinanceTransaction, 'id' | 'created_at' | 'updated_at'>): Promise<FinanceTransaction> => {
+  // Convert amount to string for storage if needed
+  const transactionData = {
+    ...transaction,
+    amount: transaction.amount.toString()
+  };
+
   const { data, error } = await supabase
     .from('finance_transactions')
-    .insert(transaction)
+    .insert(transactionData)
     .select()
     .single();
     
@@ -205,15 +211,25 @@ export const addTransaction = async (transaction: Omit<FinanceTransaction, 'id' 
     throw error;
   }
   
-  return data as FinanceTransaction;
+  // Convert amount back to number before returning
+  return {
+    ...data,
+    amount: Number(data.amount)
+  } as FinanceTransaction;
 };
 
 export const updateTransaction = async (transaction: FinanceTransaction): Promise<FinanceTransaction> => {
   const { id, created_at, updated_at, ...updateData } = transaction;
   
+  // Convert amount to string for storage if needed
+  const transactionData = {
+    ...updateData,
+    amount: updateData.amount.toString()
+  };
+
   const { data, error } = await supabase
     .from('finance_transactions')
-    .update(updateData)
+    .update(transactionData)
     .eq('id', id)
     .select()
     .single();
@@ -223,7 +239,11 @@ export const updateTransaction = async (transaction: FinanceTransaction): Promis
     throw error;
   }
   
-  return data as FinanceTransaction;
+  // Convert amount back to number before returning
+  return {
+    ...data,
+    amount: Number(data.amount)
+  } as FinanceTransaction;
 };
 
 export const deleteTransaction = async (id: string): Promise<void> => {
@@ -249,7 +269,7 @@ export const getTransactionStats = async (
   incomeByCategory: { category: string; amount: number }[];
   expenseByCategory: { category: string; amount: number }[];
 }> => {
-  // Fetch all transactions in date range
+  // Fetch all transactions in date range with category information
   const { data: transactions, error } = await supabase
     .from('finance_transactions')
     .select(`

@@ -46,13 +46,9 @@ export function SubcategoryForm({ onSubmit, initialData, categories, onCancel }:
 
   async function handleSubmit(values: z.infer<typeof formSchema>) {
     try {
-      // Ensure values are not optional
-      const subcategoryData: Omit<FinanceSubcategory, 'id' | 'created_at' | 'updated_at'> = {
-        name: values.name,
-        category_id: values.category_id
-      };
-      
-      await onSubmit(subcategoryData);
+      // Using the values directly since they are already validated by zod
+      // and guaranteed to have required properties
+      await onSubmit(values);
       toast.success(`Subcategory ${initialData ? "updated" : "created"} successfully`);
     } catch (error) {
       console.error("Error submitting subcategory:", error);
