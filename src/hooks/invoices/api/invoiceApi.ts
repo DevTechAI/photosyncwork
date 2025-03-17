@@ -6,7 +6,7 @@ import { Json } from "@/integrations/supabase/types";
 // Convert from our application type to database type
 export const mapInvoiceToDbInvoice = (invoice: Invoice) => {
   return {
-    id: invoice.id,
+    id: invoice.id || undefined, // If empty string, make it undefined so Supabase generates one
     client: invoice.client,
     client_email: invoice.clientEmail,
     date: invoice.date,
