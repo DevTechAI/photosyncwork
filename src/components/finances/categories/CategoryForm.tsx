@@ -47,7 +47,13 @@ export function CategoryForm({ onSubmit, initialData, onCancel }: CategoryFormPr
 
   async function handleSubmit(values: z.infer<typeof formSchema>) {
     try {
-      await onSubmit(values);
+      // Ensure values are not optional 
+      const categoryData: Omit<FinanceCategory, 'id' | 'created_at' | 'updated_at'> = {
+        name: values.name,
+        type: values.type,
+      };
+      
+      await onSubmit(categoryData);
       toast.success(`Category ${initialData ? "updated" : "created"} successfully`);
     } catch (error) {
       console.error("Error submitting category:", error);

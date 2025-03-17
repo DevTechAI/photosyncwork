@@ -114,10 +114,15 @@ export function TransactionForm({
 
   async function handleSubmit(values: z.infer<typeof formSchema>) {
     try {
-      const transactionData = {
-        ...values,
+      // Ensure all required fields are present
+      const transactionData: Omit<FinanceTransaction, 'id' | 'created_at' | 'updated_at'> = {
+        transaction_type: values.transaction_type,
+        category_id: values.category_id,
+        amount: values.amount,
         transaction_date: format(values.transaction_date, "yyyy-MM-dd"),
-        subcategory_id: values.subcategory_id || null,
+        description: values.description || "",
+        payment_method: values.payment_method || "",
+        subcategory_id: values.subcategory_id || undefined
       };
       
       await onSubmit(transactionData);

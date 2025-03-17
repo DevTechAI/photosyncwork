@@ -42,7 +42,7 @@ export const fetchCategories = async (): Promise<FinanceCategory[]> => {
     throw error;
   }
   
-  return data;
+  return data as FinanceCategory[];
 };
 
 export const addCategory = async (category: Omit<FinanceCategory, 'id' | 'created_at' | 'updated_at'>): Promise<FinanceCategory> => {
@@ -57,7 +57,7 @@ export const addCategory = async (category: Omit<FinanceCategory, 'id' | 'create
     throw error;
   }
   
-  return data;
+  return data as FinanceCategory;
 };
 
 export const updateCategory = async (category: FinanceCategory): Promise<FinanceCategory> => {
@@ -73,7 +73,7 @@ export const updateCategory = async (category: FinanceCategory): Promise<Finance
     throw error;
   }
   
-  return data;
+  return data as FinanceCategory;
 };
 
 export const deleteCategory = async (id: string): Promise<void> => {
@@ -106,7 +106,7 @@ export const fetchSubcategories = async (categoryId?: string): Promise<FinanceSu
     throw error;
   }
   
-  return data;
+  return data as FinanceSubcategory[];
 };
 
 export const addSubcategory = async (subcategory: Omit<FinanceSubcategory, 'id' | 'created_at' | 'updated_at'>): Promise<FinanceSubcategory> => {
@@ -121,7 +121,7 @@ export const addSubcategory = async (subcategory: Omit<FinanceSubcategory, 'id' 
     throw error;
   }
   
-  return data;
+  return data as FinanceSubcategory;
 };
 
 export const updateSubcategory = async (subcategory: FinanceSubcategory): Promise<FinanceSubcategory> => {
@@ -137,7 +137,7 @@ export const updateSubcategory = async (subcategory: FinanceSubcategory): Promis
     throw error;
   }
   
-  return data;
+  return data as FinanceSubcategory;
 };
 
 export const deleteSubcategory = async (id: string): Promise<void> => {
@@ -190,7 +190,7 @@ export const fetchTransactions = async (filters?: {
     throw error;
   }
   
-  return data;
+  return data as FinanceTransaction[];
 };
 
 export const addTransaction = async (transaction: Omit<FinanceTransaction, 'id' | 'created_at' | 'updated_at'>): Promise<FinanceTransaction> => {
@@ -205,7 +205,7 @@ export const addTransaction = async (transaction: Omit<FinanceTransaction, 'id' 
     throw error;
   }
   
-  return data;
+  return data as FinanceTransaction;
 };
 
 export const updateTransaction = async (transaction: FinanceTransaction): Promise<FinanceTransaction> => {
@@ -223,7 +223,7 @@ export const updateTransaction = async (transaction: FinanceTransaction): Promis
     throw error;
   }
   
-  return data;
+  return data as FinanceTransaction;
 };
 
 export const deleteTransaction = async (id: string): Promise<void> => {
@@ -274,11 +274,11 @@ export const getTransactionStats = async (
     .reduce((sum, t) => sum + Number(t.amount), 0);
     
   // Group by category
-  const incomeByCategory = [];
-  const expenseByCategory = [];
+  const incomeByCategory: { category: string; amount: number }[] = [];
+  const expenseByCategory: { category: string; amount: number }[] = [];
   
-  const incomeCategories = {};
-  const expenseCategories = {};
+  const incomeCategories: Record<string, number> = {};
+  const expenseCategories: Record<string, number> = {};
   
   for (const transaction of transactions) {
     const categoryName = transaction.finance_categories?.name || 'Uncategorized';
@@ -326,7 +326,7 @@ export const bulkImportCategories = async (categories: Array<Omit<FinanceCategor
     throw error;
   }
   
-  return data;
+  return data as FinanceCategory[];
 };
 
 export const bulkImportSubcategories = async (subcategories: Array<Omit<FinanceSubcategory, 'id' | 'created_at' | 'updated_at'>>): Promise<FinanceSubcategory[]> => {
@@ -340,5 +340,5 @@ export const bulkImportSubcategories = async (subcategories: Array<Omit<FinanceS
     throw error;
   }
   
-  return data;
+  return data as FinanceSubcategory[];
 };

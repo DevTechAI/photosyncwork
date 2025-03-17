@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { ArrowUpTrayIcon } from "lucide-react";
+import { Upload } from "lucide-react";
 import { bulkImportCategories, bulkImportSubcategories } from "@/hooks/finances/api/financeApi";
 import * as XLSX from "xlsx";
 
@@ -113,7 +113,7 @@ export function ImportCategoriesForm({ onSuccess }: { onSuccess: () => void }) {
           />
           
           <Button disabled={isLoading} variant="outline">
-            <ArrowUpTrayIcon className="mr-2 h-4 w-4" />
+            <Upload className="mr-2 h-4 w-4" />
             {isLoading ? "Importing..." : "Upload File"}
           </Button>
         </div>
