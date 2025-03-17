@@ -42,7 +42,7 @@ export const fetchCategories = async (): Promise<FinanceCategory[]> => {
     throw error;
   }
   
-  return data as unknown as FinanceCategory[];
+  return data as FinanceCategory[];
 };
 
 export const addCategory = async (category: Omit<FinanceCategory, 'id' | 'created_at' | 'updated_at'>): Promise<FinanceCategory> => {
@@ -57,7 +57,7 @@ export const addCategory = async (category: Omit<FinanceCategory, 'id' | 'create
     throw error;
   }
   
-  return data as unknown as FinanceCategory;
+  return data as FinanceCategory;
 };
 
 export const updateCategory = async (category: FinanceCategory): Promise<FinanceCategory> => {
@@ -73,7 +73,7 @@ export const updateCategory = async (category: FinanceCategory): Promise<Finance
     throw error;
   }
   
-  return data as unknown as FinanceCategory;
+  return data as FinanceCategory;
 };
 
 export const deleteCategory = async (id: string): Promise<void> => {
@@ -106,7 +106,7 @@ export const fetchSubcategories = async (categoryId?: string): Promise<FinanceSu
     throw error;
   }
   
-  return data as unknown as FinanceSubcategory[];
+  return data as FinanceSubcategory[];
 };
 
 export const addSubcategory = async (subcategory: Omit<FinanceSubcategory, 'id' | 'created_at' | 'updated_at'>): Promise<FinanceSubcategory> => {
@@ -121,7 +121,7 @@ export const addSubcategory = async (subcategory: Omit<FinanceSubcategory, 'id' 
     throw error;
   }
   
-  return data as unknown as FinanceSubcategory;
+  return data as FinanceSubcategory;
 };
 
 export const updateSubcategory = async (subcategory: FinanceSubcategory): Promise<FinanceSubcategory> => {
@@ -137,7 +137,7 @@ export const updateSubcategory = async (subcategory: FinanceSubcategory): Promis
     throw error;
   }
   
-  return data as unknown as FinanceSubcategory;
+  return data as FinanceSubcategory;
 };
 
 export const deleteSubcategory = async (id: string): Promise<void> => {
@@ -190,15 +190,15 @@ export const fetchTransactions = async (filters?: {
     throw error;
   }
   
-  // Convert amount from string to number
-  return (data as unknown as any[]).map(item => ({
+  // Ensure amount is returned as a number
+  return data.map(item => ({
     ...item,
     amount: Number(item.amount)
   })) as FinanceTransaction[];
 };
 
 export const addTransaction = async (transaction: Omit<FinanceTransaction, 'id' | 'created_at' | 'updated_at'>): Promise<FinanceTransaction> => {
-  // Convert amount to string for storage if needed
+  // Convert number to string for storage if needed
   const transactionData = {
     ...transaction,
     amount: transaction.amount.toString()
@@ -219,7 +219,7 @@ export const addTransaction = async (transaction: Omit<FinanceTransaction, 'id' 
   return {
     ...data,
     amount: Number(data.amount)
-  } as unknown as FinanceTransaction;
+  } as FinanceTransaction;
 };
 
 export const updateTransaction = async (transaction: FinanceTransaction): Promise<FinanceTransaction> => {
@@ -247,7 +247,7 @@ export const updateTransaction = async (transaction: FinanceTransaction): Promis
   return {
     ...data,
     amount: Number(data.amount)
-  } as unknown as FinanceTransaction;
+  } as FinanceTransaction;
 };
 
 export const deleteTransaction = async (id: string): Promise<void> => {
@@ -278,7 +278,7 @@ export const getTransactionStats = async (
     .from('finance_transactions')
     .select(`
       *,
-      finance_categories(name)
+      finance_categories:category_id(name)
     `)
     .gte('transaction_date', startDate)
     .lte('transaction_date', endDate);
@@ -288,10 +288,8 @@ export const getTransactionStats = async (
     throw error;
   }
 
-  // Cast the data to have proper type information
-  const transactions = transactionsData as unknown as Array<FinanceTransaction & {
-    finance_categories: { name: string }
-  }>;
+  // Process transactions
+  const transactions = transactionsData;
   
   // Calculate totals
   const totalIncome = transactions
@@ -327,11 +325,11 @@ export const getTransactionStats = async (
   }
   
   for (const [category, amount] of Object.entries(incomeCategories)) {
-    incomeByCategory.push({ category, amount: Number(amount) });
+    incomeByCategory.push({ category, amount });
   }
   
   for (const [category, amount] of Object.entries(expenseCategories)) {
-    expenseByCategory.push({ category, amount: Number(amount) });
+    expenseByCategory.push({ category, amount });
   }
   
   return {
@@ -355,7 +353,7 @@ export const bulkImportCategories = async (categories: Array<Omit<FinanceCategor
     throw error;
   }
   
-  return data as unknown as FinanceCategory[];
+  return data as FinanceCategory[];
 };
 
 export const bulkImportSubcategories = async (subcategories: Array<Omit<FinanceSubcategory, 'id' | 'created_at' | 'updated_at'>>): Promise<FinanceSubcategory[]> => {
@@ -369,5 +367,5 @@ export const bulkImportSubcategories = async (subcategories: Array<Omit<FinanceS
     throw error;
   }
   
-  return data as unknown as FinanceSubcategory[];
+  return data as FinanceSubcategory[];
 };

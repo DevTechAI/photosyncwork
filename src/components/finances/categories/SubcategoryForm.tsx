@@ -46,7 +46,7 @@ export function SubcategoryForm({ onSubmit, initialData, categories, onCancel }:
 
   async function handleSubmit(values: z.infer<typeof formSchema>) {
     try {
-      // Explicitly cast the values as the required type to satisfy TypeScript
+      // Ensure all required fields are provided
       const subcategoryData: Omit<FinanceSubcategory, 'id' | 'created_at' | 'updated_at'> = {
         name: values.name,
         category_id: values.category_id

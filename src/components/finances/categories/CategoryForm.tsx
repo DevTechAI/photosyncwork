@@ -47,7 +47,7 @@ export function CategoryForm({ onSubmit, initialData, onCancel }: CategoryFormPr
 
   async function handleSubmit(values: z.infer<typeof formSchema>) {
     try {
-      // Explicitly cast the values as the required type to satisfy TypeScript
+      // Ensure all required fields are provided
       const categoryData: Omit<FinanceCategory, 'id' | 'created_at' | 'updated_at'> = {
         name: values.name,
         type: values.type,

@@ -57,6 +57,116 @@ export type Database = {
         }
         Relationships: []
       }
+      finance_categories: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+          type: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      finance_subcategories: {
+        Row: {
+          category_id: string
+          created_at: string | null
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          category_id: string
+          created_at?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          category_id?: string
+          created_at?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "finance_subcategories_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "finance_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      finance_transactions: {
+        Row: {
+          amount: number
+          category_id: string
+          created_at: string | null
+          description: string | null
+          id: string
+          payment_method: string | null
+          subcategory_id: string | null
+          transaction_date: string
+          transaction_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          amount: number
+          category_id: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          payment_method?: string | null
+          subcategory_id?: string | null
+          transaction_date: string
+          transaction_type: string
+          updated_at?: string | null
+        }
+        Update: {
+          amount?: number
+          category_id?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          payment_method?: string | null
+          subcategory_id?: string | null
+          transaction_date?: string
+          transaction_type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "finance_transactions_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "finance_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finance_transactions_subcategory_id_fkey"
+            columns: ["subcategory_id"]
+            isOneToOne: false
+            referencedRelation: "finance_subcategories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoices: {
         Row: {
           amount: string
