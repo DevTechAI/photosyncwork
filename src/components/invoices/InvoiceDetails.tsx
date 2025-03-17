@@ -38,7 +38,7 @@ export function InvoiceDetails({ invoice, open, onClose, onEdit }: InvoiceDetail
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex justify-between items-center">
-            <span>Invoice #{invoice.id}</span>
+            <span>Invoice {invoice.displayNumber || `#${invoice.id.substring(0, 8)}`}</span>
             {onEdit && (
               <Button variant="outline" size="sm" onClick={onEdit} className="gap-1">
                 <Edit className="h-4 w-4" />
@@ -63,6 +63,10 @@ export function InvoiceDetails({ invoice, open, onClose, onEdit }: InvoiceDetail
               <div>
                 <h3 className="font-medium">Invoice Details</h3>
                 <div className="mt-2 space-y-1">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Invoice Number:</span>
+                    <span>{invoice.displayNumber || `#${invoice.id.substring(0, 8)}`}</span>
+                  </div>
                   <div className="flex justify-between">
                     <span className="text-sm text-muted-foreground">Date:</span>
                     <span>{new Date(invoice.date).toLocaleDateString()}</span>

@@ -6,6 +6,7 @@ export interface InvoiceItem {
 
 export interface Invoice {
   id: string;
+  displayNumber?: string;
   client: string;
   clientEmail?: string;
   date: string;

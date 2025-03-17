@@ -130,7 +130,7 @@ export function InvoicesList({
                         <span>{invoice.client}</span>
                       </div>
                     </TableCell>
-                    <TableCell>{invoice.id}</TableCell>
+                    <TableCell>{invoice.displayNumber || invoice.id.substring(0, 8)}</TableCell>
                     <TableCell>{invoice.date}</TableCell>
                     <TableCell>{invoice.amount}</TableCell>
                     <TableCell>{invoice.balanceAmount}</TableCell>

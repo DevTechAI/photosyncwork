@@ -7,6 +7,7 @@ import { Json } from "@/integrations/supabase/types";
 export const mapInvoiceToDbInvoice = (invoice: Invoice) => {
   return {
     id: invoice.id || undefined, // If empty string, make it undefined so Supabase generates one
+    display_number: invoice.displayNumber,
     client: invoice.client,
     client_email: invoice.clientEmail,
     date: invoice.date,
@@ -27,6 +28,7 @@ export const mapInvoiceToDbInvoice = (invoice: Invoice) => {
 export const mapDbInvoiceToInvoice = (item: any): Invoice => {
   return {
     id: item.id,
+    displayNumber: item.display_number,
     client: item.client,
     clientEmail: item.client_email,
     date: item.date,
@@ -41,6 +43,28 @@ export const mapDbInvoiceToInvoice = (item: any): Invoice => {
     paymentMethod: item.payment_method,
     gstRate: item.gst_rate
   };
+};
+
+// Function to generate a user-friendly invoice number
+export const generateInvoiceNumber = async (): Promise<string> => {
+  const currentDate = new Date();
+  const year = currentDate.getFullYear();
+  const month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
+  
+  // Get count of invoices this month to determine the next sequential number
+  const { count, error } = await supabase
+    .from('invoices')
+    .select('*', { count: 'exact', head: true })
+    .like('display_number', `INV-${year}${month}-%`);
+    
+  if (error) {
+    console.error("Error counting invoices:", error);
+    throw error;
+  }
+  
+  // Format: INV-YYYYMM-XXX where XXX is sequential
+  const sequentialNumber = ((count || 0) + 1).toString().padStart(3, '0');
+  return `INV-${year}${month}-${sequentialNumber}`;
 };
 
 // Fetch all invoices
@@ -59,6 +83,11 @@ export const fetchInvoices = async (): Promise<Invoice[]> => {
 
 // Add a new invoice
 export const addInvoice = async (invoice: Invoice): Promise<Invoice> => {
+  // Generate friendly invoice number if not provided
+  if (!invoice.displayNumber) {
+    invoice.displayNumber = await generateInvoiceNumber();
+  }
+  
   const dbInvoice = mapInvoiceToDbInvoice(invoice);
   
   const { data, error } = await supabase
