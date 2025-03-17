@@ -1,5 +1,5 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { Card } from "@/components/ui/card";
 import {
@@ -9,6 +9,7 @@ import {
   PieChart,
   CalendarDays,
   Receipt,
+  Tags,
 } from "lucide-react";
 import {
   Select,
@@ -32,12 +33,9 @@ import {
 } from "recharts";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { TransactionForm } from "@/components/finances/transactions/TransactionForm";
-import { useState as useStateEffect } from "react";
-import { useEffect } from "react";
 import { fetchCategories, FinanceCategory } from "@/hooks/finances/api/financeApi";
 import { toast } from "sonner";
 
-// Mock data for demonstration
 const revenueData = [
   { month: "Jan", amount: 150000 },
   { month: "Feb", amount: 180000 },
@@ -60,7 +58,6 @@ export default function FinancesPage() {
   const [isTransactionModalOpen, setIsTransactionModalOpen] = useState(false);
   const [categories, setCategories] = useState<FinanceCategory[]>([]);
   
-  // Fetch categories on component mount
   useEffect(() => {
     const loadCategories = async () => {
       try {
@@ -81,8 +78,6 @@ export default function FinancesPage() {
   
   const handleTransactionSubmit = async (data: any) => {
     try {
-      // Here we would normally save the transaction
-      // For now just close the modal and show success message
       setIsTransactionModalOpen(false);
       toast.success("Transaction recorded successfully");
     } catch (error) {
@@ -112,6 +107,12 @@ export default function FinancesPage() {
                 <SelectItem value="2022">2022</SelectItem>
               </SelectContent>
             </Select>
+            <Button variant="outline" asChild>
+              <Link to="/finances/categories">
+                <Tags className="mr-2 h-4 w-4" />
+                Manage Categories
+              </Link>
+            </Button>
             <Button onClick={handleNewTransaction}>
               <Receipt className="mr-2 h-4 w-4" />
               New Transaction
@@ -119,7 +120,6 @@ export default function FinancesPage() {
           </div>
         </div>
 
-        {/* Quick Stats */}
         <div className="grid gap-4 md:grid-cols-4">
           <Card className="p-6">
             <div className="flex items-center gap-2">
@@ -185,7 +185,6 @@ export default function FinancesPage() {
           </Card>
         </div>
 
-        {/* Charts */}
         <div className="grid gap-4 md:grid-cols-2">
           <Card className="p-6">
             <h3 className="font-semibold mb-6">Revenue Overview</h3>
@@ -234,7 +233,6 @@ export default function FinancesPage() {
           </Card>
         </div>
 
-        {/* Recent Transactions */}
         <Card className="p-6">
           <h3 className="font-semibold mb-6">Recent Transactions</h3>
           <div className="space-y-4">
@@ -300,7 +298,6 @@ export default function FinancesPage() {
         </Card>
       </div>
       
-      {/* Transaction Modal */}
       <Dialog open={isTransactionModalOpen} onOpenChange={setIsTransactionModalOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>

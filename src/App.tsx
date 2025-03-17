@@ -1,47 +1,120 @@
 
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
+import { Route, Routes } from "react-router-dom";
+import ProtectedRoute from "./components/ProtectedRoute";
+import { useUserContext } from "./contexts/UserContext";
+import { useState, useEffect } from "react";
 import Login from "./pages/Login";
-import NotFound from "./pages/NotFound";
-import { ProtectedRoute } from "./components/ProtectedRoute";
-import EstimatesPage from "./pages/estimates/EstimatesPage";
-import InvoicesPage from "./pages/invoices/InvoicesPage";
+import Index from "./pages/Index";
+import SchedulingPage from "./pages/scheduling/SchedulingPage";
 import PreProductionPage from "./pages/workflow/PreProductionPage";
 import ProductionPage from "./pages/workflow/ProductionPage";
 import PostProductionPage from "./pages/workflow/PostProductionPage";
+import NotFound from "./pages/NotFound";
+import EstimatesPage from "./pages/estimates/EstimatesPage";
+import InvoicesPage from "./pages/invoices/InvoicesPage";
 import FinancesPage from "./pages/finances/FinancesPage";
-import SchedulingPage from "./pages/scheduling/SchedulingPage";
-import { UserProvider } from "./contexts/UserContext";
-import { Toaster } from "./components/ui/toaster";
+import CategoriesPage from "./pages/finances/CategoriesPage";
+import { Toaster } from "./components/ui/sonner";
 import RealtimeTestPage from "./pages/RealtimeTestPage";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import "./App.css";
-
-// Create a client
-const queryClient = new QueryClient();
 
 function App() {
+  const { user, loading } = useUserContext();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted || loading) return null;
+
   return (
-    <QueryClientProvider client={queryClient}>
-      <UserProvider>
-        <Router>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-            <Route path="/estimates" element={<ProtectedRoute><EstimatesPage /></ProtectedRoute>} />
-            <Route path="/invoices" element={<ProtectedRoute><InvoicesPage /></ProtectedRoute>} />
-            <Route path="/pre-production" element={<ProtectedRoute><PreProductionPage /></ProtectedRoute>} />
-            <Route path="/production" element={<ProtectedRoute><ProductionPage /></ProtectedRoute>} />
-            <Route path="/post-production" element={<ProtectedRoute><PostProductionPage /></ProtectedRoute>} />
-            <Route path="/finances" element={<ProtectedRoute><FinancesPage /></ProtectedRoute>} />
-            <Route path="/scheduling" element={<ProtectedRoute><SchedulingPage /></ProtectedRoute>} />
-            <Route path="/realtime-test" element={<ProtectedRoute><RealtimeTestPage /></ProtectedRoute>} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Router>
-        <Toaster />
-      </UserProvider>
-    </QueryClientProvider>
+    <>
+      <Toaster richColors/>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute user={user}>
+              <Index />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/scheduling"
+          element={
+            <ProtectedRoute user={user}>
+              <SchedulingPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/workflow/pre-production"
+          element={
+            <ProtectedRoute user={user}>
+              <PreProductionPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/workflow/production"
+          element={
+            <ProtectedRoute user={user}>
+              <ProductionPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/workflow/post-production"
+          element={
+            <ProtectedRoute user={user}>
+              <PostProductionPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/estimates"
+          element={
+            <ProtectedRoute user={user}>
+              <EstimatesPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/invoices"
+          element={
+            <ProtectedRoute user={user}>
+              <InvoicesPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/finances"
+          element={
+            <ProtectedRoute user={user}>
+              <FinancesPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/finances/categories"
+          element={
+            <ProtectedRoute user={user}>
+              <CategoriesPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/realtime-test"
+          element={
+            <ProtectedRoute user={user}>
+              <RealtimeTestPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </>
   );
 }
 
