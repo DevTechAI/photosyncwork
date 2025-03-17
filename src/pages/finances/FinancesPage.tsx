@@ -1,4 +1,5 @@
 
+import { useState } from "react";
 import Layout from "@/components/Layout";
 import { Card } from "@/components/ui/card";
 import {
@@ -29,6 +30,12 @@ import {
   Pie,
   Cell,
 } from "recharts";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { TransactionForm } from "@/components/finances/transactions/TransactionForm";
+import { useState as useStateEffect } from "react";
+import { useEffect } from "react";
+import { fetchCategories, FinanceCategory } from "@/hooks/finances/api/financeApi";
+import { toast } from "sonner";
 
 // Mock data for demonstration
 const revenueData = [
@@ -50,6 +57,40 @@ const expensesByCategory = [
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
 
 export default function FinancesPage() {
+  const [isTransactionModalOpen, setIsTransactionModalOpen] = useState(false);
+  const [categories, setCategories] = useState<FinanceCategory[]>([]);
+  
+  // Fetch categories on component mount
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const categoriesData = await fetchCategories();
+        setCategories(categoriesData);
+      } catch (error) {
+        console.error("Error loading categories:", error);
+        toast.error("Failed to load categories");
+      }
+    };
+    
+    loadCategories();
+  }, []);
+  
+  const handleNewTransaction = () => {
+    setIsTransactionModalOpen(true);
+  };
+  
+  const handleTransactionSubmit = async (data: any) => {
+    try {
+      // Here we would normally save the transaction
+      // For now just close the modal and show success message
+      setIsTransactionModalOpen(false);
+      toast.success("Transaction recorded successfully");
+    } catch (error) {
+      console.error("Error saving transaction:", error);
+      toast.error("Failed to save transaction");
+    }
+  };
+
   return (
     <Layout>
       <div className="space-y-8 animate-in">
@@ -71,7 +112,7 @@ export default function FinancesPage() {
                 <SelectItem value="2022">2022</SelectItem>
               </SelectContent>
             </Select>
-            <Button>
+            <Button onClick={handleNewTransaction}>
               <Receipt className="mr-2 h-4 w-4" />
               New Transaction
             </Button>
@@ -258,6 +299,20 @@ export default function FinancesPage() {
           </div>
         </Card>
       </div>
+      
+      {/* Transaction Modal */}
+      <Dialog open={isTransactionModalOpen} onOpenChange={setIsTransactionModalOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Record New Transaction</DialogTitle>
+          </DialogHeader>
+          <TransactionForm 
+            onSubmit={handleTransactionSubmit} 
+            categories={categories} 
+            onCancel={() => setIsTransactionModalOpen(false)} 
+          />
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 }

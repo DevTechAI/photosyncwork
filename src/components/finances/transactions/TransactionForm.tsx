@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -30,7 +29,9 @@ import {
   FinanceCategory, 
   FinanceSubcategory, 
   FinanceTransaction, 
-  fetchSubcategories 
+  fetchSubcategories,
+  addTransaction,
+  updateTransaction 
 } from "@/hooks/finances/api/financeApi";
 
 const formSchema = z.object({
@@ -60,6 +61,7 @@ export function TransactionForm({
   const [selectedType, setSelectedType] = useState<'income' | 'expense'>(
     initialData?.transaction_type || 'expense'
   );
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -114,6 +116,7 @@ export function TransactionForm({
 
   async function handleSubmit(values: z.infer<typeof formSchema>) {
     try {
+      setIsSubmitting(true);
       // Ensure all required fields are present
       const transactionData: Omit<FinanceTransaction, 'id' | 'created_at' | 'updated_at'> = {
         transaction_type: values.transaction_type,
@@ -125,11 +128,26 @@ export function TransactionForm({
         subcategory_id: values.subcategory_id || undefined
       };
       
+      if (initialData) {
+        // Update existing transaction
+        await updateTransaction({
+          ...transactionData,
+          id: initialData.id,
+          created_at: initialData.created_at,
+          updated_at: initialData.updated_at
+        });
+      } else {
+        // Create new transaction
+        await addTransaction(transactionData);
+      }
+      
       await onSubmit(transactionData);
       toast.success(`Transaction ${initialData ? "updated" : "recorded"} successfully`);
     } catch (error) {
       console.error("Error submitting transaction:", error);
       toast.error(`Failed to ${initialData ? "update" : "record"} transaction`);
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -327,11 +345,11 @@ export function TransactionForm({
         />
         
         <div className="flex gap-2 justify-end">
-          <Button type="button" variant="outline" onClick={onCancel}>
+          <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
             Cancel
           </Button>
-          <Button type="submit">
-            {initialData ? "Update" : "Record"} Transaction
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Saving..." : initialData ? "Update" : "Record"} Transaction
           </Button>
         </div>
       </form>
