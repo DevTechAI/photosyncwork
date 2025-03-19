@@ -1,7 +1,7 @@
 
 import { Route, Routes } from "react-router-dom";
-import ProtectedRoute from "./components/ProtectedRoute";
-import { useUserContext } from "./contexts/UserContext";
+import { ProtectedRoute } from "./components/ProtectedRoute"; // Changed from default import
+import { useUser } from "./contexts/UserContext"; // Changed from useUserContext to useUser
 import { useState, useEffect } from "react";
 import Login from "./pages/Login";
 import Index from "./pages/Index";
@@ -18,7 +18,7 @@ import { Toaster } from "./components/ui/sonner";
 import RealtimeTestPage from "./pages/RealtimeTestPage";
 
 function App() {
-  const { user, loading } = useUserContext();
+  const { currentUser, loading } = useUser(); // Changed from user to currentUser
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -35,7 +35,7 @@ function App() {
         <Route
           path="/"
           element={
-            <ProtectedRoute user={user}>
+            <ProtectedRoute>
               <Index />
             </ProtectedRoute>
           }
@@ -43,7 +43,7 @@ function App() {
         <Route
           path="/scheduling"
           element={
-            <ProtectedRoute user={user}>
+            <ProtectedRoute>
               <SchedulingPage />
             </ProtectedRoute>
           }
@@ -51,7 +51,7 @@ function App() {
         <Route
           path="/workflow/pre-production"
           element={
-            <ProtectedRoute user={user}>
+            <ProtectedRoute>
               <PreProductionPage />
             </ProtectedRoute>
           }
@@ -59,7 +59,7 @@ function App() {
         <Route
           path="/workflow/production"
           element={
-            <ProtectedRoute user={user}>
+            <ProtectedRoute>
               <ProductionPage />
             </ProtectedRoute>
           }
@@ -67,7 +67,7 @@ function App() {
         <Route
           path="/workflow/post-production"
           element={
-            <ProtectedRoute user={user}>
+            <ProtectedRoute>
               <PostProductionPage />
             </ProtectedRoute>
           }
@@ -75,7 +75,7 @@ function App() {
         <Route
           path="/estimates"
           element={
-            <ProtectedRoute user={user}>
+            <ProtectedRoute>
               <EstimatesPage />
             </ProtectedRoute>
           }
@@ -83,7 +83,7 @@ function App() {
         <Route
           path="/invoices"
           element={
-            <ProtectedRoute user={user}>
+            <ProtectedRoute>
               <InvoicesPage />
             </ProtectedRoute>
           }
@@ -91,7 +91,7 @@ function App() {
         <Route
           path="/finances"
           element={
-            <ProtectedRoute user={user}>
+            <ProtectedRoute>
               <FinancesPage />
             </ProtectedRoute>
           }
@@ -99,7 +99,7 @@ function App() {
         <Route
           path="/finances/categories"
           element={
-            <ProtectedRoute user={user}>
+            <ProtectedRoute>
               <CategoriesPage />
             </ProtectedRoute>
           }
@@ -107,7 +107,7 @@ function App() {
         <Route
           path="/realtime-test"
           element={
-            <ProtectedRoute user={user}>
+            <ProtectedRoute>
               <RealtimeTestPage />
             </ProtectedRoute>
           }

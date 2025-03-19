@@ -345,7 +345,7 @@ export default function CategoriesPage() {
           <SubcategoryForm 
             initialData={subcategoryToEdit}
             categories={categories}
-            selectedCategoryType={activeTab as 'income' | 'expense'}
+            categoryType={activeTab as 'income' | 'expense'} // Changed from selectedCategoryType to categoryType
             onSubmit={handleSubcategorySubmit}
             onCancel={() => setShowSubcategoryDialog(false)}
           />
@@ -359,7 +359,7 @@ export default function CategoriesPage() {
             <DialogTitle>Import Categories</DialogTitle>
           </DialogHeader>
           <ImportCategoriesForm 
-            onSubmitSuccess={handleImportComplete}
+            onSuccess={handleImportComplete} // Changed from onSubmitSuccess to onSuccess
             onCancel={() => setShowImportDialog(false)}
           />
         </DialogContent>
