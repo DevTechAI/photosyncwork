@@ -32,10 +32,14 @@ interface SubcategoryFormProps {
   onSubmit: (data: Omit<FinanceSubcategory, 'id' | 'created_at' | 'updated_at'>) => Promise<void>;
   initialData?: FinanceSubcategory;
   categories: FinanceCategory[];
+  categoryType: 'income' | 'expense'; // Added categoryType prop
   onCancel: () => void;
 }
 
-export function SubcategoryForm({ onSubmit, initialData, categories, onCancel }: SubcategoryFormProps) {
+export function SubcategoryForm({ onSubmit, initialData, categories, categoryType, onCancel }: SubcategoryFormProps) {
+  // Filter categories by type
+  const filteredCategories = categories.filter(category => category.type === categoryType);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -93,9 +97,9 @@ export function SubcategoryForm({ onSubmit, initialData, categories, onCancel }:
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {categories.map((category) => (
+                  {filteredCategories.map((category) => (
                     <SelectItem key={category.id} value={category.id}>
-                      {category.name} ({category.type})
+                      {category.name}
                     </SelectItem>
                   ))}
                 </SelectContent>

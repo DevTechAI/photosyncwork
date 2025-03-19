@@ -8,7 +8,12 @@ import { Upload } from "lucide-react";
 import { bulkImportCategories, bulkImportSubcategories } from "@/hooks/finances/api/financeApi";
 import * as XLSX from "xlsx";
 
-export function ImportCategoriesForm({ onSuccess }: { onSuccess: () => void }) {
+interface ImportCategoriesFormProps {
+  onSuccess: () => void;
+  onCancel: () => void; // Added onCancel prop
+}
+
+export function ImportCategoriesForm({ onSuccess, onCancel }: ImportCategoriesFormProps) {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -115,6 +120,17 @@ export function ImportCategoriesForm({ onSuccess }: { onSuccess: () => void }) {
           <Button disabled={isLoading} variant="outline">
             <Upload className="mr-2 h-4 w-4" />
             {isLoading ? "Importing..." : "Upload File"}
+          </Button>
+        </div>
+        
+        <div className="flex justify-end mt-4">
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={onCancel} 
+            disabled={isLoading}
+          >
+            Cancel
           </Button>
         </div>
       </div>
