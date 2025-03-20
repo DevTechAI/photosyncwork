@@ -48,10 +48,10 @@ export const fetchTransactions = async (filters?: {
   }
   
   // Ensure amount is returned as a number
-  return (data as unknown as FinanceTransaction[]).map(item => ({
+  return data ? data.map(item => ({
     ...item,
     amount: Number(item.amount)
-  }));
+  })) as FinanceTransaction[] : [];
 };
 
 export const fetchTransactionsBySource = async (sourceId: string, sourceType?: string): Promise<FinanceTransaction[]> => {
@@ -72,10 +72,10 @@ export const fetchTransactionsBySource = async (sourceId: string, sourceType?: s
     throw error;
   }
   
-  return (data as unknown as FinanceTransaction[]).map(item => ({
+  return data ? data.map(item => ({
     ...item,
     amount: Number(item.amount)
-  }));
+  })) as FinanceTransaction[] : [];
 };
 
 export const addTransaction = async (transaction: Omit<FinanceTransaction, 'id' | 'created_at' | 'updated_at'>): Promise<FinanceTransaction> => {

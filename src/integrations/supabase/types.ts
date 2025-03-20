@@ -121,6 +121,8 @@ export type Database = {
           description: string | null
           id: string
           payment_method: string | null
+          source_id: string | null
+          source_type: string | null
           subcategory_id: string | null
           transaction_date: string
           transaction_type: string
@@ -133,6 +135,8 @@ export type Database = {
           description?: string | null
           id?: string
           payment_method?: string | null
+          source_id?: string | null
+          source_type?: string | null
           subcategory_id?: string | null
           transaction_date: string
           transaction_type: string
@@ -145,6 +149,8 @@ export type Database = {
           description?: string | null
           id?: string
           payment_method?: string | null
+          source_id?: string | null
+          source_type?: string | null
           subcategory_id?: string | null
           transaction_date?: string
           transaction_type?: string

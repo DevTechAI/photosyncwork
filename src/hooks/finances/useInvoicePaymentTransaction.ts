@@ -1,73 +1,60 @@
 
 import { useState } from 'react';
-import { addTransaction } from '@/hooks/finances/api/transactionApi';
-import { fetchCategories } from '@/hooks/finances/api/categoryApi';
-import { useQuery } from '@tanstack/react-query';
+import { addTransaction } from './api/transactionApi';
 import { toast } from 'sonner';
-import { Invoice } from '@/components/invoices/types';
-import { FinanceTransaction } from '@/hooks/finances/api/types';
+import { fetchCategories } from './api/categoryApi';
+import { useQuery } from '@tanstack/react-query';
 
-export function useInvoicePaymentTransaction() {
+export const useInvoicePaymentTransaction = () => {
   const [isProcessing, setIsProcessing] = useState(false);
-
-  // Fetch income categories
-  const { data: categories = [] } = useQuery({
-    queryKey: ['categories'],
+  
+  // Get "Client Payments" category for recording invoice payments
+  const { data: categories } = useQuery({
+    queryKey: ['financeCategories'],
     queryFn: fetchCategories
   });
-
-  // Find the "Client Payment" or similar income category
-  const getClientPaymentCategory = () => {
-    // First look for a category specifically for client payments
-    const clientPaymentCategory = categories.find(
-      cat => cat.type === 'income' && 
-      (cat.name.toLowerCase().includes('client') || 
-       cat.name.toLowerCase().includes('payment') || 
-       cat.name.toLowerCase().includes('invoice'))
-    );
-    
-    // If not found, just get any income category
-    if (!clientPaymentCategory) {
-      return categories.find(cat => cat.type === 'income')?.id;
-    }
-    
-    return clientPaymentCategory.id;
-  };
-
-  const recordPaymentAsTransaction = async (
-    invoice: Invoice, 
-    paymentAmount: number,
-    paymentMethod: string,
-    paymentDate: string
-  ) => {
-    setIsProcessing(true);
-    
+  
+  const recordPaymentAsTransaction = async (paymentData: {
+    invoiceId: string;
+    clientName: string;
+    amount: number;
+    paymentDate: Date;
+    paymentMethod?: string;
+    description?: string;
+  }) => {
     try {
-      const categoryId = getClientPaymentCategory();
+      setIsProcessing(true);
       
-      if (!categoryId) {
-        toast.error("No income category found. Please set up categories first.");
-        return false;
+      // Find the Client Payments category
+      const clientPaymentsCategory = categories?.find(
+        c => c.name === 'Client Payments' && c.type === 'income'
+      );
+      
+      if (!clientPaymentsCategory) {
+        console.error("Client Payments category not found");
+        toast.error("Could not find Client Payments category. Payment recorded but not added to transactions.");
+        return null;
       }
       
-      const transactionData: Omit<FinanceTransaction, 'id' | 'created_at' | 'updated_at'> = {
+      // Create the transaction
+      const transaction = await addTransaction({
         transaction_type: 'income',
-        category_id: categoryId,
-        amount: paymentAmount,
-        transaction_date: paymentDate,
-        description: `Payment for Invoice #${invoice.id.slice(0, 8)} - ${invoice.client}`,
-        payment_method: paymentMethod,
-        source_id: invoice.id,
+        category_id: clientPaymentsCategory.id,
+        amount: paymentData.amount,
+        transaction_date: paymentData.paymentDate.toISOString().split('T')[0],
+        description: paymentData.description || `Payment from ${paymentData.clientName}`,
+        payment_method: paymentData.paymentMethod || 'none',
+        source_id: paymentData.invoiceId,
         source_type: 'invoice'
-      };
+      });
       
-      await addTransaction(transactionData);
-      toast.success("Payment recorded and transaction created successfully");
-      return true;
+      toast.success("Payment successfully recorded as a transaction");
+      return transaction;
+      
     } catch (error) {
       console.error("Error recording payment as transaction:", error);
-      toast.error("Failed to create transaction for payment");
-      return false;
+      toast.error("Failed to record payment as transaction");
+      return null;
     } finally {
       setIsProcessing(false);
     }
@@ -77,4 +64,4 @@ export function useInvoicePaymentTransaction() {
     recordPaymentAsTransaction,
     isProcessing
   };
-}
+};

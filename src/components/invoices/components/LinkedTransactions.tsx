@@ -1,121 +1,118 @@
 
-import React, { useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { format } from "date-fns";
-import { Invoice } from "../types";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { fetchTransactionsBySource } from "@/hooks/finances/api/transactionApi";
+import React from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FinanceTransaction } from "@/hooks/finances/api/types";
+import { fetchTransactionsBySource } from "@/hooks/finances/api/transactionApi";
+import { useQuery } from "@tanstack/react-query";
+import { formatDate } from "date-fns";
+import { Badge } from "@/components/ui/badge";
+import { Pencil, Plus, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
-import { ArrowUpRight, Plus } from "lucide-react";
+import { LoaderCircle } from "lucide-react";
 
 interface LinkedTransactionsProps {
-  invoice: Invoice;
-  onCreateTransaction?: () => void;
+  invoiceId: string;
+  onAddTransaction?: () => void;
+  onEditTransaction?: (transaction: FinanceTransaction) => void;
+  onDeleteTransaction?: (transactionId: string) => void;
 }
 
-export function LinkedTransactions({ invoice, onCreateTransaction }: LinkedTransactionsProps) {
-  const queryClient = useQueryClient();
-  
-  // Fetch transactions linked to this invoice
-  const { data: transactions = [], isLoading } = useQuery({
-    queryKey: ['transactions', 'invoice', invoice.id],
-    queryFn: () => fetchTransactionsBySource(invoice.id, 'invoice'),
+export function LinkedTransactions({
+  invoiceId,
+  onAddTransaction,
+  onEditTransaction,
+  onDeleteTransaction
+}: LinkedTransactionsProps) {
+  const { data: transactions, isLoading } = useQuery({
+    queryKey: ['invoiceTransactions', invoiceId],
+    queryFn: () => fetchTransactionsBySource(invoiceId, 'invoice'),
+    enabled: !!invoiceId
   });
-  
-  // Calculate total payments recorded in transactions
-  const totalPaymentsRecorded = transactions.reduce((sum, t) => 
-    t.transaction_type === 'income' ? sum + Number(t.amount) : sum, 0
-  );
-  
-  // Parse invoice paid amount
-  const invoicePaidAmount = parseFloat(invoice.paidAmount.replace(/[₹,]/g, "")) || 0;
-  
-  // Check if there's a discrepancy between invoice payments and transactions
-  const hasDiscrepancy = Math.abs(totalPaymentsRecorded - invoicePaidAmount) > 0.01;
-  
-  // Refresh transactions when invoice changes
-  useEffect(() => {
-    queryClient.invalidateQueries({ queryKey: ['transactions', 'invoice', invoice.id] });
-  }, [invoice, queryClient]);
-  
+
+  const formatAmount = (amount: number) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR'
+    }).format(amount);
+  };
+
   if (isLoading) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="flex justify-between items-center">
-            <span>Payment Transactions</span>
+          <CardTitle className="text-xl flex items-center gap-2">
+            <LoaderCircle className="h-4 w-4 animate-spin" />
+            Loading Transactions
           </CardTitle>
         </CardHeader>
+      </Card>
+    );
+  }
+
+  if (!transactions || transactions.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-xl">Linked Transactions</CardTitle>
+          <CardDescription>
+            No transactions are linked to this invoice yet.
+          </CardDescription>
+        </CardHeader>
         <CardContent>
-          <div className="h-20 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-800"></div>
-          </div>
+          {onAddTransaction && (
+            <Button onClick={onAddTransaction} className="w-full">
+              <Plus className="h-4 w-4 mr-2" /> Add Transaction
+            </Button>
+          )}
         </CardContent>
       </Card>
     );
   }
-  
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex justify-between items-center">
-          <span>Payment Transactions</span>
-          {onCreateTransaction && (
-            <Button variant="outline" size="sm" onClick={onCreateTransaction}>
-              <Plus className="h-4 w-4 mr-1" /> Record Transaction
-            </Button>
-          )}
-        </CardTitle>
+        <CardTitle className="text-xl">Linked Transactions</CardTitle>
+        <CardDescription>
+          Transactions linked to this invoice
+        </CardDescription>
       </CardHeader>
       <CardContent>
-        {transactions.length === 0 ? (
-          <div className="text-center py-6 text-muted-foreground">
-            <p>No transactions linked to this invoice.</p>
-            {hasDiscrepancy && (
-              <div className="mt-2">
-                <Badge variant="destructive">Discrepancy Detected</Badge>
-                <p className="text-sm mt-1">
-                  Invoice shows ₹{invoicePaidAmount.toLocaleString('en-IN')} paid but no transactions are recorded.
-                </p>
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {hasDiscrepancy && (
-              <div className="p-2 bg-yellow-50 border border-yellow-200 rounded-md">
-                <Badge variant="warning">Payment Mismatch</Badge>
-                <p className="text-sm mt-1">
-                  Invoice shows ₹{invoicePaidAmount.toLocaleString('en-IN')} paid but transactions total 
-                  ₹{totalPaymentsRecorded.toLocaleString('en-IN')}.
-                </p>
-              </div>
-            )}
-            
-            <div className="space-y-2">
-              {transactions.map((transaction) => (
-                <div key={transaction.id} className="flex justify-between items-center p-3 border rounded-md">
-                  <div>
-                    <p className="font-medium">{format(new Date(transaction.transaction_date), "dd MMM yyyy")}</p>
-                    <p className="text-sm text-muted-foreground">{transaction.description}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {transaction.payment_method ? transaction.payment_method.replace('_', ' ') : 'No payment method'}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-medium text-green-600">₹{Number(transaction.amount).toLocaleString('en-IN')}</p>
-                    <Link to={`/finances?transaction=${transaction.id}`} className="text-xs text-blue-600 flex items-center">
-                      View <ArrowUpRight className="h-3 w-3 ml-1" />
-                    </Link>
-                  </div>
+        <div className="space-y-4">
+          {transactions.map((transaction) => (
+            <div key={transaction.id} className="flex items-center justify-between p-3 border rounded-md">
+              <div>
+                <div className="flex items-center gap-2">
+                  <p className="font-medium">{formatDate(new Date(transaction.transaction_date), 'PP')}</p>
+                  <Badge variant={transaction.transaction_type === 'income' ? 'secondary' : 'outline'}>
+                    {transaction.transaction_type}
+                  </Badge>
                 </div>
-              ))}
+                <p className="text-sm text-muted-foreground">{transaction.description || 'No description'}</p>
+              </div>
+              <div className="flex items-center gap-4">
+                <p className="font-medium">{formatAmount(transaction.amount)}</p>
+                <div className="flex gap-1">
+                  {onEditTransaction && (
+                    <Button variant="ghost" size="icon" onClick={() => onEditTransaction(transaction)}>
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                  )}
+                  {onDeleteTransaction && (
+                    <Button variant="ghost" size="icon" className="text-destructive" onClick={() => onDeleteTransaction(transaction.id)}>
+                      <Trash className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              </div>
             </div>
-          </div>
-        )}
+          ))}
+          {onAddTransaction && (
+            <Button onClick={onAddTransaction} className="w-full mt-4">
+              <Plus className="h-4 w-4 mr-2" /> Add Transaction
+            </Button>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
