@@ -24,6 +24,8 @@ export interface FinanceTransaction {
   description?: string;
   transaction_type: 'income' | 'expense';
   payment_method?: string;
+  source_id?: string; // Reference ID (invoice ID, vendor payment ID)
+  source_type?: string; // Type of source (invoice, vendor, general)
   created_at?: string;
   updated_at?: string;
 }
@@ -34,4 +36,10 @@ export interface TransactionStats {
   netAmount: number;
   incomeByCategory: { category: string; amount: number }[];
   expenseByCategory: { category: string; amount: number }[];
+}
+
+export interface TransactionSource {
+  id: string;
+  type: 'invoice' | 'vendor' | 'general';
+  reference: string; // Additional reference information
 }

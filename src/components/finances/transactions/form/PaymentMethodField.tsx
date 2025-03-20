@@ -35,6 +35,10 @@ export function PaymentMethodField({ form }: PaymentMethodFieldProps) {
               <SelectItem value="credit_card">Credit Card</SelectItem>
               <SelectItem value="debit_card">Debit Card</SelectItem>
               <SelectItem value="cheque">Cheque</SelectItem>
+              <SelectItem value="online_payment">Online Payment</SelectItem>
+              <SelectItem value="paypal">PayPal</SelectItem>
+              <SelectItem value="venmo">Venmo</SelectItem>
+              <SelectItem value="stripe">Stripe</SelectItem>
               <SelectItem value="other">Other</SelectItem>
             </SelectContent>
           </Select>

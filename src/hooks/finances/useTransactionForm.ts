@@ -18,6 +18,8 @@ interface UseTransactionFormProps {
   initialData?: FinanceTransaction;
   categories: FinanceCategory[];
   onCancel: () => void;
+  sourceId?: string; // Reference ID for source of transaction (invoice, expense, etc)
+  sourceType?: 'invoice' | 'vendor' | 'general'; // Type of source
 }
 
 export function useTransactionForm({
@@ -25,23 +27,27 @@ export function useTransactionForm({
   initialData,
   categories,
   onCancel,
+  sourceId,
+  sourceType,
 }: UseTransactionFormProps) {
   const [subcategories, setSubcategories] = useState<FinanceSubcategory[]>([]);
   const [selectedType, setSelectedType] = useState<'income' | 'expense'>(
-    initialData?.transaction_type || 'expense'
+    initialData?.transaction_type || sourceType === 'invoice' ? 'income' : 'expense'
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<TransactionFormValues>({
     resolver: zodResolver(transactionFormSchema),
     defaultValues: {
-      transaction_type: initialData?.transaction_type || "expense",
+      transaction_type: initialData?.transaction_type || sourceType === 'invoice' ? 'income' : 'expense',
       category_id: initialData?.category_id || "",
-      subcategory_id: initialData?.subcategory_id || "",
+      subcategory_id: initialData?.subcategory_id || "none",
       amount: initialData ? Number(initialData.amount) : undefined,
       transaction_date: initialData ? new Date(initialData.transaction_date) : new Date(),
       description: initialData?.description || "",
       payment_method: initialData?.payment_method || "none",
+      source_id: sourceId || initialData?.source_id || "",
+      source_type: sourceType || initialData?.source_type || ""
     },
   });
 
@@ -79,6 +85,7 @@ export function useTransactionForm({
     }
   }, [selectedCategoryId, form]);
 
+  // Filter categories based on transaction type
   const filteredCategories = categories.filter(
     (cat) => cat.type === selectedTransactionType
   );
@@ -94,7 +101,9 @@ export function useTransactionForm({
         transaction_date: format(values.transaction_date, "yyyy-MM-dd"),
         description: values.description || "",
         payment_method: values.payment_method === "none" ? "" : values.payment_method,
-        subcategory_id: values.subcategory_id === "none" ? undefined : values.subcategory_id
+        subcategory_id: values.subcategory_id === "none" ? undefined : values.subcategory_id,
+        source_id: values.source_id || undefined,
+        source_type: values.source_type || undefined
       };
       
       if (initialData) {
@@ -126,6 +135,7 @@ export function useTransactionForm({
     filteredCategories,
     isSubmitting,
     handleSubmit,
-    isEditing: !!initialData
+    isEditing: !!initialData,
+    sourceType
   };
 }

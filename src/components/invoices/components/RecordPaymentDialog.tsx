@@ -10,6 +10,7 @@ import {
 import { Invoice } from "../types";
 import { useRecordPayment } from "@/hooks/invoices/useRecordPayment";
 import { PaymentForm } from "./PaymentForm";
+import { useInvoicePaymentTransaction } from "@/hooks/finances/useInvoicePaymentTransaction";
 
 interface RecordPaymentDialogProps {
   open: boolean;
@@ -24,6 +25,8 @@ export function RecordPaymentDialog({
   onSave, 
   invoice 
 }: RecordPaymentDialogProps) {
+  const { recordPaymentAsTransaction } = useInvoicePaymentTransaction();
+  
   const {
     paymentDate,
     setPaymentDate,
@@ -36,7 +39,7 @@ export function RecordPaymentDialog({
     amountError,
     maxAllowedPayment,
     handleSubmit
-  } = useRecordPayment(invoice, onSave, onClose);
+  } = useRecordPayment(invoice, onSave, onClose, recordPaymentAsTransaction);
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -44,7 +47,7 @@ export function RecordPaymentDialog({
         <DialogHeader>
           <DialogTitle>Record Payment</DialogTitle>
           <DialogDescription>
-            Record a payment for invoice #{invoice.id} for {invoice.client}
+            Record a payment for invoice #{invoice.id.slice(0, 8)} for {invoice.client}
           </DialogDescription>
         </DialogHeader>
         

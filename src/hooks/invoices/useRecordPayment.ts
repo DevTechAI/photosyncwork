@@ -3,7 +3,12 @@ import { useState, useEffect } from "react";
 import { Invoice } from "@/components/invoices/types";
 import { toast } from "sonner";
 
-export function useRecordPayment(invoice: Invoice, onSave: (invoice: Invoice) => void, onClose: () => void) {
+export function useRecordPayment(
+  invoice: Invoice, 
+  onSave: (invoice: Invoice) => void, 
+  onClose: () => void,
+  recordPaymentAsTransaction?: (invoice: Invoice, amount: number, method: string, date: string) => Promise<boolean>
+) {
   const [paymentDate, setPaymentDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [paymentAmount, setPaymentAmount] = useState<string>(invoice.balanceAmount || "");
   const [paymentMethod, setPaymentMethod] = useState<string>("bank");
@@ -46,7 +51,7 @@ export function useRecordPayment(invoice: Invoice, onSave: (invoice: Invoice) =>
     return true;
   };
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     
     // Validation
@@ -95,10 +100,22 @@ export function useRecordPayment(invoice: Invoice, onSave: (invoice: Invoice) =>
         : `${new Date().toLocaleDateString()}: Payment of ₹${parseFloat(paymentAmount).toLocaleString('en-IN')} collected by ${collectedBy || 'staff'}`
     };
     
-    onSave(updatedInvoice);
-    onClose();
+    // Also record this payment as a transaction if the function is provided
+    let transactionRecorded = true;
+    if (recordPaymentAsTransaction) {
+      transactionRecorded = await recordPaymentAsTransaction(
+        invoice, 
+        newPayment, 
+        paymentMethod, 
+        paymentDate
+      );
+    }
     
-    toast.success("Payment recorded successfully");
+    if (transactionRecorded) {
+      onSave(updatedInvoice);
+      onClose();
+      toast.success("Payment recorded successfully");
+    }
   };
 
   return {

@@ -9,6 +9,8 @@ export const transactionFormSchema = z.object({
   transaction_date: z.date({ required_error: "Transaction date is required" }),
   description: z.string().optional(),
   payment_method: z.string().optional(),
+  source_id: z.string().optional(), // ID of the source (invoice, expense)
+  source_type: z.string().optional(), // Type of source (invoice, vendor, general)
 });
 
 export type TransactionFormValues = z.infer<typeof transactionFormSchema>;

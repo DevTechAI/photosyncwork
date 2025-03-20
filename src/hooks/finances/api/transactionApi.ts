@@ -8,6 +8,8 @@ export const fetchTransactions = async (filters?: {
   categoryId?: string;
   subcategoryId?: string;
   type?: 'income' | 'expense';
+  sourceId?: string;
+  sourceType?: string;
 }): Promise<FinanceTransaction[]> => {
   let query = supabase
     .from('finance_transactions')
@@ -30,6 +32,12 @@ export const fetchTransactions = async (filters?: {
     if (filters.type) {
       query = query.eq('transaction_type', filters.type);
     }
+    if (filters.sourceId) {
+      query = query.eq('source_id', filters.sourceId);
+    }
+    if (filters.sourceType) {
+      query = query.eq('source_type', filters.sourceType);
+    }
   }
   
   const { data, error } = await query;
@@ -40,6 +48,30 @@ export const fetchTransactions = async (filters?: {
   }
   
   // Ensure amount is returned as a number
+  return (data as unknown as FinanceTransaction[]).map(item => ({
+    ...item,
+    amount: Number(item.amount)
+  }));
+};
+
+export const fetchTransactionsBySource = async (sourceId: string, sourceType?: string): Promise<FinanceTransaction[]> => {
+  let query = supabase
+    .from('finance_transactions')
+    .select('*')
+    .eq('source_id', sourceId)
+    .order('transaction_date', { ascending: false });
+  
+  if (sourceType) {
+    query = query.eq('source_type', sourceType);
+  }
+  
+  const { data, error } = await query;
+  
+  if (error) {
+    console.error("Error fetching transactions by source:", error);
+    throw error;
+  }
+  
   return (data as unknown as FinanceTransaction[]).map(item => ({
     ...item,
     amount: Number(item.amount)
