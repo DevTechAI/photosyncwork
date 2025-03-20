@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { format, subMonths, startOfMonth, endOfMonth } from "date-fns";
-import { getTransactionStats } from "@/hooks/finances/api/financeApi";
+import { getTransactionStats } from "@/hooks/finances/api/statsApi";
 
 export function useFinancesPage() {
   const [isTransactionModalOpen, setIsTransactionModalOpen] = useState(false);

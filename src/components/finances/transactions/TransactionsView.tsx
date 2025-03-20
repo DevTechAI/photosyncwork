@@ -53,7 +53,6 @@ export function TransactionsView({ categories, onAddTransaction }: TransactionsV
   const [selectedTransaction, setSelectedTransaction] = useState<FinanceTransaction | null>(null);
   const queryClient = useQueryClient();
 
-  // Use React Query to fetch transactions
   const { data: transactions = [], isLoading } = useQuery({
     queryKey: ['transactions', filterType, filterCategory],
     queryFn: async () => {
@@ -281,7 +280,6 @@ export function TransactionsView({ categories, onAddTransaction }: TransactionsV
         )}
       </Card>
 
-      {/* Edit Transaction Modal */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
@@ -298,7 +296,6 @@ export function TransactionsView({ categories, onAddTransaction }: TransactionsV
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -318,4 +315,3 @@ export function TransactionsView({ categories, onAddTransaction }: TransactionsV
     </div>
   );
 }
-

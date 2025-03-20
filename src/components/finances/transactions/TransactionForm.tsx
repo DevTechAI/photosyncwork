@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Form } from "@/components/ui/form";
 import { useTransactionForm } from "./hooks/useTransactionForm";
@@ -10,7 +9,7 @@ import { DateField } from "./form/DateField";
 import { DescriptionField } from "./form/DescriptionField";
 import { PaymentMethodField } from "./form/PaymentMethodField";
 import { FormActions } from "./form/FormActions";
-import { FinanceCategory, FinanceTransaction } from "@/hooks/finances/api/financeApi";
+import { FinanceCategory, FinanceTransaction } from "@/hooks/finances/api/types";
 
 interface TransactionFormProps {
   onSubmit: (data: Omit<FinanceTransaction, 'id' | 'created_at' | 'updated_at'>) => Promise<void>;

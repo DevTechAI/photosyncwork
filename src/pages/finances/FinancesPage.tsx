@@ -3,7 +3,7 @@ import React from "react";
 import Layout from "@/components/Layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { fetchCategories } from "@/hooks/finances/api/financeApi";
+import { fetchCategories } from "@/hooks/finances/api/categoryApi";
 import { useQuery } from "@tanstack/react-query";
 import { TransactionForm } from "@/components/finances/transactions/TransactionForm";
 import { TransactionsView } from "@/components/finances/transactions/TransactionsView";

@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { 
   fetchCategories, 
-  fetchSubcategories, 
+  fetchSubcategories,
   FinanceCategory,
   FinanceSubcategory,
   deleteCategory,
