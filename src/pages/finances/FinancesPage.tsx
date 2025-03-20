@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
@@ -41,10 +40,10 @@ import { toast } from "sonner";
 import { TransactionsView } from "@/components/finances/transactions/TransactionsView";
 import { FinancialReports } from "@/components/finances/reports/FinancialReports";
 import { format, subMonths, startOfMonth, endOfMonth } from "date-fns";
+import { useQuery } from "@tanstack/react-query";
 
 export default function FinancesPage() {
   const [isTransactionModalOpen, setIsTransactionModalOpen] = useState(false);
-  const [categories, setCategories] = useState<FinanceCategory[]>([]);
   const [activeTab, setActiveTab] = useState("overview");
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
   const [summaryStats, setSummaryStats] = useState({
@@ -54,7 +53,6 @@ export default function FinancesPage() {
     incomeByCategory: [],
     expenseByCategory: []
   });
-  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
   
   // Current month range for default stats
@@ -62,36 +60,26 @@ export default function FinancesPage() {
   const startDate = format(startOfMonth(today), 'yyyy-MM-dd');
   const endDate = format(endOfMonth(today), 'yyyy-MM-dd');
   
-  useEffect(() => {
-    const loadCategories = async () => {
-      try {
-        const categoriesData = await fetchCategories();
-        setCategories(categoriesData);
-      } catch (error) {
-        console.error("Error loading categories:", error);
-        toast.error("Failed to load categories");
-      }
-    };
-    
-    loadCategories();
-  }, []);
+  // Use React Query to fetch categories
+  const { data: categories = [], isLoading: isCategoriesLoading } = useQuery({
+    queryKey: ['categories'],
+    queryFn: fetchCategories
+  });
   
-  useEffect(() => {
-    const loadStats = async () => {
+  const { isLoading: isStatsLoading } = useQuery({
+    queryKey: ['transactionStats', startDate, endDate],
+    queryFn: async () => {
       try {
-        setIsLoading(true);
         const stats = await getTransactionStats(startDate, endDate);
         setSummaryStats(stats);
+        return stats;
       } catch (error) {
         console.error("Error loading transaction stats:", error);
         toast.error("Failed to load financial statistics");
-      } finally {
-        setIsLoading(false);
+        throw error;
       }
-    };
-    
-    loadStats();
-  }, [startDate, endDate]);
+    }
+  });
   
   const handleNewTransaction = () => {
     setIsTransactionModalOpen(true);
@@ -99,18 +87,10 @@ export default function FinancesPage() {
   
   const handleTransactionSubmit = async () => {
     setIsTransactionModalOpen(false);
+    toast.success("Transaction recorded successfully");
     
-    // Refresh stats after adding a transaction
-    try {
-      const stats = await getTransactionStats(startDate, endDate);
-      setSummaryStats(stats);
-      toast.success("Transaction recorded successfully");
-      
-      // If we're not on the transactions tab, stay where we are
-      // If we are on transactions tab, it will refresh via its own useEffect
-    } catch (error) {
-      console.error("Error refreshing stats:", error);
-    }
+    // Invalidate and refetch the relevant queries
+    // This will be handled by the QueryClient in the updated components
   };
   
   // Generate monthly revenue data

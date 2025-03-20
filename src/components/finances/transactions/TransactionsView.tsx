@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -17,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Receipt, Search, Filter, FileDown, Edit, Trash } from "lucide-react";
+import { Plus, Receipt, Search, Filter, Edit, Trash } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { TransactionForm } from "./TransactionForm";
@@ -31,14 +30,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {
   fetchTransactions,
-  fetchCategories,
   deleteTransaction,
   FinanceTransaction,
   FinanceCategory,
 } from "@/hooks/finances/api/financeApi";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 interface TransactionsViewProps {
@@ -47,8 +45,6 @@ interface TransactionsViewProps {
 }
 
 export function TransactionsView({ categories, onAddTransaction }: TransactionsViewProps) {
-  const [transactions, setTransactions] = useState<FinanceTransaction[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState<string>("all");
   const [filterCategory, setFilterCategory] = useState<string>("all");
@@ -57,10 +53,10 @@ export function TransactionsView({ categories, onAddTransaction }: TransactionsV
   const [selectedTransaction, setSelectedTransaction] = useState<FinanceTransaction | null>(null);
   const queryClient = useQueryClient();
 
-  // Filter options
-  const fetchData = async () => {
-    try {
-      setIsLoading(true);
+  // Use React Query to fetch transactions
+  const { data: transactions = [], isLoading } = useQuery({
+    queryKey: ['transactions', filterType, filterCategory],
+    queryFn: async () => {
       const filters: any = {};
       
       if (filterType !== "all") {
@@ -71,19 +67,9 @@ export function TransactionsView({ categories, onAddTransaction }: TransactionsV
         filters.categoryId = filterCategory;
       }
       
-      const data = await fetchTransactions(filters);
-      setTransactions(data);
-    } catch (error) {
-      console.error("Error fetching transactions:", error);
-      toast.error("Failed to load transactions");
-    } finally {
-      setIsLoading(false);
+      return fetchTransactions(filters);
     }
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, [filterType, filterCategory]);
+  });
 
   const handleEdit = (transaction: FinanceTransaction) => {
     setSelectedTransaction(transaction);
@@ -101,7 +87,7 @@ export function TransactionsView({ categories, onAddTransaction }: TransactionsV
     try {
       await deleteTransaction(selectedTransaction.id);
       toast.success("Transaction deleted successfully");
-      fetchData(); // Refresh the list
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
     } catch (error) {
       console.error("Error deleting transaction:", error);
       toast.error("Failed to delete transaction");
@@ -113,7 +99,8 @@ export function TransactionsView({ categories, onAddTransaction }: TransactionsV
 
   const handleSubmitEdit = async () => {
     setIsEditModalOpen(false);
-    fetchData(); // Refresh the transactions list
+    queryClient.invalidateQueries({ queryKey: ['transactions'] });
+    toast.success("Transaction updated successfully");
   };
 
   const filteredTransactions = transactions.filter(transaction => {
@@ -331,3 +318,4 @@ export function TransactionsView({ categories, onAddTransaction }: TransactionsV
     </div>
   );
 }
+
