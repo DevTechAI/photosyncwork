@@ -9,7 +9,7 @@ import {
   FinanceTransaction
 } from "@/hooks/finances/api/types";
 import { format } from "date-fns";
-import { transactionFormSchema, TransactionFormValues } from "../form/FormSchema";
+import { transactionFormSchema, TransactionFormValues } from "@/components/finances/transactions/form/FormSchema";
 import { fetchSubcategories } from "@/hooks/finances/api/subcategoryApi";
 import { addTransaction, updateTransaction } from "@/hooks/finances/api/transactionApi";
 
