@@ -4,7 +4,7 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/comp
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { UseFormReturn } from "react-hook-form";
 import { TransactionFormValues } from "./FormSchema";
-import { FinanceSubcategory } from "@/hooks/finances/api/financeApi";
+import { FinanceSubcategory } from "@/hooks/finances/api/types";
 
 interface SubcategoryFieldProps {
   form: UseFormReturn<TransactionFormValues>;
@@ -25,7 +25,7 @@ export function SubcategoryField({ form, subcategories }: SubcategoryFieldProps)
           <FormLabel>Subcategory</FormLabel>
           <Select
             onValueChange={field.onChange}
-            value={field.value || ""}
+            value={field.value || "none"}
           >
             <FormControl>
               <SelectTrigger>
@@ -33,7 +33,7 @@ export function SubcategoryField({ form, subcategories }: SubcategoryFieldProps)
               </SelectTrigger>
             </FormControl>
             <SelectContent>
-              <SelectItem value="">None</SelectItem>
+              <SelectItem value="none">None</SelectItem>
               {subcategories.map((subcategory) => (
                 <SelectItem key={subcategory.id} value={subcategory.id}>
                   {subcategory.name}

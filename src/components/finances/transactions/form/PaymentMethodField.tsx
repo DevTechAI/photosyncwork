@@ -20,7 +20,7 @@ export function PaymentMethodField({ form }: PaymentMethodFieldProps) {
           <Select
             onValueChange={field.onChange}
             defaultValue={field.value}
-            value={field.value || ""}
+            value={field.value || "none"}
           >
             <FormControl>
               <SelectTrigger>
@@ -28,7 +28,7 @@ export function PaymentMethodField({ form }: PaymentMethodFieldProps) {
               </SelectTrigger>
             </FormControl>
             <SelectContent>
-              <SelectItem value="">None</SelectItem>
+              <SelectItem value="none">None</SelectItem>
               <SelectItem value="cash">Cash</SelectItem>
               <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
               <SelectItem value="upi">UPI</SelectItem>
