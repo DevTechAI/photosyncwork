@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, FileSpreadsheet } from "lucide-react";
 
 interface CategoryPageHeaderProps {
   onAddCategory: () => void;
@@ -22,7 +22,8 @@ export function CategoryPageHeader({ onAddCategory, onImportCategories }: Catego
           variant="outline"
           onClick={onImportCategories}
         >
-          Import Categories
+          <FileSpreadsheet className="mr-2 h-4 w-4" />
+          Import from Excel
         </Button>
         <Button onClick={onAddCategory}>
           <PlusCircle className="mr-2 h-4 w-4" />

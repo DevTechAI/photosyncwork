@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Upload, FileWarning } from "lucide-react";
+import { Upload, FileWarning, Info } from "lucide-react";
 import { bulkImportCategories, bulkImportSubcategories } from "@/hooks/finances/api/financeApi";
 import * as XLSX from "xlsx";
 
@@ -13,29 +13,67 @@ interface ImportCategoriesFormProps {
   onCancel: () => void;
 }
 
+// Define the expected structure for the Excel data
+interface CategoryImportRow {
+  [key: string]: string | number | null;
+}
+
 export function ImportCategoriesForm({ onSuccess, onCancel }: ImportCategoriesFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [fileSelected, setFileSelected] = useState<File | null>(null);
-  const [previewData, setPreviewData] = useState<any[]>([]);
+  const [previewData, setPreviewData] = useState<CategoryImportRow[]>([]);
+  const [importError, setImportError] = useState<string | null>(null);
 
   const parseExcelFile = async (file: File) => {
     try {
+      setImportError(null);
       const data = await file.arrayBuffer();
       const workbook = XLSX.read(data, { type: 'array' });
       
       if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
-        toast.error("Invalid Excel file: No sheets found");
+        const error = "Invalid Excel file: No sheets found";
+        setImportError(error);
+        toast.error(error);
         return null;
       }
       
       const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-      const jsonData = XLSX.utils.sheet_to_json(worksheet);
+      const jsonData = XLSX.utils.sheet_to_json<CategoryImportRow>(worksheet);
       
       console.log("Parsed Excel data:", jsonData);
+
+      if (jsonData.length === 0) {
+        const error = "Excel file is empty or contains no valid data";
+        setImportError(error);
+        toast.error(error);
+        return null;
+      }
+      
+      // Validate that the Excel has the required columns
+      const firstRow = jsonData[0];
+      let categoryColumn = null;
+      
+      // Check for various possible column names
+      if ('Main Category' in firstRow) categoryColumn = 'Main Category';
+      else if ('main_category' in firstRow) categoryColumn = 'main_category'; 
+      else if ('Category' in firstRow) categoryColumn = 'Category';
+      else if ('category' in firstRow) categoryColumn = 'category';
+      else if ('Category Name' in firstRow) categoryColumn = 'Category Name';
+      else if ('category_name' in firstRow) categoryColumn = 'category_name';
+      
+      if (!categoryColumn) {
+        const error = "Excel file must have a column for categories (Main Category, Category, Category Name)";
+        setImportError(error);
+        toast.error(error);
+        return null;
+      }
+      
       return jsonData;
     } catch (error) {
       console.error("Error parsing Excel file:", error);
-      toast.error("Failed to parse Excel file. Make sure it's a valid .xlsx file.");
+      const errorMessage = "Failed to parse Excel file. Make sure it's a valid .xlsx file.";
+      setImportError(errorMessage);
+      toast.error(errorMessage);
       return null;
     }
   };
@@ -74,24 +112,60 @@ export function ImportCategoriesForm({ onSuccess, onCancel }: ImportCategoriesFo
       const categories: Array<{name: string, type: 'income' | 'expense'}> = [];
       const subcategoriesMap = new Map<string, string[]>();
       
-      // Check for required columns
+      // Determine column names from the first row
       const firstRow = jsonData[0];
-      const hasCategoryName = 'Category Name' in firstRow || 'category_name' in firstRow;
-      const hasCategoryType = 'Category Type' in firstRow || 'category_type' in firstRow;
       
-      if (!hasCategoryName) {
-        toast.error("Excel file must have a 'Category Name' or 'category_name' column");
+      // Look for category column
+      let categoryColumn = null;
+      if ('Main Category' in firstRow) categoryColumn = 'Main Category';
+      else if ('main_category' in firstRow) categoryColumn = 'main_category';
+      else if ('Category' in firstRow) categoryColumn = 'Category';
+      else if ('category' in firstRow) categoryColumn = 'category';
+      else if ('Category Name' in firstRow) categoryColumn = 'Category Name';
+      else if ('category_name' in firstRow) categoryColumn = 'category_name';
+      
+      // Look for subcategory column
+      let subcategoryColumn = null;
+      if ('Subcategory' in firstRow) subcategoryColumn = 'Subcategory';
+      else if ('subcategory' in firstRow) subcategoryColumn = 'subcategory';
+      else if ('Subcategory Name' in firstRow) subcategoryColumn = 'Subcategory Name';
+      else if ('subcategory_name' in firstRow) subcategoryColumn = 'subcategory_name';
+      
+      // Look for type column
+      let typeColumn = null;
+      if ('Type' in firstRow) typeColumn = 'Type';
+      else if ('type' in firstRow) typeColumn = 'type';
+      else if ('Category Type' in firstRow) typeColumn = 'Category Type';
+      else if ('category_type' in firstRow) typeColumn = 'category_type';
+      
+      if (!categoryColumn) {
+        toast.error("Excel file must have a column for categories");
         return;
       }
       
       console.log("Processing data for import:", jsonData);
+      console.log(`Using columns: Category=${categoryColumn}, Type=${typeColumn}, Subcategory=${subcategoryColumn}`);
       
-      // Expected Excel format:
-      // Category Name | Category Type | Subcategory Name
+      // Process each row in the Excel file
       for (const row of jsonData) {
-        const categoryName = row['Category Name'] || row['category_name'] || '';
-        const categoryType = (row['Category Type'] || row['category_type'] || 'expense').toLowerCase();
-        const subcategoryName = row['Subcategory Name'] || row['subcategory_name'] || '';
+        // Get category name from the identified column
+        const categoryName = row[categoryColumn]?.toString().trim() || '';
+        
+        // Determine category type (income or expense)
+        let categoryType: 'income' | 'expense' = 'expense'; // Default to expense
+        
+        if (typeColumn && row[typeColumn]) {
+          const typeValue = row[typeColumn]?.toString().toLowerCase() || '';
+          categoryType = typeValue === 'income' ? 'income' : 'expense';
+        } else {
+          // If no type column, try to guess from the category name
+          if (categoryName.toLowerCase() === 'income') {
+            categoryType = 'income';
+          }
+        }
+        
+        // Get subcategory if available
+        const subcategoryName = subcategoryColumn ? (row[subcategoryColumn]?.toString().trim() || '') : '';
         
         console.log(`Processing row: Category=${categoryName}, Type=${categoryType}, Subcategory=${subcategoryName}`);
         
@@ -104,7 +178,7 @@ export function ImportCategoriesForm({ onSuccess, onCancel }: ImportCategoriesFo
         if (!categories.some(c => c.name === categoryName && c.type === categoryType)) {
           categories.push({
             name: categoryName,
-            type: categoryType === 'income' ? 'income' : 'expense'
+            type: categoryType
           });
         }
         
@@ -176,10 +250,17 @@ export function ImportCategoriesForm({ onSuccess, onCancel }: ImportCategoriesFo
       <h3 className="text-lg font-medium mb-4">Import Categories from Excel</h3>
       
       <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">
-          Upload an Excel file with your categories and subcategories. The file should have columns:
-          "Category Name", "Category Type" (income/expense), and "Subcategory Name" (optional).
-        </p>
+        <div className="bg-blue-50 p-4 rounded-md border border-blue-100 flex items-start">
+          <Info className="h-5 w-5 text-blue-500 mt-0.5 mr-2 flex-shrink-0" />
+          <div className="text-sm text-blue-700">
+            <p className="font-medium mb-1">Expected Excel Format:</p>
+            <ul className="list-disc pl-5 space-y-1">
+              <li>A column for categories (called "Main Category", "Category", or "Category Name")</li>
+              <li>Optional column for type ("Type" or "Category Type") with values "income" or "expense"</li>
+              <li>Optional column for subcategories (called "Subcategory" or "Subcategory Name")</li>
+            </ul>
+          </div>
+        </div>
         
         <div className="flex items-center gap-4">
           <Input
@@ -190,11 +271,31 @@ export function ImportCategoriesForm({ onSuccess, onCancel }: ImportCategoriesFo
             disabled={isLoading}
             className="max-w-sm"
           />
+          <Button 
+            variant="outline" 
+            onClick={() => {
+              setFileSelected(null);
+              setPreviewData([]);
+              setImportError(null);
+              const fileInput = document.getElementById('file-upload') as HTMLInputElement;
+              if (fileInput) fileInput.value = '';
+            }}
+            disabled={!fileSelected || isLoading}
+          >
+            Clear
+          </Button>
         </div>
         
         {fileSelected && (
           <div className="bg-muted p-3 rounded-md">
             <p className="text-sm font-medium">File selected: {fileSelected.name}</p>
+          </div>
+        )}
+        
+        {importError && (
+          <div className="flex items-center p-3 text-red-500 bg-red-50 rounded-md border border-red-100">
+            <FileWarning className="h-5 w-5 mr-2 flex-shrink-0" />
+            <span className="text-sm">{importError}</span>
           </div>
         )}
         
@@ -213,8 +314,8 @@ export function ImportCategoriesForm({ onSuccess, onCancel }: ImportCategoriesFo
                 <tbody>
                   {previewData.map((row, i) => (
                     <tr key={i} className="border-b border-muted-foreground/10">
-                      {Object.values(row).map((value: any, j) => (
-                        <td key={j} className="py-2 px-3">{String(value)}</td>
+                      {Object.entries(row).map(([key, value], j) => (
+                        <td key={j} className="py-2 px-3">{value !== null ? String(value) : ''}</td>
                       ))}
                     </tr>
                   ))}
@@ -224,7 +325,7 @@ export function ImportCategoriesForm({ onSuccess, onCancel }: ImportCategoriesFo
           </div>
         )}
         
-        {previewData.length === 0 && fileSelected && (
+        {previewData.length === 0 && fileSelected && !importError && (
           <div className="flex items-center p-3 text-amber-500 bg-amber-500/10 rounded-md">
             <FileWarning className="h-5 w-5 mr-2" />
             <span>No data preview available. Please ensure your file has the correct format.</span>
@@ -244,8 +345,20 @@ export function ImportCategoriesForm({ onSuccess, onCancel }: ImportCategoriesFo
             onClick={handleImport} 
             disabled={isLoading || !fileSelected}
           >
-            <Upload className="mr-2 h-4 w-4" />
-            {isLoading ? "Importing..." : "Import Categories"}
+            {isLoading ? (
+              <>
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Importing...
+              </>
+            ) : (
+              <>
+                <Upload className="mr-2 h-4 w-4" />
+                Import Categories
+              </>
+            )}
           </Button>
         </div>
       </div>
