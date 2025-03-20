@@ -30,6 +30,11 @@ function App() {
         <Route path="/workflow/production" element={<ProtectedRoute requiredModule="production"><ProductionPage /></ProtectedRoute>} />
         <Route path="/workflow/post-production" element={<ProtectedRoute requiredModule="post-production"><PostProductionPage /></ProtectedRoute>} />
         
+        {/* Add direct routes without "/workflow/" prefix to match navigation links */}
+        <Route path="/pre-production" element={<ProtectedRoute requiredModule="crm"><PreProductionPage /></ProtectedRoute>} />
+        <Route path="/production" element={<ProtectedRoute requiredModule="production"><ProductionPage /></ProtectedRoute>} />
+        <Route path="/post-production" element={<ProtectedRoute requiredModule="post-production"><PostProductionPage /></ProtectedRoute>} />
+        
         {/* Catch-all route for 404 */}
         <Route path="*" element={<NotFound />} />
       </Routes>
