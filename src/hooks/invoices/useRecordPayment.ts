@@ -1,120 +1,121 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Invoice } from "@/components/invoices/types";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
-export function useRecordPayment(
+interface InvoicePaymentData {
+  invoiceId: string;
+  clientName: string;
+  amount: number;
+  paymentDate: Date;
+  paymentMethod?: string;
+  description?: string;
+}
+
+type RecordPaymentFn = (paymentData: InvoicePaymentData) => Promise<any>;
+
+export const useRecordPayment = (
   invoice: Invoice, 
   onSave: (invoice: Invoice) => void, 
   onClose: () => void,
-  recordPaymentAsTransaction?: (invoice: Invoice, amount: number, method: string, date: string) => Promise<boolean>
-) {
-  const [paymentDate, setPaymentDate] = useState<string>(new Date().toISOString().split('T')[0]);
-  const [paymentAmount, setPaymentAmount] = useState<string>(invoice.balanceAmount || "");
-  const [paymentMethod, setPaymentMethod] = useState<string>("bank");
-  const [collectedBy, setCollectedBy] = useState<string>("");
+  recordPaymentAsTransaction?: RecordPaymentFn
+) => {
+  const [paymentDate, setPaymentDate] = useState<Date>(new Date());
+  const [paymentAmount, setPaymentAmount] = useState<string>(
+    Math.max(0, invoice.balance).toFixed(2)
+  );
+  const [paymentMethod, setPaymentMethod] = useState<string>("upi");
+  const [collectedBy, setCollectedBy] = useState<string>("self");
   const [amountError, setAmountError] = useState<string>("");
 
-  // Get max allowed payment (balance amount)
-  const maxAllowedPayment = parseFloat(invoice.balanceAmount.replace(/[₹,]/g, "")) || 0;
+  const maxAllowedPayment = invoice.balance;
 
-  // Update payment amount when invoice changes
-  useEffect(() => {
-    setPaymentAmount(invoice.balanceAmount.replace(/[₹,]/g, "") || "");
-    setPaymentMethod(invoice.paymentMethod || "bank");
-    setPaymentDate(new Date().toISOString().split('T')[0]);
-    setCollectedBy("");
-  }, [invoice]);
-
-  // Validate payment amount when it changes
   const handlePaymentAmountChange = (value: string) => {
     setPaymentAmount(value);
-    validatePaymentAmount(value);
+
+    const numValue = parseFloat(value);
+    if (isNaN(numValue)) {
+      setAmountError("Please enter a valid amount");
+    } else if (numValue <= 0) {
+      setAmountError("Amount must be greater than zero");
+    } else if (numValue > maxAllowedPayment) {
+      setAmountError(`Amount cannot exceed the remaining balance (${maxAllowedPayment})`);
+    } else {
+      setAmountError("");
+    }
   };
 
-  // Validate payment amount
-  const validatePaymentAmount = (value: string) => {
-    const cleanValue = value.replace(/[₹,]/g, "");
-    const numValue = parseFloat(cleanValue) || 0;
+  const handleSubmit = async () => {
+    try {
+      const amount = parseFloat(paymentAmount);
+      
+      if (isNaN(amount) || amount <= 0) {
+        toast.error("Please enter a valid payment amount");
+        return;
+      }
+      
+      if (amount > maxAllowedPayment) {
+        toast.error(`Payment amount cannot exceed the remaining balance (${maxAllowedPayment})`);
+        return;
+      }
 
-    if (numValue <= 0) {
-      setAmountError("Payment amount must be greater than zero");
-      return false;
-    }
+      // Update the invoice's payment history
+      const paymentId = crypto.randomUUID();
+      const payment = {
+        id: paymentId,
+        date: paymentDate.toISOString().split('T')[0],
+        amount: amount,
+        method: paymentMethod,
+        collected_by: collectedBy
+      };
 
-    if (numValue > maxAllowedPayment) {
-      setAmountError(`Payment cannot exceed balance (₹${maxAllowedPayment.toLocaleString('en-IN')})`);
-      return false;
-    }
+      const updatedPayments = [...(invoice.payments || []), payment];
+      const totalPaid = updatedPayments.reduce((sum, p) => sum + p.amount, 0);
+      const newBalance = invoice.total - totalPaid;
+      const newStatus = newBalance <= 0 ? "paid" : "partial";
 
-    setAmountError("");
-    return true;
-  };
+      const { data, error } = await supabase
+        .from("invoices")
+        .update({
+          payments: updatedPayments,
+          status: newStatus,
+          paid_amount: totalPaid,
+          balance: newBalance,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", invoice.id)
+        .select()
+        .single();
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    
-    // Validation
-    if (!paymentDate) {
-      toast.error("Please select a payment date");
-      return;
-    }
-    
-    if (!paymentAmount) {
-      toast.error("Please enter a payment amount");
-      return;
-    }
+      if (error) {
+        console.error("Error recording payment:", error);
+        toast.error("Failed to record payment");
+        return false;
+      }
 
-    // Validate payment amount
-    if (!validatePaymentAmount(paymentAmount)) {
-      return;
-    }
-    
-    // Convert amounts to numbers for calculation
-    const currentPaid = parseFloat(invoice.paidAmount.replace(/[₹,]/g, "")) || 0;
-    const newPayment = parseFloat(paymentAmount.replace(/[₹,]/g, "")) || 0;
-    const totalAmount = parseFloat(invoice.amount.replace(/[₹,]/g, "")) || 0;
-    
-    // Calculate new paid amount and balance
-    const updatedPaidAmount = (currentPaid + newPayment).toString();
-    const updatedBalanceAmount = Math.max(0, totalAmount - (currentPaid + newPayment)).toString();
-    
-    // Determine status based on payment
-    const updatedStatus = 
-      currentPaid + newPayment >= totalAmount 
-        ? "paid" 
-        : currentPaid + newPayment > 0 
-          ? "partial" 
-          : "pending";
-    
-    // Create updated invoice object
-    const updatedInvoice: Invoice = {
-      ...invoice,
-      paidAmount: updatedPaidAmount,
-      balanceAmount: updatedBalanceAmount,
-      status: updatedStatus,
-      paymentDate: paymentDate,
-      paymentMethod: paymentMethod,
-      notes: invoice.notes 
-        ? `${invoice.notes}\n${new Date().toLocaleDateString()}: Payment of ₹${parseFloat(paymentAmount).toLocaleString('en-IN')} collected by ${collectedBy || 'staff'}`
-        : `${new Date().toLocaleDateString()}: Payment of ₹${parseFloat(paymentAmount).toLocaleString('en-IN')} collected by ${collectedBy || 'staff'}`
-    };
-    
-    // Also record this payment as a transaction if the function is provided
-    let transactionRecorded = true;
-    if (recordPaymentAsTransaction) {
-      transactionRecorded = await recordPaymentAsTransaction(
-        invoice, 
-        newPayment, 
-        paymentMethod, 
-        paymentDate
-      );
-    }
-    
-    if (transactionRecorded) {
-      onSave(updatedInvoice);
-      onClose();
+      // If we have a transaction recorder function, use it
+      if (recordPaymentAsTransaction) {
+        const paymentData: InvoicePaymentData = {
+          invoiceId: invoice.id,
+          clientName: invoice.client,
+          amount: amount,
+          paymentDate,
+          paymentMethod,
+          description: `Payment for Invoice #${invoice.id.slice(0, 8)}`
+        };
+        
+        await recordPaymentAsTransaction(paymentData);
+      }
+
       toast.success("Payment recorded successfully");
+      onSave(data);
+      onClose();
+      return true;
+    } catch (error) {
+      console.error("Error in payment submission:", error);
+      toast.error("An error occurred while recording the payment");
+      return false;
     }
   };
 
@@ -131,4 +132,4 @@ export function useRecordPayment(
     maxAllowedPayment,
     handleSubmit
   };
-}
+};
