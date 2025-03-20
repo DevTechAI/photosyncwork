@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -26,9 +25,6 @@ import {
   LineChart,
   Line,
 } from "recharts";
-import { MonthlyTrendReport } from "./MonthlyTrendReport";
-import { CategoryBreakdownReport } from "./CategoryBreakdownReport";
-import { CashFlowReport } from "./CashFlowReport";
 import { format, subMonths, parse, setMonth, setYear } from "date-fns";
 import { fetchTransactions, getTransactionStats } from "@/hooks/finances/api/financeApi";
 import { DownloadIcon, RefreshCw } from "lucide-react";
@@ -58,7 +54,6 @@ export function FinancialReports({ year }: FinancialReportsProps) {
     try {
       setIsLoading(true);
       
-      // Fetch data for each month of the selected year
       const monthlyStats = [];
       
       for (let month = 0; month < 12; month++) {
@@ -81,7 +76,6 @@ export function FinancialReports({ year }: FinancialReportsProps) {
       
       setMonthlyData(monthlyStats);
       
-      // Update category data for the selected month
       updateCategoryData(parseInt(selectedMonth));
       
     } catch (error) {
