@@ -83,7 +83,7 @@ export const useRecordPayment = (
           payments: updatedPayments,
           status: newStatus,
           paid_amount: totalPaid.toString(),
-          balance: newBalance,
+          balance_amount: newBalance.toString(), // Changed from balance to balance_amount
           updated_at: new Date().toISOString()
         })
         .eq("id", invoice.id)
