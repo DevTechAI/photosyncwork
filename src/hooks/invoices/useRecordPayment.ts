@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Invoice } from "@/components/invoices/types";
+import { Invoice, InvoicePayment } from "@/components/invoices/types";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -62,7 +62,7 @@ export const useRecordPayment = (
 
       // Update the invoice's payment history
       const paymentId = crypto.randomUUID();
-      const payment = {
+      const payment: InvoicePayment = {
         id: paymentId,
         date: paymentDate,
         amount: amount,
@@ -77,10 +77,19 @@ export const useRecordPayment = (
       const newBalance = invoiceAmount - totalPaid;
       const newStatus = newBalance <= 0 ? "paid" : "partial";
 
+      // Convert payments to plain objects for Supabase storage
+      const paymentsForDb = updatedPayments.map(p => ({
+        id: p.id,
+        date: p.date,
+        amount: p.amount,
+        method: p.method,
+        collected_by: p.collected_by
+      }));
+
       const { data, error } = await supabase
         .from("invoices")
         .update({
-          payments: updatedPayments,
+          payments: paymentsForDb,
           status: newStatus,
           paid_amount: totalPaid.toString(),
           balance_amount: newBalance.toString(),
@@ -104,7 +113,7 @@ export const useRecordPayment = (
           amount: amount,
           paymentDate,
           paymentMethod,
-          description: `Payment for Invoice #${invoice.id.slice(0, 8)}`
+          description: `Payment for Invoice #${invoice.displayNumber || invoice.id.slice(0, 8)}`
         };
         
         await recordPaymentAsTransaction(paymentData);

@@ -85,6 +85,11 @@ export const addTransaction = async (transaction: Omit<FinanceTransaction, 'id' 
     amount: Number(transaction.amount)
   };
 
+  // For metadata, convert to plain object to ensure it's compatible with Supabase jsonb
+  if (transactionData.metadata && typeof transactionData.metadata === 'object') {
+    transactionData.metadata = JSON.parse(JSON.stringify(transactionData.metadata));
+  }
+
   const { data, error } = await supabase
     .from('finance_transactions')
     .insert(transactionData)
@@ -110,6 +115,11 @@ export const updateTransaction = async (transaction: FinanceTransaction): Promis
     ...updateData,
     amount: Number(updateData.amount)
   };
+
+  // For metadata, convert to plain object to ensure it's compatible with Supabase jsonb
+  if (transactionData.metadata && typeof transactionData.metadata === 'object') {
+    transactionData.metadata = JSON.parse(JSON.stringify(transactionData.metadata));
+  }
 
   const { data, error } = await supabase
     .from('finance_transactions')
