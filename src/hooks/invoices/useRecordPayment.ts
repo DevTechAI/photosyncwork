@@ -8,7 +8,7 @@ interface InvoicePaymentData {
   invoiceId: string;
   clientName: string;
   amount: number;
-  paymentDate: Date;
+  paymentDate: string;
   paymentMethod?: string;
   description?: string;
 }
@@ -21,15 +21,15 @@ export const useRecordPayment = (
   onClose: () => void,
   recordPaymentAsTransaction?: RecordPaymentFn
 ) => {
-  const [paymentDate, setPaymentDate] = useState<Date>(new Date());
+  const [paymentDate, setPaymentDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [paymentAmount, setPaymentAmount] = useState<string>(
-    Math.max(0, invoice.balance).toFixed(2)
+    Math.max(0, parseFloat(invoice.balanceAmount)).toFixed(2)
   );
   const [paymentMethod, setPaymentMethod] = useState<string>("upi");
   const [collectedBy, setCollectedBy] = useState<string>("self");
   const [amountError, setAmountError] = useState<string>("");
 
-  const maxAllowedPayment = invoice.balance;
+  const maxAllowedPayment = parseFloat(invoice.balanceAmount);
 
   const handlePaymentAmountChange = (value: string) => {
     setPaymentAmount(value);
@@ -64,15 +64,17 @@ export const useRecordPayment = (
       const paymentId = crypto.randomUUID();
       const payment = {
         id: paymentId,
-        date: paymentDate.toISOString().split('T')[0],
+        date: paymentDate,
         amount: amount,
         method: paymentMethod,
         collected_by: collectedBy
       };
 
-      const updatedPayments = [...(invoice.payments || []), payment];
+      const existingPayments = invoice.payments || [];
+      const updatedPayments = [...existingPayments, payment];
       const totalPaid = updatedPayments.reduce((sum, p) => sum + p.amount, 0);
-      const newBalance = invoice.total - totalPaid;
+      const invoiceAmount = parseFloat(invoice.amount);
+      const newBalance = invoiceAmount - totalPaid;
       const newStatus = newBalance <= 0 ? "paid" : "partial";
 
       const { data, error } = await supabase
@@ -80,7 +82,7 @@ export const useRecordPayment = (
         .update({
           payments: updatedPayments,
           status: newStatus,
-          paid_amount: totalPaid,
+          paid_amount: totalPaid.toString(),
           balance: newBalance,
           updated_at: new Date().toISOString()
         })
@@ -108,8 +110,27 @@ export const useRecordPayment = (
         await recordPaymentAsTransaction(paymentData);
       }
 
+      // Convert DB invoice to our app's Invoice format
+      const updatedInvoice: Invoice = {
+        id: data.id,
+        client: data.client,
+        clientEmail: data.client_email,
+        date: data.date,
+        amount: data.amount,
+        paidAmount: data.paid_amount || "0",
+        balanceAmount: newBalance.toString(),
+        status: newStatus as "pending" | "partial" | "paid",
+        items: data.items as any,
+        estimateId: data.estimate_id,
+        notes: data.notes,
+        paymentDate: data.payment_date,
+        paymentMethod: data.payment_method,
+        gstRate: data.gst_rate,
+        payments: updatedPayments
+      };
+
       toast.success("Payment recorded successfully");
-      onSave(data);
+      onSave(updatedInvoice);
       onClose();
       return true;
     } catch (error) {

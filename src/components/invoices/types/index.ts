@@ -4,6 +4,14 @@ export interface InvoiceItem {
   amount: string;
 }
 
+export interface InvoicePayment {
+  id: string;
+  date: string;
+  amount: number;
+  method: string;
+  collected_by: string;
+}
+
 export interface Invoice {
   id: string;
   displayNumber?: string;
@@ -20,4 +28,10 @@ export interface Invoice {
   paymentDate?: string;
   paymentMethod?: string;
   gstRate?: string;
+  
+  // Adding these missing properties needed by useRecordPayment
+  payments?: InvoicePayment[];
+  balance?: number;
+  total?: number;
+  paid_amount?: string;
 }

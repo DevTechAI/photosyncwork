@@ -9,7 +9,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Invoice } from "../types";
 import { useEffect, useState } from "react";
 
 interface PaymentFormProps {
@@ -23,7 +22,7 @@ interface PaymentFormProps {
   setCollectedBy: (name: string) => void;
   amountError: string;
   maxAllowedPayment: number;
-  handleSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
+  handleSubmit: () => Promise<boolean>;
   onClose: () => void;
 }
 
@@ -70,8 +69,13 @@ export function PaymentForm({
     }
   };
 
+  const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    handleSubmit();
+  };
+
   return (
-    <form className="space-y-4" onSubmit={handleSubmit}>
+    <form className="space-y-4" onSubmit={onSubmit}>
       <div className="space-y-2">
         <Label htmlFor="paymentDate">Payment Date</Label>
         <Input 

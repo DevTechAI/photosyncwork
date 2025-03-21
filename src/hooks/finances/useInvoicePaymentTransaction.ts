@@ -18,7 +18,7 @@ export const useInvoicePaymentTransaction = () => {
     invoiceId: string;
     clientName: string;
     amount: number;
-    paymentDate: Date;
+    paymentDate: string;
     paymentMethod?: string;
     description?: string;
   }) => {
@@ -41,7 +41,7 @@ export const useInvoicePaymentTransaction = () => {
         transaction_type: 'income',
         category_id: clientPaymentsCategory.id,
         amount: paymentData.amount,
-        transaction_date: paymentData.paymentDate.toISOString().split('T')[0],
+        transaction_date: paymentData.paymentDate,
         description: paymentData.description || `Payment from ${paymentData.clientName}`,
         payment_method: paymentData.paymentMethod || 'none',
         source_id: paymentData.invoiceId,
