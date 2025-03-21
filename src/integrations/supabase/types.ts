@@ -120,6 +120,7 @@ export type Database = {
           created_at: string | null
           description: string | null
           id: string
+          metadata: Json | null
           payment_method: string | null
           source_id: string | null
           source_type: string | null
@@ -134,6 +135,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           id?: string
+          metadata?: Json | null
           payment_method?: string | null
           source_id?: string | null
           source_type?: string | null
@@ -148,6 +150,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           id?: string
+          metadata?: Json | null
           payment_method?: string | null
           source_id?: string | null
           source_type?: string | null

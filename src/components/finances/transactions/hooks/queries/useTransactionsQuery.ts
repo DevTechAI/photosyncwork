@@ -1,6 +1,6 @@
 
 import { useQuery } from "@tanstack/react-query";
-import { fetchTransactions } from "@/hooks/finances/api/financeApi";
+import { fetchTransactions } from "@/hooks/finances/api/transactionApi";
 
 export function useTransactionsQuery(filterType: string, filterCategory: string) {
   return useQuery({

@@ -135,7 +135,7 @@ export const useRecordPayment = (
         paymentDate: data.payment_date,
         paymentMethod: data.payment_method,
         gstRate: data.gst_rate,
-        payments: data.payments || [],
+        payments: data.payments as InvoicePayment[] || [],
         displayNumber: data.display_number
       };
 
