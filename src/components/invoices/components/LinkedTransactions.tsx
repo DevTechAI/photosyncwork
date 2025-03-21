@@ -6,7 +6,7 @@ import { fetchTransactionsBySource } from "@/hooks/finances/api/transactionApi";
 import { useQuery } from "@tanstack/react-query";
 import { formatDate } from "date-fns";
 import { Badge } from "@/components/ui/badge";
-import { Pencil, Plus, Trash } from "lucide-react";
+import { Pencil, Plus, Trash, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LoaderCircle } from "lucide-react";
 
@@ -87,6 +87,12 @@ export function LinkedTransactions({
                   <Badge variant={transaction.transaction_type === 'income' ? 'secondary' : 'outline'}>
                     {transaction.transaction_type}
                   </Badge>
+                  {transaction.metadata?.client_name && (
+                    <Badge variant="outline" className="flex items-center gap-1">
+                      <User className="h-3 w-3" />
+                      {transaction.metadata.client_name}
+                    </Badge>
+                  )}
                 </div>
                 <p className="text-sm text-muted-foreground">{transaction.description || 'No description'}</p>
               </div>

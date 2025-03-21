@@ -11,6 +11,7 @@ export const transactionFormSchema = z.object({
   payment_method: z.string().optional(),
   source_id: z.string().optional(), // ID of the source (invoice, expense)
   source_type: z.string().optional(), // Type of source (invoice, vendor, general)
+  metadata: z.record(z.any()).optional(), // Allow for metadata object with any structure
 });
 
 export type TransactionFormValues = z.infer<typeof transactionFormSchema>;

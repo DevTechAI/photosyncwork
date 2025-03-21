@@ -36,7 +36,7 @@ export const useInvoicePaymentTransaction = () => {
         return null;
       }
       
-      // Create the transaction
+      // Create the transaction with client name in description and metadata
       const transaction = await addTransaction({
         transaction_type: 'income',
         category_id: clientPaymentsCategory.id,
@@ -45,7 +45,11 @@ export const useInvoicePaymentTransaction = () => {
         description: paymentData.description || `Payment from ${paymentData.clientName}`,
         payment_method: paymentData.paymentMethod || 'none',
         source_id: paymentData.invoiceId,
-        source_type: 'invoice'
+        source_type: 'invoice',
+        metadata: {
+          client_name: paymentData.clientName, // Store client name in metadata for querying
+          invoice_id: paymentData.invoiceId
+        }
       });
       
       toast.success("Payment successfully recorded as a transaction");
