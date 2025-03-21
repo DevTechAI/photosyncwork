@@ -10,6 +10,7 @@ import { Download, Send, Edit } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
 import { Card } from "../ui/card";
 import { Invoice } from "./types";
+import { format } from "date-fns";
 
 interface InvoiceDetailsProps {
   invoice: Invoice | null;
@@ -30,6 +31,15 @@ export function InvoiceDetails({ invoice, open, onClose, onEdit }: InvoiceDetail
         return 'bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs';
       default:
         return 'bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs';
+    }
+  };
+
+  // Format date helper function
+  const formatDate = (dateStr: string) => {
+    try {
+      return new Date(dateStr).toLocaleDateString();
+    } catch (e) {
+      return dateStr;
     }
   };
 
@@ -69,7 +79,7 @@ export function InvoiceDetails({ invoice, open, onClose, onEdit }: InvoiceDetail
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm text-muted-foreground">Date:</span>
-                    <span>{new Date(invoice.date).toLocaleDateString()}</span>
+                    <span>{formatDate(invoice.date)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm text-muted-foreground">Status:</span>
@@ -108,7 +118,7 @@ export function InvoiceDetails({ invoice, open, onClose, onEdit }: InvoiceDetail
                     {invoice.paymentDate && (
                       <div className="flex justify-between">
                         <span className="text-sm text-muted-foreground">Payment Date:</span>
-                        <span>{new Date(invoice.paymentDate).toLocaleDateString()}</span>
+                        <span>{formatDate(invoice.paymentDate)}</span>
                       </div>
                     )}
                     <div className="flex justify-between">
@@ -158,6 +168,33 @@ export function InvoiceDetails({ invoice, open, onClose, onEdit }: InvoiceDetail
               </TableBody>
             </Table>
           </div>
+          
+          {/* Payment History */}
+          {invoice.payments && invoice.payments.length > 0 && (
+            <div>
+              <h3 className="font-medium mb-2">Payment History</h3>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Method</TableHead>
+                    <TableHead>Collected By</TableHead>
+                    <TableHead className="text-right">Amount</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {invoice.payments.map((payment) => (
+                    <TableRow key={payment.id}>
+                      <TableCell>{formatDate(payment.date)}</TableCell>
+                      <TableCell className="capitalize">{payment.method}</TableCell>
+                      <TableCell>{payment.collected_by}</TableCell>
+                      <TableCell className="text-right text-green-600">₹{payment.amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
           
           {/* Notes */}
           {invoice.notes && (

@@ -52,12 +52,12 @@ export const useRecordPayment = (
       
       if (isNaN(amount) || amount <= 0) {
         toast.error("Please enter a valid payment amount");
-        return;
+        return false;
       }
       
       if (amount > maxAllowedPayment) {
         toast.error(`Payment amount cannot exceed the remaining balance (${maxAllowedPayment})`);
-        return;
+        return false;
       }
 
       // Update the invoice's payment history
@@ -83,7 +83,7 @@ export const useRecordPayment = (
           payments: updatedPayments,
           status: newStatus,
           paid_amount: totalPaid.toString(),
-          balance_amount: newBalance.toString(), // Changed from balance to balance_amount
+          balance_amount: newBalance.toString(),
           updated_at: new Date().toISOString()
         })
         .eq("id", invoice.id)
@@ -118,15 +118,16 @@ export const useRecordPayment = (
         date: data.date,
         amount: data.amount,
         paidAmount: data.paid_amount || "0",
-        balanceAmount: newBalance.toString(),
-        status: newStatus as "pending" | "partial" | "paid",
+        balanceAmount: data.balance_amount,
+        status: data.status as "pending" | "partial" | "paid",
         items: data.items as any,
         estimateId: data.estimate_id,
         notes: data.notes,
         paymentDate: data.payment_date,
         paymentMethod: data.payment_method,
         gstRate: data.gst_rate,
-        payments: updatedPayments
+        payments: data.payments || [],
+        displayNumber: data.display_number
       };
 
       toast.success("Payment recorded successfully");

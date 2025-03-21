@@ -181,6 +181,7 @@ export type Database = {
           client_email: string | null
           created_at: string
           date: string
+          display_number: string | null
           estimate_id: string | null
           gst_rate: string | null
           id: string
@@ -189,6 +190,7 @@ export type Database = {
           paid_amount: string
           payment_date: string | null
           payment_method: string | null
+          payments: Json | null
           status: string
           updated_at: string
         }
@@ -199,6 +201,7 @@ export type Database = {
           client_email?: string | null
           created_at?: string
           date: string
+          display_number?: string | null
           estimate_id?: string | null
           gst_rate?: string | null
           id?: string
@@ -207,6 +210,7 @@ export type Database = {
           paid_amount?: string
           payment_date?: string | null
           payment_method?: string | null
+          payments?: Json | null
           status?: string
           updated_at?: string
         }
@@ -217,6 +221,7 @@ export type Database = {
           client_email?: string | null
           created_at?: string
           date?: string
+          display_number?: string | null
           estimate_id?: string | null
           gst_rate?: string | null
           id?: string
@@ -225,6 +230,7 @@ export type Database = {
           paid_amount?: string
           payment_date?: string | null
           payment_method?: string | null
+          payments?: Json | null
           status?: string
           updated_at?: string
         }

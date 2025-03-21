@@ -29,9 +29,6 @@ export interface Invoice {
   paymentMethod?: string;
   gstRate?: string;
   
-  // Adding these missing properties needed by useRecordPayment
+  // Making sure payments is properly typed
   payments?: InvoicePayment[];
-  balance?: number;
-  total?: number;
-  paid_amount?: string;
 }

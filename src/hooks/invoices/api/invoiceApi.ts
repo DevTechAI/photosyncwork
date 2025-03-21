@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Invoice } from "@/components/invoices/types";
 import { Json } from "@/integrations/supabase/types";
@@ -20,7 +19,8 @@ export const mapInvoiceToDbInvoice = (invoice: Invoice) => {
     notes: invoice.notes,
     payment_date: invoice.paymentDate,
     payment_method: invoice.paymentMethod,
-    gst_rate: invoice.gstRate
+    gst_rate: invoice.gstRate,
+    payments: invoice.payments as unknown as Json
   };
 };
 
@@ -41,7 +41,8 @@ export const mapDbInvoiceToInvoice = (item: any): Invoice => {
     notes: item.notes,
     paymentDate: item.payment_date,
     paymentMethod: item.payment_method,
-    gstRate: item.gst_rate
+    gstRate: item.gst_rate,
+    payments: item.payments || []
   };
 };
 
