@@ -119,6 +119,18 @@ export const useRecordPayment = (
         await recordPaymentAsTransaction(paymentData);
       }
 
+      // Properly type the payments from database response
+      // The proper way to handle this is to map the JSON data to our expected type
+      const typedPayments = Array.isArray(data.payments) 
+        ? data.payments.map((p: any) => ({
+            id: p.id,
+            date: p.date,
+            amount: Number(p.amount),
+            method: p.method,
+            collected_by: p.collected_by
+          } as InvoicePayment))
+        : [];
+
       // Convert DB invoice to our app's Invoice format
       const updatedInvoice: Invoice = {
         id: data.id,
@@ -135,7 +147,7 @@ export const useRecordPayment = (
         paymentDate: data.payment_date,
         paymentMethod: data.payment_method,
         gstRate: data.gst_rate,
-        payments: data.payments as InvoicePayment[] || [],
+        payments: typedPayments, // Using our properly typed array
         displayNumber: data.display_number
       };
 
