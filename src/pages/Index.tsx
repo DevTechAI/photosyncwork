@@ -11,51 +11,39 @@ import { AnimatedBackground } from "@/components/webgl/AnimatedBackground";
 export default function Index() {
   const { currentUser } = useUser();
 
-  // Manager Dashboard - Enhanced with financial overview
-  if (currentUser?.role === "manager" || currentUser?.role === "accounts") {
-    return (
-      <Layout>
-        <AnimatedBackground />
-        <ManagerDashboard />
-      </Layout>
-    );
-  }
+  // Render an enhanced AnimatedBackground for all dashboard views
+  const renderDashboard = () => {
+    // Manager Dashboard - Enhanced with financial overview
+    if (currentUser?.role === "manager" || currentUser?.role === "accounts") {
+      return <ManagerDashboard />;
+    }
 
-  // Photographer Dashboard
-  if (currentUser?.role === "photographer") {
-    return (
-      <Layout>
-        <AnimatedBackground />
-        <PhotographerDashboard />
-      </Layout>
-    );
-  }
+    // Photographer Dashboard
+    if (currentUser?.role === "photographer") {
+      return <PhotographerDashboard />;
+    }
 
-  // Videographer Dashboard
-  if (currentUser?.role === "videographer") {
-    return (
-      <Layout>
-        <AnimatedBackground />
-        <VideographerDashboard />
-      </Layout>
-    );
-  }
+    // Videographer Dashboard
+    if (currentUser?.role === "videographer") {
+      return <VideographerDashboard />;
+    }
 
-  // Editor Dashboard
-  if (currentUser?.role === "editor") {
-    return (
-      <Layout>
-        <AnimatedBackground />
-        <EditorDashboard />
-      </Layout>
-    );
-  }
+    // Editor Dashboard
+    if (currentUser?.role === "editor") {
+      return <EditorDashboard />;
+    }
 
-  // Default Dashboard (fallback)
+    // Default Dashboard (fallback)
+    return <DefaultDashboard />;
+  };
+
   return (
     <Layout>
+      {/* Enhanced AnimatedBackground with improved particle system */}
       <AnimatedBackground />
-      <DefaultDashboard />
+      <div className="relative z-10">
+        {renderDashboard()}
+      </div>
     </Layout>
   );
 }

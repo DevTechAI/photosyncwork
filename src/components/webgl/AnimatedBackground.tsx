@@ -12,6 +12,7 @@ export const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({ classNam
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const particlesRef = useRef<THREE.Points | null>(null);
+  const clockRef = useRef<THREE.Clock>(new THREE.Clock());
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -39,48 +40,71 @@ export const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({ classNam
 
     // Create particles
     const particlesGeometry = new THREE.BufferGeometry();
-    const particlesCount = 1500;
+    const particlesCount = 2000; // Increased particle count
     
     const posArray = new Float32Array(particlesCount * 3);
     const colorArray = new Float32Array(particlesCount * 3);
+    const sizeArray = new Float32Array(particlesCount);
     
     // Fill positions with random values
-    for (let i = 0; i < particlesCount * 3; i++) {
-      // Random positions for particles
-      posArray[i] = (Math.random() - 0.5) * 60;
+    for (let i = 0; i < particlesCount * 3; i += 3) {
+      // Random positions for particles - create a more distributed field
+      posArray[i] = (Math.random() - 0.5) * 70;        // x
+      posArray[i + 1] = (Math.random() - 0.5) * 70;    // y
+      posArray[i + 2] = (Math.random() - 0.5) * 70;    // z
       
-      // Blue-ish gradient colors for particles
-      if (i % 3 === 0) {
-        colorArray[i] = 0.5 + Math.random() * 0.5; // More blue
-      } else if (i % 3 === 1) {
-        colorArray[i] = 0.7 + Math.random() * 0.3; // Some green
-      } else {
-        colorArray[i] = 0.9 + Math.random() * 0.1; // Less red
-      }
+      // Enhanced blue-purple gradient colors for particles
+      colorArray[i] = 0.5 + Math.random() * 0.5;       // Blue (more variation)
+      colorArray[i + 1] = 0.3 + Math.random() * 0.3;   // Green (less)
+      colorArray[i + 2] = 0.8 + Math.random() * 0.2;   // Red (more purple tint)
+      
+      // Varied particle sizes
+      sizeArray[i/3] = 0.3 + Math.random() * 0.7;      // Different sizes for visual interest
     }
     
     particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
     particlesGeometry.setAttribute('color', new THREE.BufferAttribute(colorArray, 3));
+    particlesGeometry.setAttribute('size', new THREE.BufferAttribute(sizeArray, 1));
     
+    // Create particle material with custom shader
     const particlesMaterial = new THREE.PointsMaterial({
-      size: 0.1,
+      size: 0.15, // Base size is larger
+      sizeAttenuation: true, // Size changes with distance
       transparent: true,
       opacity: 0.8,
       vertexColors: true,
-      blending: THREE.AdditiveBlending
+      blending: THREE.AdditiveBlending,
+      depthWrite: false, // Helps with transparency
     });
     
     const particles = new THREE.Points(particlesGeometry, particlesMaterial);
     scene.add(particles);
     particlesRef.current = particles;
 
-    // Animation loop
+    // Animation loop with more dynamic movement
     const animate = () => {
       requestAnimationFrame(animate);
       
+      const delta = clockRef.current.getDelta();
+      
       if (particlesRef.current) {
-        particlesRef.current.rotation.x += 0.0005;
+        // More noticeable rotation and movement
+        particlesRef.current.rotation.x += 0.0003;
         particlesRef.current.rotation.y += 0.0005;
+        
+        // Add subtle pulsing effect
+        const time = clockRef.current.getElapsedTime();
+        particlesRef.current.scale.x = 1 + Math.sin(time * 0.2) * 0.05;
+        particlesRef.current.scale.y = 1 + Math.sin(time * 0.3) * 0.05;
+        particlesRef.current.scale.z = 1 + Math.sin(time * 0.4) * 0.05;
+      }
+      
+      // Gently move camera
+      if (cameraRef.current) {
+        const time = clockRef.current.getElapsedTime() * 0.5;
+        cameraRef.current.position.x = Math.sin(time * 0.2) * 1;
+        cameraRef.current.position.y = Math.cos(time * 0.1) * 1;
+        cameraRef.current.lookAt(0, 0, 0);
       }
       
       renderer.render(scene, camera);
@@ -125,6 +149,7 @@ export const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({ classNam
     <div 
       ref={containerRef} 
       className={className || "absolute top-0 left-0 w-full h-full -z-10"}
+      data-testid="animated-background"
     />
   );
 };
