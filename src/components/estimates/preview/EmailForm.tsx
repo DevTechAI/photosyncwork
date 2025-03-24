@@ -71,11 +71,13 @@ export function EmailForm({ onClose, estimate }: EmailFormProps) {
     setIsLoading(true);
 
     try {
+      const templateId = estimate.selectedTemplate || 'modern';
+      
       const completeHtml = `
         <div style="font-family: system-ui, -apple-system, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px;">
-          ${generateIntroHtml(estimate.clientName)}
-          ${generatePortfolioHtml(estimate.portfolioLinks)}
-          ${generateServicesHtml(estimate.selectedServices)}
+          ${generateIntroHtml(estimate.clientName, templateId)}
+          ${generatePortfolioHtml(estimate.portfolioLinks, templateId)}
+          ${generateServicesHtml(estimate.selectedServices, templateId)}
           ${generateEstimateDetailsHtml(estimate)}
         </div>
       `;

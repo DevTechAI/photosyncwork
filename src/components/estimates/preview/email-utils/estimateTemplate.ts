@@ -1,4 +1,3 @@
-
 interface Package {
   name?: string;
   amount: string;
@@ -15,35 +14,77 @@ export const applyTemplateStyles = (html: string, templateId: string = 'modern')
   let headerClass = '';
   let contentClass = '';
   let headingClass = '';
+  let containerClass = '';
+  let cardClass = '';
+  let buttonClass = '';
+  let separatorClass = '';
+  let fontFamily = 'font-family: system-ui, -apple-system, sans-serif;';
   
   switch(templateId) {
     case 'bold':
-      headerClass = 'background-color:#000000; color:#ffffff; padding:32px 0;';
-      contentClass = 'border-left:4px solid #000000; padding-left:16px; margin-bottom:24px;';
-      headingClass = 'font-weight:700; text-transform:uppercase; letter-spacing:2px;';
+      headerClass = 'background-color:#222222; color:#ffffff; padding:36px 0; text-transform:uppercase;';
+      contentClass = 'border-left:4px solid #FF719A; padding-left:20px; margin-bottom:24px;';
+      headingClass = 'font-weight:700; text-transform:uppercase; letter-spacing:2px; color:#222222;';
+      containerClass = 'background-color:#f9f9f9; border-radius:0;';
+      cardClass = 'border:none; border-bottom:3px solid #FF719A; border-radius:0; box-shadow:0 4px 8px rgba(0,0,0,0.1);';
+      buttonClass = 'background-color:#FF719A; color:#ffffff; font-weight:bold; text-transform:uppercase; border-radius:0;';
+      separatorClass = 'height:3px; background-color:#FF719A;';
+      fontFamily = 'font-family: "Montserrat", sans-serif;';
       break;
+      
     case 'classic':
-      headerClass = 'background-color:#f7f7f7; color:#333333; padding:24px 0; border-bottom:2px solid #e0e0e0;';
+      headerClass = 'background-color:#f7f7f7; color:#333333; padding:28px 0; border-bottom:2px solid #e0e0e0;';
       contentClass = 'border-bottom:1px solid #e0e0e0; padding-bottom:24px; margin-bottom:24px;';
-      headingClass = 'font-family:serif; font-size:20px;';
+      headingClass = 'font-family:serif; font-size:22px; color:#333333; font-weight:500;';
+      containerClass = 'background-color:#ffffff; border:1px solid #e0e0e0; border-radius:8px;';
+      cardClass = 'border:1px solid #e0e0e0; border-radius:8px; background-color:#ffffff;';
+      buttonClass = 'background-color:#4A6FA5; color:#ffffff; font-family:serif; border-radius:4px;';
+      separatorClass = 'height:1px; background-color:#e0e0e0;';
+      fontFamily = 'font-family: "Playfair Display", Georgia, serif;';
       break;
+      
     case 'modern':
     default:
-      headerClass = 'background-color:#ffffff; color:#333333; padding:16px 0;';
-      contentClass = 'margin-bottom:24px;';
-      headingClass = 'font-weight:500;';
+      headerClass = 'background: linear-gradient(109.6deg, rgba(223,234,247,1) 11.2%, rgba(244,248,252,1) 91.1%); color:#333333; padding:24px 0;';
+      contentClass = 'margin-bottom:24px; background-color:#ffffff; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.05);';
+      headingClass = 'font-weight:500; color:#1a73e8; border-bottom:1px solid #f0f0f0; padding-bottom:8px;';
+      containerClass = 'background-color:#f8f9fa; border-radius:12px;';
+      cardClass = 'border:1px solid #f0f0f0; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.05); background-color:#ffffff;';
+      buttonClass = 'background: linear-gradient(90deg, #1a73e8, #6ba4f7); color:#ffffff; font-weight:500; border-radius:24px;';
+      separatorClass = 'height:1px; background: linear-gradient(90deg, #1a73e8, #6ba4f7);';
+      fontFamily = 'font-family: "Inter", system-ui, sans-serif;';
   }
   
   let styledHtml = html.replace(
-    '<div style="text-align:center; margin-bottom:20px;">',
-    `<div style="text-align:center; margin-bottom:20px; ${headerClass}">`
+    '<div style="font-family: system-ui, -apple-system, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px;">',
+    `<div style="${fontFamily} max-width: 800px; margin: 0 auto; padding: 20px; ${containerClass}">`
   );
   
-  styledHtml = styledHtml.replace(/<h([2-3])(.*?)>/g, `<h$1$2 style="${headingClass}">`);
+  styledHtml = styledHtml.replace(
+    '<div style="text-align:center; margin-bottom:30px;">',
+    `<div style="text-align:center; margin-bottom:30px; ${headerClass}">`
+  );
+  
+  styledHtml = styledHtml.replace(/<h([1-6])(.*?)>/g, `<h$1$2 style="${headingClass}">`);
   
   styledHtml = styledHtml.replace(
-    /<div style="margin-bottom:16px;">/g, 
-    `<div style="margin-bottom:16px; ${contentClass}">`
+    '<div style="display:inline-block; background:#f1f5f9; color:#374151; padding:4px 12px; border-radius:9999px; font-size:14px; margin-top:10px;">',
+    `<div style="display:inline-block; ${buttonClass} padding:4px 16px; font-size:14px; margin-top:10px;">`
+  );
+  
+  styledHtml = styledHtml.replace(
+    /<div style="border:1px solid #e2e8f0; border-radius:8px; padding:(16|20|24)px; margin-bottom:(16|20|24)px;">/g,
+    `<div style="${cardClass} padding:$1px; margin-bottom:$2px;">`
+  );
+  
+  styledHtml = styledHtml.replace(
+    /<div style="margin-bottom:(16|20|24)px;">/g,
+    `<div style="margin-bottom:$1px; ${contentClass}">`
+  );
+  
+  styledHtml = styledHtml.replace(
+    /<div style="border-top:1px solid #e2e8f0; padding-top:16px;/g,
+    `<div style="border-top:none; ${separatorClass} padding-top:16px;`
   );
   
   return styledHtml;
