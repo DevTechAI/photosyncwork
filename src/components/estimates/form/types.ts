@@ -9,6 +9,16 @@ export interface EstimateFormData {
     deliverables: string[];
   };
   terms: string[];
+  portfolioLinks: PortfolioLink[];
+  selectedTemplate: string;
+}
+
+export interface PortfolioLink {
+  id: string;
+  title: string;
+  url: string;
+  platform: 'youtube' | 'vimeo' | 'website' | 'instagram' | 'other';
+  description?: string;
 }
 
 export interface PreviewEstimate {
@@ -16,6 +26,15 @@ export interface PreviewEstimate {
   status?: string;
   clientName: string;
   clientEmail?: string;
-  selectedPackageIndex?: number; // Added to track which package was approved
+  selectedPackageIndex?: number;
+  portfolioLinks?: PortfolioLink[];
+  selectedTemplate?: string;
   [key: string]: any;
+}
+
+export type EstimateTemplate = {
+  id: string;
+  name: string;
+  description: string;
+  previewImage: string;
 }

@@ -1,6 +1,9 @@
 
 import { ReactNode } from "react";
 import { services as serviceOptions } from "../pages/ServicesPage";
+import { PortfolioLink } from "../form/types";
+import { estimateTemplates } from "../pages/TemplateSelectionPage";
+import { Youtube, Vimeo, Globe, Instagram, Link as LinkIcon } from "lucide-react";
 
 interface EstimateDetailsProps {
   estimate: {
@@ -10,6 +13,8 @@ interface EstimateDetailsProps {
     amount: string;
     status: string;
     selectedServices?: string[];
+    selectedTemplate?: string;
+    portfolioLinks?: PortfolioLink[];
     services?: Array<{
       event: string;
       date: string;
@@ -69,107 +74,182 @@ export function EstimateDetails({ estimate }: EstimateDetailsProps) {
   // Get the selected services
   const selectedServices = estimate.selectedServices || [];
 
+  // Get the selected template
+  const templateId = estimate.selectedTemplate || "modern";
+  const selectedTemplate = estimateTemplates.find(t => t.id === templateId) || estimateTemplates[0];
+
+  // Portfolio links
+  const portfolioLinks = estimate.portfolioLinks || [];
+
+  // Platform icons for portfolio links
+  const platformIcons = {
+    youtube: <Youtube className="h-5 w-5 text-red-500" />,
+    vimeo: <Vimeo className="h-5 w-5 text-blue-500" />,
+    website: <Globe className="h-5 w-5 text-green-500" />,
+    instagram: <Instagram className="h-5 w-5 text-pink-500" />,
+    other: <LinkIcon className="h-5 w-5 text-gray-500" />,
+  };
+
+  // Template-specific styles
+  const getTemplateStyles = () => {
+    switch (templateId) {
+      case "bold":
+        return {
+          headerClass: "bg-black text-white py-8",
+          sectionClass: "border-l-4 border-black pl-4 mb-6",
+          cardClass: "border-none shadow-lg",
+          headingClass: "font-bold uppercase tracking-widest",
+        };
+      case "classic":
+        return {
+          headerClass: "bg-gray-100 text-gray-800 py-6 border-b-2 border-gray-300",
+          sectionClass: "border-b border-gray-200 pb-6 mb-6",
+          cardClass: "border rounded-none",
+          headingClass: "font-serif text-xl",
+        };
+      case "modern":
+      default:
+        return {
+          headerClass: "bg-white text-gray-800 py-4",
+          sectionClass: "mb-6",
+          cardClass: "border rounded-lg",
+          headingClass: "font-medium",
+        };
+    }
+  };
+
+  const styles = getTemplateStyles();
+
   return (
-    <div className="border rounded-lg p-6 space-y-6">
-      <div className="text-center space-y-2">
-        <h1 className="text-2xl font-semibold">ESTIMATE</h1>
+    <div className={`border rounded-lg overflow-hidden ${templateId === "bold" ? "border-none" : ""}`}>
+      <div className={`text-center space-y-3 ${styles.headerClass}`}>
+        <h1 className={`text-2xl font-semibold ${styles.headingClass}`}>ESTIMATE</h1>
         <p className="text-muted-foreground">StudioSync Photography Services</p>
         <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm ${statusClass}`}>
           Status: {estimate.status.charAt(0).toUpperCase() + estimate.status.slice(1)}
         </div>
       </div>
 
-      <div className="flex justify-between items-start border-b pb-4">
-        <div>
-          <h2 className="font-medium">Client</h2>
-          <p>{estimate.clientName}</p>
-          <p className="text-sm text-muted-foreground">
-            Date: {new Date(estimate.date).toLocaleDateString()}
-          </p>
+      <div className={`p-6 space-y-6 ${templateId === "bold" ? "bg-gray-50" : ""}`}>
+        <div className={`flex justify-between items-start border-b pb-4 ${styles.sectionClass}`}>
+          <div>
+            <h2 className={styles.headingClass}>Client</h2>
+            <p>{estimate.clientName}</p>
+            <p className="text-sm text-muted-foreground">
+              Date: {new Date(estimate.date).toLocaleDateString()}
+            </p>
+          </div>
+          <div className="text-right">
+            <h2 className={styles.headingClass}>Estimate #{estimate.id}</h2>
+            <p className="text-sm text-muted-foreground capitalize">
+              Valid until: {new Date(new Date(estimate.date).getTime() + 30*24*60*60*1000).toLocaleDateString()}
+            </p>
+          </div>
         </div>
-        <div className="text-right">
-          <h2 className="font-medium">Estimate #{estimate.id}</h2>
-          <p className="text-sm text-muted-foreground capitalize">
-            Valid until: {new Date(new Date(estimate.date).getTime() + 30*24*60*60*1000).toLocaleDateString()}
-          </p>
-        </div>
-      </div>
 
-      {selectedServices.length > 0 && (
-        <div className="mb-4">
-          <h3 className="font-medium mb-2">Selected Services</h3>
-          <div className="grid md:grid-cols-2 gap-4">
-            {selectedServices.map(serviceKey => (
-              <div key={serviceKey} className="border p-4 rounded-md">
-                <h4 className="font-medium mb-2">{serviceOptions[serviceKey]?.title}</h4>
-                <ul className="list-disc ml-5 space-y-1 text-sm text-muted-foreground">
-                  {serviceOptions[serviceKey]?.items.map((item, index) => (
-                    <li key={index}>{item}</li>
+        {portfolioLinks.length > 0 && (
+          <div className={styles.sectionClass}>
+            <h3 className={`${styles.headingClass} mb-4`}>Our Portfolio</h3>
+            <div className="grid md:grid-cols-2 gap-4">
+              {portfolioLinks.map((link) => (
+                <div key={link.id} className={`${styles.cardClass} p-4 rounded-md`}>
+                  <div className="flex items-center gap-2 mb-2">
+                    {platformIcons[link.platform]}
+                    <h4 className="font-medium">{link.title}</h4>
+                  </div>
+                  <a 
+                    href={link.url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-blue-500 hover:underline text-sm block mb-2"
+                  >
+                    {link.url}
+                  </a>
+                  {link.description && (
+                    <p className="text-sm text-muted-foreground">{link.description}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {selectedServices.length > 0 && (
+          <div className={styles.sectionClass}>
+            <h3 className={`${styles.headingClass} mb-4`}>Selected Services</h3>
+            <div className="grid md:grid-cols-2 gap-4">
+              {selectedServices.map(serviceKey => (
+                <div key={serviceKey} className={`${styles.cardClass} p-4 rounded-md`}>
+                  <h4 className="font-medium mb-2">{serviceOptions[serviceKey]?.title}</h4>
+                  <ul className="list-disc ml-5 space-y-1 text-sm text-muted-foreground">
+                    {serviceOptions[serviceKey]?.items.map((item, index) => (
+                      <li key={index}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {packagesToRender.map((pkg, packageIndex) => (
+          <div key={packageIndex} className={`${styles.cardClass} p-4 rounded-md mb-6`}>
+            <h2 className={`text-xl ${styles.headingClass} mb-4`}>
+              {pkg.name || `Package Option ${packageIndex + 1}`}
+            </h2>
+            
+            {pkg.services && pkg.services.length > 0 && (
+              <div className="mb-4">
+                <h3 className={`${styles.headingClass} mb-2`}>Services</h3>
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left py-2">Event</th>
+                      <th className="text-left py-2">Date</th>
+                      <th className="text-left py-2">Photographers</th>
+                      <th className="text-left py-2">Cinematographers</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pkg.services.map((service, index) => (
+                      <tr key={index} className="border-b">
+                        <td className="py-2">{service.event}</td>
+                        <td className="py-2">{new Date(service.date).toLocaleDateString()}</td>
+                        <td className="py-2">{service.photographers}</td>
+                        <td className="py-2">{service.cinematographers}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {pkg.deliverables && pkg.deliverables.length > 0 && (
+              <div className="mb-4">
+                <h3 className={`${styles.headingClass} mb-2`}>Deliverables</h3>
+                <ul className="list-disc ml-5 space-y-1">
+                  {pkg.deliverables.map((deliverable, index) => (
+                    <li key={index}>{deliverable}</li>
                   ))}
                 </ul>
               </div>
+            )}
+
+            <div className={`text-right pt-2 border-t ${templateId === "bold" ? "border-black" : ""}`}>
+              <span className="font-medium">Package Total: </span>
+              <span className={`text-xl font-semibold ${templateId === "bold" ? "text-black" : ""}`}>{pkg.amount}</span>
+            </div>
+          </div>
+        ))}
+
+        <div className={`pt-4 text-sm text-muted-foreground ${styles.sectionClass}`}>
+          <p className={styles.headingClass}>Terms & Conditions</p>
+          <ul className="list-disc ml-5 mt-2 space-y-1">
+            {termsToDisplay.map((term, index) => (
+              <li key={index}>{term}</li>
             ))}
-          </div>
+          </ul>
         </div>
-      )}
-
-      {packagesToRender.map((pkg, packageIndex) => (
-        <div key={packageIndex} className="border p-4 rounded-md mb-6">
-          <h2 className="text-xl font-medium mb-4">
-            {pkg.name || `Package Option ${packageIndex + 1}`}
-          </h2>
-          
-          {pkg.services && pkg.services.length > 0 && (
-            <div className="mb-4">
-              <h3 className="font-medium mb-2">Services</h3>
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left py-2">Event</th>
-                    <th className="text-left py-2">Date</th>
-                    <th className="text-left py-2">Photographers</th>
-                    <th className="text-left py-2">Cinematographers</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {pkg.services.map((service, index) => (
-                    <tr key={index} className="border-b">
-                      <td className="py-2">{service.event}</td>
-                      <td className="py-2">{new Date(service.date).toLocaleDateString()}</td>
-                      <td className="py-2">{service.photographers}</td>
-                      <td className="py-2">{service.cinematographers}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {pkg.deliverables && pkg.deliverables.length > 0 && (
-            <div className="mb-4">
-              <h3 className="font-medium mb-2">Deliverables</h3>
-              <ul className="list-disc ml-5 space-y-1">
-                {pkg.deliverables.map((deliverable, index) => (
-                  <li key={index}>{deliverable}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          <div className="text-right pt-2 border-t">
-            <span className="font-medium">Package Total: </span>
-            <span className="text-xl font-semibold">{pkg.amount}</span>
-          </div>
-        </div>
-      ))}
-
-      <div className="border-t pt-4 text-sm text-muted-foreground">
-        <p>Terms & Conditions</p>
-        <ul className="list-disc ml-5 mt-2 space-y-1">
-          {termsToDisplay.map((term, index) => (
-            <li key={index}>{term}</li>
-          ))}
-        </ul>
       </div>
     </div>
   );

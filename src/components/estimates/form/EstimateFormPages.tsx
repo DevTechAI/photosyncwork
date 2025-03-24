@@ -2,6 +2,8 @@
 import { WelcomePage } from "../pages/WelcomePage";
 import { ServicesPage } from "../pages/ServicesPage";
 import { EstimateDetailsPage } from "../pages/EstimateDetailsPage";
+import { PortfolioPage } from "../pages/PortfolioPage";
+import { TemplateSelectionPage } from "../pages/TemplateSelectionPage";
 import { PreviewStep } from "../components/PreviewStep";
 import { FormNavigation } from "../components/FormNavigation";
 import { EstimateFormData } from "./types";
@@ -65,6 +67,26 @@ export function EstimateFormPages({
           />
         );
       case 3:
+        return (
+          <PortfolioPage
+            portfolioLinks={formData.portfolioLinks || []}
+            onPortfolioLinksChange={(links) =>
+              onUpdateFormData("portfolioLinks", links)
+            }
+            isReadOnly={isEditing}
+          />
+        );
+      case 4:
+        return (
+          <TemplateSelectionPage 
+            selectedTemplate={formData.selectedTemplate || "modern"}
+            onTemplateChange={(templateId) =>
+              onUpdateFormData("selectedTemplate", templateId)
+            }
+            isReadOnly={isEditing}
+          />
+        );
+      case 5:
         return previewEstimate ? (
           <PreviewStep 
             estimate={previewEstimate} 
@@ -80,7 +102,7 @@ export function EstimateFormPages({
     <>
       {renderCurrentPage()}
       
-      {(currentPage < 3 || !previewEstimate) && (
+      {(currentPage < 5 || !previewEstimate) && (
         <FormNavigation
           currentPage={currentPage}
           isSubmitting={isSubmitting}
