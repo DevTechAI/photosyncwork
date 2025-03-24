@@ -6,44 +6,50 @@ import { DefaultDashboard } from "@/components/dashboard/DefaultDashboard";
 import { PhotographerDashboard } from "@/components/dashboard/PhotographerDashboard";
 import { VideographerDashboard } from "@/components/dashboard/VideographerDashboard";
 import { EditorDashboard } from "@/components/dashboard/EditorDashboard";
-import { AnimatedBackground } from "@/components/webgl/AnimatedBackground";
 
 export default function Index() {
   const { currentUser } = useUser();
 
-  // Render an enhanced AnimatedBackground for all dashboard views
-  const renderDashboard = () => {
-    // Manager Dashboard - Enhanced with financial overview
-    if (currentUser?.role === "manager" || currentUser?.role === "accounts") {
-      return <ManagerDashboard />;
-    }
+  // Manager Dashboard - Enhanced with financial overview
+  if (currentUser?.role === "manager" || currentUser?.role === "accounts") {
+    return (
+      <Layout>
+        <ManagerDashboard />
+      </Layout>
+    );
+  }
 
-    // Photographer Dashboard
-    if (currentUser?.role === "photographer") {
-      return <PhotographerDashboard />;
-    }
+  // Photographer Dashboard
+  if (currentUser?.role === "photographer") {
+    return (
+      <Layout>
+        <PhotographerDashboard />
+      </Layout>
+    );
+  }
 
-    // Videographer Dashboard
-    if (currentUser?.role === "videographer") {
-      return <VideographerDashboard />;
-    }
+  // Videographer Dashboard
+  if (currentUser?.role === "videographer") {
+    return (
+      <Layout>
+        <VideographerDashboard />
+      </Layout>
+    );
+  }
 
-    // Editor Dashboard
-    if (currentUser?.role === "editor") {
-      return <EditorDashboard />;
-    }
+  // Editor Dashboard
+  if (currentUser?.role === "editor") {
+    return (
+      <Layout>
+        <EditorDashboard />
+      </Layout>
+    );
+  }
 
-    // Default Dashboard (fallback)
-    return <DefaultDashboard />;
-  };
-
+  // Default Dashboard (fallback)
   return (
     <Layout>
-      {/* Enhanced AnimatedBackground with improved particle system */}
-      <AnimatedBackground />
-      <div className="relative z-10 backdrop-blur-sm bg-white/10 p-6 rounded-lg shadow-xl">
-        {renderDashboard()}
-      </div>
+      <DefaultDashboard />
     </Layout>
   );
 }
