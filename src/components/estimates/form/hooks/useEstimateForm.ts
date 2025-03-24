@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { generatePreviewEstimate } from "../../utils/estimateHelpers";
@@ -153,7 +152,7 @@ export function useEstimateForm(editingEstimate?: any) {
   };
 
   const handleNextPage = () => {
-    if (currentPage === 2) {
+    if (currentPage === 4) {
       handleGeneratePreview();
     } else {
       setCurrentPage(prev => prev + 1);
