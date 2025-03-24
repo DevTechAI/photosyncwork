@@ -10,6 +10,14 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+interface PortfolioLink {
+  id: string;
+  title: string;
+  url: string;
+  platform: 'youtube' | 'vimeo' | 'website' | 'instagram' | 'other';
+  description?: string;
+}
+
 interface EstimateEmailRequest {
   to: string;
   clientName: string;
@@ -20,6 +28,8 @@ interface EstimateEmailRequest {
   deliverables?: string[];
   packages?: any[];
   terms?: string[];
+  portfolioLinks?: PortfolioLink[];
+  selectedTemplate?: string;
   completeHtml: string; // Added to receive the complete HTML from the client
 }
 
@@ -38,6 +48,8 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     console.log("Sending email to:", emailData.to);
+    console.log("Email data includes template:", emailData.selectedTemplate);
+    console.log("Email data includes portfolio links:", emailData.portfolioLinks?.length || 0);
 
     // Use the complete HTML provided by the client
     const emailResponse = await resend.emails.send({

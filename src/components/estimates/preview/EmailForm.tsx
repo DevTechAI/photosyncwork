@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,6 +7,8 @@ import { Send, X } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { services as serviceOptions } from "../pages/ServicesPage";
+import { estimateTemplates } from "../pages/TemplateSelectionPage";
+import { PortfolioLink } from "../form/types";
 
 interface EmailFormProps {
   onClose: () => void;
@@ -37,6 +38,8 @@ interface EmailFormProps {
       deliverables: string[];
     }>;
     terms?: string[];
+    portfolioLinks?: PortfolioLink[];
+    selectedTemplate?: string;
   };
 }
 
@@ -45,7 +48,6 @@ export function EmailForm({ onClose, estimate }: EmailFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  // Pre-fill the client email if available
   useEffect(() => {
     if (estimate.clientEmail) {
       setEmailInput(estimate.clientEmail);
@@ -53,11 +55,8 @@ export function EmailForm({ onClose, estimate }: EmailFormProps) {
   }, [estimate.clientEmail]);
 
   const sendEmailFallback = async (emailData) => {
-    // This is a fallback mechanism that would typically store the email request 
-    // for later processing or use a different email sending method
     console.log("Using email fallback mechanism with data:", emailData);
     
-    // Store the email request in localStorage for demonstration
     const pendingEmails = JSON.parse(localStorage.getItem("pendingEmails") || "[]");
     pendingEmails.push({
       ...emailData,
@@ -65,15 +64,60 @@ export function EmailForm({ onClose, estimate }: EmailFormProps) {
     });
     localStorage.setItem("pendingEmails", JSON.stringify(pendingEmails));
     
-    // In a real app, you might want to:
-    // 1. Store this in a database for later processing
-    // 2. Use a different email service directly from the client
-    // 3. Implement a retry mechanism
-    
     return { success: true, fallback: true };
   };
 
-  // Function to generate HTML for the intro page
+  const generatePortfolioHtml = () => {
+    const portfolioLinks = estimate.portfolioLinks || [];
+    
+    if (portfolioLinks.length === 0) {
+      return '';
+    }
+    
+    let portfolioHtml = `
+      <div style="margin-bottom:30px;">
+        <h2 style="text-align:center; font-size:24px; font-weight:300; margin-bottom:20px;">OUR PORTFOLIO</h2>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+    `;
+    
+    portfolioLinks.forEach(link => {
+      let platformIcon = '';
+      switch(link.platform) {
+        case 'youtube':
+          platformIcon = '📺';
+          break;
+        case 'vimeo':
+          platformIcon = '🎬';
+          break;
+        case 'website':
+          platformIcon = '🌐';
+          break;
+        case 'instagram':
+          platformIcon = '📷';
+          break;
+        default:
+          platformIcon = '🔗';
+      }
+      
+      portfolioHtml += `
+        <div style="border:1px solid #e2e8f0; border-radius:8px; padding:20px;">
+          <h3 style="font-size:18px; font-weight:500; margin-bottom:10px;">
+            ${platformIcon} ${link.title}
+          </h3>
+          <a href="${link.url}" style="color:#3182ce; text-decoration:underline; display:block; margin-bottom:8px;">${link.url}</a>
+          ${link.description ? `<p style="color:#666; font-size:14px;">${link.description}</p>` : ''}
+        </div>
+      `;
+    });
+    
+    portfolioHtml += `
+        </div>
+      </div>
+    `;
+    
+    return portfolioHtml;
+  };
+
   const generateIntroHtml = () => {
     return `
       <div style="text-align:center; margin-bottom:30px;">
@@ -90,7 +134,6 @@ export function EmailForm({ onClose, estimate }: EmailFormProps) {
     `;
   };
 
-  // Function to generate HTML for the services page
   const generateServicesHtml = () => {
     const selectedServices = estimate.selectedServices || [];
     
@@ -129,12 +172,49 @@ export function EmailForm({ onClose, estimate }: EmailFormProps) {
     return servicesHtml;
   };
 
-  // Function to generate HTML for the estimate details
+  const applyTemplateStyles = (html) => {
+    const templateId = estimate.selectedTemplate || 'modern';
+    
+    let headerClass = '';
+    let contentClass = '';
+    let headingClass = '';
+    
+    switch(templateId) {
+      case 'bold':
+        headerClass = 'background-color:#000000; color:#ffffff; padding:32px 0;';
+        contentClass = 'border-left:4px solid #000000; padding-left:16px; margin-bottom:24px;';
+        headingClass = 'font-weight:700; text-transform:uppercase; letter-spacing:2px;';
+        break;
+      case 'classic':
+        headerClass = 'background-color:#f7f7f7; color:#333333; padding:24px 0; border-bottom:2px solid #e0e0e0;';
+        contentClass = 'border-bottom:1px solid #e0e0e0; padding-bottom:24px; margin-bottom:24px;';
+        headingClass = 'font-family:serif; font-size:20px;';
+        break;
+      case 'modern':
+      default:
+        headerClass = 'background-color:#ffffff; color:#333333; padding:16px 0;';
+        contentClass = 'margin-bottom:24px;';
+        headingClass = 'font-weight:500;';
+    }
+    
+    let styledHtml = html.replace(
+      '<div style="text-align:center; margin-bottom:20px;">',
+      `<div style="text-align:center; margin-bottom:20px; ${headerClass}">`
+    );
+    
+    styledHtml = styledHtml.replace(/<h([2-3])(.*?)>/g, `<h$1$2 style="${headingClass}">`);
+    
+    styledHtml = styledHtml.replace(
+      /<div style="margin-bottom:16px;">/g, 
+      `<div style="margin-bottom:16px; ${contentClass}">`
+    );
+    
+    return styledHtml;
+  };
+
   const generateEstimateDetailsHtml = () => {
-    // Check if we have packages data (multiple estimate options)
     const hasPackages = estimate.packages && estimate.packages.length > 0;
     
-    // If we don't have packages, use the legacy format (services and deliverables directly on estimate)
     const legacyPackage = {
       name: "Standard Package",
       amount: estimate.amount,
@@ -142,17 +222,14 @@ export function EmailForm({ onClose, estimate }: EmailFormProps) {
       deliverables: estimate.deliverables || []
     };
     
-    // Use packages if available, otherwise create a single package from the estimate's direct properties
     const packagesToRender = hasPackages ? estimate.packages : [legacyPackage];
     
-    // Default terms if none provided
     const defaultTerms = [
       "This estimate is valid for 30 days from the date of issue.",
       "A 50% advance payment is required to confirm the booking.",
       "The balance payment is due before the event date."
     ];
     
-    // Use provided terms or default terms
     const termsToDisplay = estimate.terms && estimate.terms.length > 0 ? estimate.terms : defaultTerms;
 
     let estimateHtml = `
@@ -178,7 +255,6 @@ export function EmailForm({ onClose, estimate }: EmailFormProps) {
         </div>
     `;
 
-    // Packages content
     packagesToRender.forEach((pkg, packageIndex) => {
       estimateHtml += `
         <div style="border:1px solid #e2e8f0; border-radius:8px; padding:16px; margin-bottom:24px;">
@@ -216,7 +292,7 @@ export function EmailForm({ onClose, estimate }: EmailFormProps) {
             <div style="margin-bottom:16px;">
               <h4 style="font-weight:500; margin-bottom:8px;">Deliverables</h4>
               <ul style="list-style-type:disc; margin-left:20px;">
-                ${pkg.deliverables.map(deliverable => `<li>${deliverable}</li>`).join('')}
+                ${Array.isArray(pkg.deliverables) ? pkg.deliverables.map(deliverable => `<li>${deliverable}</li>`).join('') : ''}
               </ul>
             </div>
           ` : ''}
@@ -229,7 +305,6 @@ export function EmailForm({ onClose, estimate }: EmailFormProps) {
       `;
     });
 
-    // Terms and conditions
     estimateHtml += `
         <div style="border-top:1px solid #e2e8f0; padding-top:16px; font-size:14px; color:#666;">
           <p>Terms & Conditions</p>
@@ -240,7 +315,7 @@ export function EmailForm({ onClose, estimate }: EmailFormProps) {
       </div>
     `;
 
-    return estimateHtml;
+    return applyTemplateStyles(estimateHtml);
   };
 
   const handleSendEmail = async () => {
@@ -256,16 +331,15 @@ export function EmailForm({ onClose, estimate }: EmailFormProps) {
     setIsLoading(true);
 
     try {
-      // Generate complete HTML that includes all three pages
       const completeHtml = `
         <div style="font-family: system-ui, -apple-system, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px;">
           ${generateIntroHtml()}
+          ${generatePortfolioHtml()}
           ${generateServicesHtml()}
           ${generateEstimateDetailsHtml()}
         </div>
       `;
 
-      // Prepare the email data
       const emailData = {
         to: emailInput,
         clientName: estimate.clientName,
@@ -276,10 +350,11 @@ export function EmailForm({ onClose, estimate }: EmailFormProps) {
         deliverables: estimate.deliverables,
         packages: estimate.packages,
         terms: estimate.terms,
-        completeHtml: completeHtml // Add the complete HTML to the email data
+        portfolioLinks: estimate.portfolioLinks,
+        selectedTemplate: estimate.selectedTemplate,
+        completeHtml: completeHtml
       };
       
-      // Try to send via edge function first
       let result;
       try {
         const { data, error } = await supabase.functions.invoke("send-estimate-email", {
@@ -293,7 +368,6 @@ export function EmailForm({ onClose, estimate }: EmailFormProps) {
         result = { success: true, data };
       } catch (edgeFunctionError) {
         console.warn("Edge function failed, using fallback:", edgeFunctionError);
-        // If edge function fails, use the fallback
         result = await sendEmailFallback(emailData);
       }
       
