@@ -36,18 +36,18 @@ export const useInvoicePaymentTransaction = () => {
         return null;
       }
       
-      // Create the transaction with client name in description and metadata
+      // Create the transaction with client name prominently in description
       const transaction = await addTransaction({
         transaction_type: 'income',
         category_id: clientPaymentsCategory.id,
         amount: paymentData.amount,
         transaction_date: paymentData.paymentDate,
-        description: paymentData.description || `Payment from ${paymentData.clientName}`,
+        description: paymentData.description || `Payment from ${paymentData.clientName} for Invoice #${paymentData.invoiceId.slice(0, 8)}`,
         payment_method: paymentData.paymentMethod || 'none',
         source_id: paymentData.invoiceId,
         source_type: 'invoice',
         metadata: {
-          client_name: paymentData.clientName, // Store client name in metadata for querying
+          client_name: paymentData.clientName,
           invoice_id: paymentData.invoiceId
         }
       });
