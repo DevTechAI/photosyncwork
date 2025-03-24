@@ -6,6 +6,7 @@ import { DefaultDashboard } from "@/components/dashboard/DefaultDashboard";
 import { PhotographerDashboard } from "@/components/dashboard/PhotographerDashboard";
 import { VideographerDashboard } from "@/components/dashboard/VideographerDashboard";
 import { EditorDashboard } from "@/components/dashboard/EditorDashboard";
+import { AnimatedBackground } from "@/components/webgl/AnimatedBackground";
 
 export default function Index() {
   const { currentUser } = useUser();
@@ -14,6 +15,7 @@ export default function Index() {
   if (currentUser?.role === "manager" || currentUser?.role === "accounts") {
     return (
       <Layout>
+        <AnimatedBackground />
         <ManagerDashboard />
       </Layout>
     );
@@ -23,6 +25,7 @@ export default function Index() {
   if (currentUser?.role === "photographer") {
     return (
       <Layout>
+        <AnimatedBackground />
         <PhotographerDashboard />
       </Layout>
     );
@@ -32,6 +35,7 @@ export default function Index() {
   if (currentUser?.role === "videographer") {
     return (
       <Layout>
+        <AnimatedBackground />
         <VideographerDashboard />
       </Layout>
     );
@@ -41,6 +45,7 @@ export default function Index() {
   if (currentUser?.role === "editor") {
     return (
       <Layout>
+        <AnimatedBackground />
         <EditorDashboard />
       </Layout>
     );
@@ -49,6 +54,7 @@ export default function Index() {
   // Default Dashboard (fallback)
   return (
     <Layout>
+      <AnimatedBackground />
       <DefaultDashboard />
     </Layout>
   );
