@@ -20,7 +20,9 @@ export function useEstimateForm(editingEstimate?: any) {
       "This estimate is valid for 30 days from the date of issue.",
       "A 50% advance payment is required to confirm the booking.",
       "The balance payment is due before the event date."
-    ]
+    ],
+    portfolioLinks: [],
+    selectedTemplate: "modern"
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [previewEstimate, setPreviewEstimate] = useState<PreviewEstimate | null>(null);
@@ -57,7 +59,9 @@ export function useEstimateForm(editingEstimate?: any) {
           "This estimate is valid for 30 days from the date of issue.",
           "A 50% advance payment is required to confirm the booking.",
           "The balance payment is due before the event date."
-        ]
+        ],
+        portfolioLinks: editingEstimate.portfolioLinks || [],
+        selectedTemplate: editingEstimate.selectedTemplate || "modern"
       });
       
       setPreviewEstimate(editingEstimate);
@@ -88,8 +92,14 @@ export function useEstimateForm(editingEstimate?: any) {
       // Add terms to the preview
       preview.terms = formData.terms;
       
+      // Add portfolio links to the preview
+      preview.portfolioLinks = formData.portfolioLinks;
+      
+      // Add selected template to the preview
+      preview.selectedTemplate = formData.selectedTemplate;
+      
       setPreviewEstimate(preview);
-      setCurrentPage(3);
+      setCurrentPage(5);
     }
   };
 

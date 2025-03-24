@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { PortfolioLink } from "../form/types";
-import { X, Youtube, Vimeo, Link, Globe, Instagram } from "lucide-react";
+import { X, Youtube, Video, Link, Globe, Instagram } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 
 interface PortfolioPageProps {
@@ -28,7 +28,7 @@ export function PortfolioPage({
 
   const platformIcons = {
     youtube: <Youtube className="h-5 w-5 text-red-500" />,
-    vimeo: <Vimeo className="h-5 w-5 text-blue-500" />,
+    vimeo: <Video className="h-5 w-5 text-blue-500" />,
     website: <Globe className="h-5 w-5 text-green-500" />,
     instagram: <Instagram className="h-5 w-5 text-pink-500" />,
     other: <Link className="h-5 w-5 text-gray-500" />,

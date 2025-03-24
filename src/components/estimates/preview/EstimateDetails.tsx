@@ -3,7 +3,7 @@ import { ReactNode } from "react";
 import { services as serviceOptions } from "../pages/ServicesPage";
 import { PortfolioLink } from "../form/types";
 import { estimateTemplates } from "../pages/TemplateSelectionPage";
-import { Youtube, Vimeo, Globe, Instagram, Link as LinkIcon } from "lucide-react";
+import { Youtube, Video, Globe, Instagram, Link as LinkIcon } from "lucide-react";
 
 interface EstimateDetailsProps {
   estimate: {
@@ -84,7 +84,7 @@ export function EstimateDetails({ estimate }: EstimateDetailsProps) {
   // Platform icons for portfolio links
   const platformIcons = {
     youtube: <Youtube className="h-5 w-5 text-red-500" />,
-    vimeo: <Vimeo className="h-5 w-5 text-blue-500" />,
+    vimeo: <Video className="h-5 w-5 text-blue-500" />,
     website: <Globe className="h-5 w-5 text-green-500" />,
     instagram: <Instagram className="h-5 w-5 text-pink-500" />,
     other: <LinkIcon className="h-5 w-5 text-gray-500" />,
