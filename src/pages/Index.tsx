@@ -41,7 +41,7 @@ export default function Index() {
     <Layout>
       {/* Enhanced AnimatedBackground with improved particle system */}
       <AnimatedBackground />
-      <div className="relative z-10">
+      <div className="relative z-10 backdrop-blur-sm bg-white/10 p-6 rounded-lg shadow-xl">
         {renderDashboard()}
       </div>
     </Layout>
