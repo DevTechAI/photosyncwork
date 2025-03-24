@@ -99,7 +99,11 @@ export function generatePreviewEstimate(formData: any, toast: any) {
     // Add the selected services
     selectedServices: formData.selectedServices,
     // Add custom terms
-    terms: formData.terms
+    terms: formData.terms,
+    // Add portfolio links
+    portfolioLinks: formData.portfolioLinks || [],
+    // Add selected template
+    selectedTemplate: formData.selectedTemplate || "modern"
   };
   
   return previewData;

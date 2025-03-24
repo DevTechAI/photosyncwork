@@ -29,6 +29,13 @@ export interface PreviewEstimate {
   selectedPackageIndex?: number;
   portfolioLinks?: PortfolioLink[];
   selectedTemplate?: string;
+  selectedServices?: string[];
+  terms?: string[];
+  date?: string;
+  amount?: string;
+  services?: any[];
+  deliverables?: string[];
+  packages?: any[];
   [key: string]: any;
 }
 
