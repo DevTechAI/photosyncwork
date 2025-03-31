@@ -89,7 +89,14 @@ serve(async (req) => {
     console.log('OpenAI response received');
     
     // Extract the suggestion content
-    const suggestionContent = data.choices[0].message.content;
+    const suggestionContent = data.choices && data.choices[0] && data.choices[0].message 
+      ? data.choices[0].message.content 
+      : null;
+    
+    if (!suggestionContent) {
+      console.error('Invalid response from OpenAI:', data);
+      throw new Error('Invalid or empty response from OpenAI');
+    }
     
     // Try to parse JSON from the response 
     // The AI might include explanatory text, so we need to extract just the JSON part
