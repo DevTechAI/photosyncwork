@@ -13,6 +13,7 @@ import ProductionPage from "./pages/workflow/ProductionPage";
 import PostProductionPage from "./pages/workflow/PostProductionPage";
 import InvoicesPage from "./pages/invoices/InvoicesPage";
 import CategoriesPage from "./pages/finances/CategoriesPage";
+import SchedulingPage from "./pages/scheduling/SchedulingPage";
 
 function App() {
   return (
@@ -26,6 +27,9 @@ function App() {
         <Route path="/finances/categories" element={<ProtectedRoute requiredModule="finances"><CategoriesPage /></ProtectedRoute>} />
         <Route path="/estimates" element={<ProtectedRoute requiredModule="crm"><EstimatesPage /></ProtectedRoute>} />
         <Route path="/invoices" element={<ProtectedRoute requiredModule="accounts"><InvoicesPage /></ProtectedRoute>} />
+        
+        {/* Add Scheduling route */}
+        <Route path="/scheduling" element={<ProtectedRoute requiredModule="crm"><SchedulingPage /></ProtectedRoute>} />
         
         {/* Workflow routes */}
         <Route path="/workflow/pre-production" element={<ProtectedRoute requiredModule="crm"><PreProductionPage /></ProtectedRoute>} />

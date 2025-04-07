@@ -26,6 +26,7 @@ const navItems = [
   { path: "/estimates", label: "Estimates", icon: FileText, access: ["manager", "crm"] },
   { path: "/invoices", label: "Invoices", icon: Receipt, access: ["manager", "accounts"] },
   { path: "/finances", label: "Finances", icon: LineChart, access: ["manager", "accounts"] },
+  { path: "/scheduling", label: "Scheduling", icon: Calendar, access: ["manager", "crm"] }, // Added Scheduling entry
   { path: "/pre-production", label: "Pre-Production", icon: Calendar, access: ["manager", "crm"] },
   { path: "/production", label: "Production", icon: Camera, access: ["manager", "crm", "photographer", "videographer"] },
   { path: "/post-production", label: "Post-Production", icon: Film, access: ["manager", "crm", "editor"] },
