@@ -1,8 +1,7 @@
-
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import * as galleryService from '@/services/galleryService';
-import { Photo, Gallery, RecognizedPerson } from '@/services/galleryService';
+import * as galleryService from '@/services/gallery';
+import { Photo, Gallery, RecognizedPerson } from '@/services/gallery/types';
 
 export function useGallery(galleryId?: string) {
   const queryClient = useQueryClient();
