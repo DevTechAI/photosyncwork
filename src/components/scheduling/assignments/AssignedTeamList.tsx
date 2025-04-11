@@ -23,6 +23,8 @@ export function AssignedTeamList({
         {event.assignments.length > 0 ? (
           event.assignments.map((assignment, index) => {
             const member = teamMembers.find(tm => tm.id === assignment.teamMemberId);
+            const status = assignment.status || 'pending'; // Default to pending if status is undefined
+            
             return (
               <div key={index} className="flex justify-between items-center p-2 rounded-md bg-gray-50">
                 <div className="flex items-center gap-2">
@@ -31,14 +33,14 @@ export function AssignedTeamList({
                 </div>
                 <div className="flex items-center gap-2">
                   <div className={`px-2 py-1 rounded text-xs ${
-                    assignment.status === 'accepted' ? 'bg-green-100 text-green-800' : 
-                    assignment.status === 'declined' ? 'bg-red-100 text-red-800' : 
+                    status === 'accepted' ? 'bg-green-100 text-green-800' : 
+                    status === 'declined' ? 'bg-red-100 text-red-800' : 
                     'bg-yellow-100 text-yellow-800'
                   }`}>
-                    {assignment.status}
+                    {status}
                   </div>
                   
-                  {assignment.status === 'pending' && (
+                  {status === 'pending' && (
                     <div className="flex gap-1">
                       <Button 
                         variant="ghost" 
@@ -62,7 +64,7 @@ export function AssignedTeamList({
                   )}
                   
                   {/* Revert option for admin - Available for accepted or declined assignments */}
-                  {showRevertOption && assignment.status !== 'pending' && (
+                  {showRevertOption && status !== 'pending' && (
                     <Button 
                       variant="ghost" 
                       size="sm"

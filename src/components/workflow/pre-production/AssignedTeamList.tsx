@@ -45,7 +45,9 @@ export function AssignedTeamList({ assignedTeamMembers, onUpdateStatus }: Assign
                   assignment.status === 'reassigned' ? 'bg-purple-100 text-purple-800' :
                   'bg-yellow-100 text-yellow-800'
                 }`}>
-                  {assignment.status.charAt(0).toUpperCase() + assignment.status.slice(1)}
+                  {assignment.status ? 
+                    (assignment.status.charAt(0).toUpperCase() + assignment.status.slice(1)) : 
+                    'Pending'}
                 </div>
                 
                 {assignment.status === 'pending' && onUpdateStatus && (
