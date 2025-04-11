@@ -5,7 +5,12 @@ import { Gallery } from "./types";
 // Gallery functions
 export async function createGallery(name: string, eventId: string, clientName: string, id?: string): Promise<Gallery | null> {
   try {
-    const galleryData = { 
+    const galleryData: {
+      name: string;
+      event_id: string;
+      client_name: string;
+      id?: string;
+    } = { 
       name, 
       event_id: eventId, 
       client_name: clientName 
