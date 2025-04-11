@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { v4 as uuidv4 } from "uuid";
 
@@ -243,15 +242,25 @@ export async function getRecognizedPeopleByGalleryId(galleryId: string): Promise
     const peopleWithFaceCounts: RecognizedPerson[] = [];
     
     for (const person of peopleData) {
+      // First get all photo ids from the gallery
+      const { data: photoIds, error: photoError } = await supabase
+        .from('photos')
+        .select('id')
+        .eq('gallery_id', galleryId);
+      
+      if (photoError) {
+        console.error(`Error fetching photos for gallery ${galleryId}:`, photoError);
+        continue;
+      }
+      
+      // Then count faces for this person in those photos
+      const photoIdArray = photoIds.map(photo => photo.id);
+      
       const { count, error: countError } = await supabase
         .from('faces')
         .select('*', { count: 'exact', head: true })
         .eq('person_name', person.name)
-        .in('photo_id', function(subquery) {
-          return subquery.select('id')
-            .from('photos')
-            .eq('gallery_id', galleryId);
-        });
+        .in('photo_id', photoIdArray);
       
       if (countError) {
         console.error(`Error counting faces for person ${person.name}:`, countError);
