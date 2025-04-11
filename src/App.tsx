@@ -14,7 +14,6 @@ import PostProductionPage from "./pages/workflow/PostProductionPage";
 import InvoicesPage from "./pages/invoices/InvoicesPage";
 import CategoriesPage from "./pages/finances/CategoriesPage";
 import SchedulingPage from "./pages/scheduling/SchedulingPage";
-import ClientGalleryPage from "./pages/gallery/ClientGallery";
 
 function App() {
   return (
@@ -31,9 +30,6 @@ function App() {
         
         {/* Add Scheduling route */}
         <Route path="/scheduling" element={<ProtectedRoute requiredModule="crm"><SchedulingPage /></ProtectedRoute>} />
-        
-        {/* Add Client Gallery route */}
-        <Route path="/gallery" element={<ProtectedRoute requiredModule="crm"><ClientGalleryPage /></ProtectedRoute>} />
         
         {/* Workflow routes */}
         <Route path="/workflow/pre-production" element={<ProtectedRoute requiredModule="crm"><PreProductionPage /></ProtectedRoute>} />
