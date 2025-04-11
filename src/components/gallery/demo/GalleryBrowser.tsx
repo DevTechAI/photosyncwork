@@ -5,7 +5,7 @@ import { FolderBrowser } from '../FolderBrowser';
 import { Gallery } from '@/services/gallery/types';
 import { useToast } from '@/components/ui/use-toast';
 import * as galleryService from '@/services/galleryService';
-import { GalleryInitializer } from './GalleryInitializer';
+import { GalleryInitializer } from '../demo/GalleryInitializer';
 
 interface GalleryBrowserProps {
   viewMode: 'admin' | 'client';
