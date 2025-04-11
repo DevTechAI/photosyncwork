@@ -1,98 +1,117 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { GalleryView } from './GalleryView';
 import { FaceDetectionDemo } from './FaceDetectionDemo';
 import { GallerySettings } from './components/GallerySettings';
 import { PhotoManagement } from './components/PhotoManagement';
+import { useGallery } from '@/hooks/useGallery';
+import * as galleryService from '@/services/galleryService';
+import { useToast } from '@/components/ui/use-toast';
 
-// Mock photos for the demo
-const mockPhotos = [
-  {
-    id: '1',
-    url: 'https://images.unsplash.com/photo-1551963831-b3b1ca40c98e',
-    thumbnail: 'https://images.unsplash.com/photo-1551963831-b3b1ca40c98e?w=500',
-    selected: false,
-    favorite: false
-  },
-  {
-    id: '2',
-    url: 'https://images.unsplash.com/photo-1551782450-a2132b4ba21d',
-    thumbnail: 'https://images.unsplash.com/photo-1551782450-a2132b4ba21d?w=500',
-    selected: true,
-    favorite: false
-  },
-  {
-    id: '3',
-    url: 'https://images.unsplash.com/photo-1522770179533-24471fcdba45',
-    thumbnail: 'https://images.unsplash.com/photo-1522770179533-24471fcdba45?w=500',
-    selected: false,
-    favorite: true
-  },
-  {
-    id: '4',
-    url: 'https://images.unsplash.com/photo-1444418776041-9c7e33cc5a9c',
-    thumbnail: 'https://images.unsplash.com/photo-1444418776041-9c7e33cc5a9c?w=500',
-    selected: false,
-    favorite: false
-  },
-  {
-    id: '5',
-    url: 'https://images.unsplash.com/photo-1533827432537-70133748f5c8',
-    thumbnail: 'https://images.unsplash.com/photo-1533827432537-70133748f5c8?w=500',
-    selected: false,
-    favorite: false
-  },
-  {
-    id: '6',
-    url: 'https://images.unsplash.com/photo-1558642452-9d2a7deb7f62',
-    thumbnail: 'https://images.unsplash.com/photo-1558642452-9d2a7deb7f62?w=500',
-    selected: false,
-    favorite: false
-  },
-  {
-    id: '7',
-    url: 'https://images.unsplash.com/photo-1516802273409-68526ee1bdd6',
-    thumbnail: 'https://images.unsplash.com/photo-1516802273409-68526ee1bdd6?w=500',
-    selected: false,
-    favorite: false
-  },
-  {
-    id: '8',
-    url: 'https://images.unsplash.com/photo-1583585635793-0e1894c169bd',
-    thumbnail: 'https://images.unsplash.com/photo-1583585635793-0e1894c169bd?w=500',
-    selected: false,
-    favorite: false
-  },
-];
+// Demo gallery ID for testing - in a real app, this would be passed via URL or context
+const DEMO_GALLERY_ID = 'demo-gallery-1';
 
 export function ClientGalleryDemo() {
-  const [photos, setPhotos] = useState(mockPhotos);
   const [viewMode, setViewMode] = useState<'admin' | 'client'>('admin');
+  const { toast } = useToast();
+  
+  // Initialize the gallery if it doesn't exist yet
+  useEffect(() => {
+    const initializeGallery = async () => {
+      try {
+        // Check if demo gallery exists
+        const galleries = await galleryService.getGalleries();
+        const demoGallery = galleries.find(g => g.name === 'Demo Gallery');
+        
+        if (!demoGallery) {
+          // Create demo gallery
+          const gallery = await galleryService.createGallery(
+            'Demo Gallery', 
+            'demo-event-1', 
+            'John & Jane Doe'
+          );
+          
+          if (gallery) {
+            toast({
+              title: "Demo gallery created",
+              description: "Sample gallery has been created for demonstration purposes."
+            });
+            
+            // Add mock photos - in real app, users would upload photos
+            // This is omitted for the demo as it would require uploading actual files
+          }
+        }
+      } catch (error) {
+        console.error("Error initializing gallery:", error);
+        toast({
+          title: "Error",
+          description: "Failed to initialize demo gallery.",
+          variant: "destructive"
+        });
+      }
+    };
+    
+    initializeGallery();
+  }, [toast]);
+  
+  // Use the gallery hook
+  const {
+    gallery,
+    isLoadingGallery,
+    photos,
+    isLoadingPhotos,
+    filteredPhotos,
+    activeTab,
+    setActiveTab,
+    selectedPhoto,
+    setSelectedPhoto,
+    handleSelectPhoto,
+    handleFavoritePhoto,
+    recognizedPeople,
+    isLoadingPeople,
+    selectedPeople,
+    handlePersonSelect
+  } = useGallery(DEMO_GALLERY_ID);
   
   // Toggle between admin and client views
   const toggleViewMode = () => {
     setViewMode(viewMode === 'admin' ? 'client' : 'admin');
   };
   
-  // Select a photo
-  const handleSelectPhoto = (photoId: string) => {
-    setPhotos(photos.map(photo => 
-      photo.id === photoId 
-        ? { ...photo, selected: !photo.selected } 
-        : photo
-    ));
-  };
+  // Show skeleton or loading state while data is loading
+  if (isLoadingGallery || isLoadingPhotos) {
+    return (
+      <div className="container mx-auto px-4 py-6">
+        <div className="h-8 w-32 bg-gray-200 rounded animate-pulse mb-6"></div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {[1, 2, 3, 4, 5, 6].map(i => (
+            <div key={i} className="h-48 bg-gray-100 rounded animate-pulse"></div>
+          ))}
+        </div>
+      </div>
+    );
+  }
   
-  // Favorite a photo
-  const handleFavoritePhoto = (photoId: string) => {
-    setPhotos(photos.map(photo => 
-      photo.id === photoId 
-        ? { ...photo, favorite: !photo.favorite } 
-        : photo
-    ));
-  };
+  // If no gallery data, show error
+  if (!gallery && !isLoadingGallery) {
+    return (
+      <div className="container mx-auto px-4 py-6 text-center">
+        <h2 className="text-xl font-bold mb-4">Gallery Not Found</h2>
+        <p className="text-muted-foreground mb-4">
+          The demo gallery could not be loaded. Please try refreshing the page.
+        </p>
+        <Button 
+          onClick={() => window.location.reload()}
+          variant="outline"
+        >
+          Refresh Page
+        </Button>
+      </div>
+    );
+  }
   
+  // Client view
   if (viewMode === 'client') {
     return (
       <div className="container mx-auto px-4 py-6">
@@ -103,10 +122,16 @@ export function ClientGalleryDemo() {
         </div>
         
         <GalleryView 
-          eventId="demo-event-1"
-          eventName="Wedding Photoshoot - Demo"
-          clientName="John & Jane Doe"
-          photos={photos}
+          eventId={gallery?.eventId || 'demo-event-1'}
+          eventName={gallery?.name || 'Demo Gallery'}
+          clientName={gallery?.clientName || 'John & Jane Doe'}
+          photos={photos.map(photo => ({
+            id: photo.id,
+            url: photo.url,
+            thumbnail: photo.thumbnail,
+            selected: photo.selected,
+            favorite: photo.favorite
+          }))}
           onSelectPhoto={handleSelectPhoto}
           onFavoritePhoto={handleFavoritePhoto}
         />
@@ -114,6 +139,7 @@ export function ClientGalleryDemo() {
     );
   }
   
+  // Admin view
   return (
     <div className="container mx-auto px-4 py-6">
       <div className="flex justify-between items-center mb-6">
@@ -126,12 +152,16 @@ export function ClientGalleryDemo() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1 space-y-6">
           <GallerySettings 
-            eventName="Wedding Photoshoot - Demo" 
-            clientName="John & Jane Doe" 
+            eventName={gallery?.name || 'Demo Gallery'}
+            clientName={gallery?.clientName || 'John & Jane Doe'} 
           />
           
-          {/* Add Face Detection Feature */}
-          <FaceDetectionDemo />
+          <FaceDetectionDemo 
+            people={recognizedPeople}
+            selectedPeople={selectedPeople}
+            onPersonSelect={handlePersonSelect}
+            isLoading={isLoadingPeople}
+          />
         </div>
         
         <div className="lg:col-span-2">

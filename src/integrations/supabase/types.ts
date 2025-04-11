@@ -57,6 +57,44 @@ export type Database = {
         }
         Relationships: []
       }
+      faces: {
+        Row: {
+          bounding_box: Json | null
+          created_at: string
+          embedding: Json | null
+          id: string
+          person_name: string | null
+          photo_id: string
+          updated_at: string
+        }
+        Insert: {
+          bounding_box?: Json | null
+          created_at?: string
+          embedding?: Json | null
+          id?: string
+          person_name?: string | null
+          photo_id: string
+          updated_at?: string
+        }
+        Update: {
+          bounding_box?: Json | null
+          created_at?: string
+          embedding?: Json | null
+          id?: string
+          person_name?: string | null
+          photo_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "faces_photo_id_fkey"
+            columns: ["photo_id"]
+            isOneToOne: false
+            referencedRelation: "photos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       finance_categories: {
         Row: {
           created_at: string | null
@@ -239,6 +277,74 @@ export type Database = {
         }
         Relationships: []
       }
+      photo_galleries: {
+        Row: {
+          client_name: string
+          created_at: string
+          event_id: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          client_name: string
+          created_at?: string
+          event_id: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          client_name?: string
+          created_at?: string
+          event_id?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      photos: {
+        Row: {
+          created_at: string
+          favorite: boolean
+          gallery_id: string
+          id: string
+          selected: boolean
+          thumbnail: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          favorite?: boolean
+          gallery_id: string
+          id?: string
+          selected?: boolean
+          thumbnail: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          favorite?: boolean
+          gallery_id?: string
+          id?: string
+          selected?: boolean
+          thumbnail?: string
+          updated_at?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "photos_gallery_id_fkey"
+            columns: ["gallery_id"]
+            isOneToOne: false
+            referencedRelation: "photo_galleries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       realtime_messages: {
         Row: {
           created_at: string
@@ -262,6 +368,48 @@ export type Database = {
           user_name?: string
         }
         Relationships: []
+      }
+      recognized_people: {
+        Row: {
+          created_at: string
+          gallery_id: string
+          id: string
+          name: string
+          reference_photo_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          gallery_id: string
+          id?: string
+          name: string
+          reference_photo_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          gallery_id?: string
+          id?: string
+          name?: string
+          reference_photo_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recognized_people_gallery_id_fkey"
+            columns: ["gallery_id"]
+            isOneToOne: false
+            referencedRelation: "photo_galleries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recognized_people_reference_photo_id_fkey"
+            columns: ["reference_photo_id"]
+            isOneToOne: false
+            referencedRelation: "photos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       scheduled_events: {
         Row: {

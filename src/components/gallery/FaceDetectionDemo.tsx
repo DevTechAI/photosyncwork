@@ -5,35 +5,22 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Search, User, Users, ScanFace } from "lucide-react";
+import { RecognizedPerson } from '@/services/galleryService';
 
-interface Person {
-  id: string;
-  name: string;
-  faceCount: number;
-  selected: boolean;
+interface FaceDetectionProps {
+  people: RecognizedPerson[];
+  selectedPeople: string[];
+  onPersonSelect: (personId: string) => void;
+  isLoading: boolean;
 }
 
-// Mock recognized people
-const mockPeople: Person[] = [
-  { id: '1', name: 'Client (Jane)', faceCount: 15, selected: true },
-  { id: '2', name: 'Client (John)', faceCount: 12, selected: true },
-  { id: '3', name: 'Guest 1', faceCount: 8, selected: false },
-  { id: '4', name: 'Guest 2', faceCount: 6, selected: false },
-  { id: '5', name: 'Guest 3', faceCount: 4, selected: false },
-  { id: '6', name: 'Wedding Party', faceCount: 10, selected: false },
-];
-
-export function FaceDetectionDemo() {
-  const [people, setPeople] = useState<Person[]>(mockPeople);
+export function FaceDetectionDemo({ 
+  people, 
+  selectedPeople, 
+  onPersonSelect,
+  isLoading
+}: FaceDetectionProps) {
   const [scanningMode, setScanningMode] = useState(false);
-  
-  const handlePersonSelect = (personId: string) => {
-    setPeople(people.map(person => 
-      person.id === personId 
-        ? { ...person, selected: !person.selected } 
-        : person
-    ));
-  };
   
   const toggleScanningMode = () => {
     setScanningMode(!scanningMode);
@@ -75,23 +62,36 @@ export function FaceDetectionDemo() {
           </TabsList>
           
           <TabsContent value="people" className="mt-2">
-            <div className="grid grid-cols-2 gap-2">
-              {people.map(person => (
-                <Button 
-                  key={person.id} 
-                  variant={person.selected ? "default" : "outline"}
-                  className="justify-start h-auto py-2"
-                  onClick={() => handlePersonSelect(person.id)}
-                >
-                  <div className="flex flex-col items-start">
-                    <span className="text-sm">{person.name}</span>
-                    <span className="text-xs text-muted-foreground">
-                      {person.faceCount} photos
-                    </span>
-                  </div>
-                </Button>
-              ))}
-            </div>
+            {isLoading ? (
+              <div className="grid grid-cols-2 gap-2">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="h-16 bg-gray-100 animate-pulse rounded" />
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-2">
+                {people.map(person => (
+                  <Button 
+                    key={person.id} 
+                    variant={selectedPeople.includes(person.id) ? "default" : "outline"}
+                    className="justify-start h-auto py-2"
+                    onClick={() => onPersonSelect(person.id)}
+                  >
+                    <div className="flex flex-col items-start">
+                      <span className="text-sm">{person.name}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {person.faceCount} photos
+                      </span>
+                    </div>
+                  </Button>
+                ))}
+                {people.length === 0 && (
+                  <p className="text-sm text-muted-foreground col-span-2 py-2">
+                    No people recognized yet. Click "Scan Faces" to start.
+                  </p>
+                )}
+              </div>
+            )}
             
             <div className="mt-4 flex">
               <Button variant="outline" size="sm" className="w-full">
@@ -108,7 +108,7 @@ export function FaceDetectionDemo() {
               </p>
               <div className="flex flex-wrap gap-2">
                 {people
-                  .filter(person => person.selected)
+                  .filter(person => selectedPeople.includes(person.id))
                   .map(person => (
                     <Badge key={person.id} variant="outline" className="flex items-center">
                       {person.name}
@@ -116,20 +116,23 @@ export function FaceDetectionDemo() {
                         variant="ghost" 
                         size="sm" 
                         className="h-4 w-4 ml-1 p-0"
-                        onClick={() => handlePersonSelect(person.id)}
+                        onClick={() => onPersonSelect(person.id)}
                       >
                         ×
                       </Button>
                     </Badge>
                   ))}
-                {people.filter(person => person.selected).length === 0 && (
+                {selectedPeople.length === 0 && (
                   <span className="text-sm text-muted-foreground">No filters active</span>
                 )}
               </div>
               
               <p className="text-xs text-muted-foreground mt-4">
-                {people.filter(person => person.selected).length > 0 
-                  ? `Showing photos containing ${people.filter(person => person.selected).map(p => p.name).join(' & ')}`
+                {selectedPeople.length > 0 
+                  ? `Showing photos containing ${people
+                      .filter(person => selectedPeople.includes(person.id))
+                      .map(p => p.name)
+                      .join(' & ')}`
                   : "Showing all photos"}
               </p>
             </div>
@@ -138,7 +141,7 @@ export function FaceDetectionDemo() {
         
         <div className="mt-4 pt-4 border-t">
           <p className="text-xs text-muted-foreground">
-            <span className="font-medium">Demo Version:</span> Currently using simulated data. Full implementation would process actual images.
+            <span className="font-medium">Face Detection:</span> AI-powered face recognition will identify and group people in your photos.
           </p>
         </div>
       </CardContent>
