@@ -53,8 +53,10 @@ export async function uploadPhoto(galleryId: string, file: File): Promise<Photo 
     // Generate unique filename
     const fileExt = file.name.split('.').pop();
     const fileName = `${uuidv4()}.${fileExt}`;
-    const filePath = `galleries/${galleryId}/${fileName}`;
-    const thumbnailPath = `galleries/${galleryId}/thumbnails/${fileName}`;
+    const filePath = `${galleryId}/${fileName}`;
+    const thumbnailPath = `${galleryId}/thumbnails/${fileName}`;
+    
+    console.log(`Uploading to bucket 'photos', file path: ${filePath}`);
     
     // Upload original image
     const { error: uploadError } = await supabase.storage
