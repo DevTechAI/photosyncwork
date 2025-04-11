@@ -1,4 +1,3 @@
-
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
@@ -14,7 +13,6 @@ import {
   FileCheck,
   LogOut,
   User,
-  Image,
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { useEffect, useState } from "react";
@@ -28,7 +26,6 @@ const navItems = [
   { path: "/invoices", label: "Invoices", icon: Receipt, access: ["manager", "accounts"] },
   { path: "/finances", label: "Finances", icon: LineChart, access: ["manager", "accounts"] },
   { path: "/scheduling", label: "Scheduling", icon: Calendar, access: ["manager", "crm"] },
-  { path: "/gallery", label: "Client Gallery", icon: Image, access: ["manager", "crm", "photographer"] },
   { path: "/pre-production", label: "Pre-Production", icon: Calendar, access: ["manager", "crm"] },
   { path: "/production", label: "Production", icon: Camera, access: ["manager", "crm", "photographer", "videographer"] },
   { path: "/post-production", label: "Post-Production", icon: Film, access: ["manager", "crm", "editor"] },
