@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { GalleryView } from './GalleryView';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, Upload } from 'lucide-react';
+import { FaceDetectionDemo } from './FaceDetectionDemo';
 
 // Mock photos for the demo
 const mockPhotos = [
@@ -123,43 +124,48 @@ export function ClientGalleryDemo() {
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-1">
-          <CardHeader>
-            <CardTitle>Gallery Settings</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-sm font-medium mb-1">Event Information</h3>
-                <p className="text-sm text-muted-foreground">Wedding Photoshoot - Demo</p>
-                <p className="text-sm text-muted-foreground">Client: John & Jane Doe</p>
-              </div>
-              
-              <div>
-                <h3 className="text-sm font-medium mb-1">Gallery Status</h3>
-                <div className="flex items-center">
-                  <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
-                  <span className="text-sm">Active</span>
+        <div className="lg:col-span-1 space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Gallery Settings</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-sm font-medium mb-1">Event Information</h3>
+                  <p className="text-sm text-muted-foreground">Wedding Photoshoot - Demo</p>
+                  <p className="text-sm text-muted-foreground">Client: John & Jane Doe</p>
+                </div>
+                
+                <div>
+                  <h3 className="text-sm font-medium mb-1">Gallery Status</h3>
+                  <div className="flex items-center">
+                    <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
+                    <span className="text-sm">Active</span>
+                  </div>
+                </div>
+                
+                <div>
+                  <h3 className="text-sm font-medium mb-1">Gallery Access</h3>
+                  <div className="flex items-center justify-between border rounded p-2 text-sm">
+                    <span className="truncate">https://studioclient.com/g/abc123</span>
+                    <Button variant="ghost" size="sm">Copy</Button>
+                  </div>
+                </div>
+                
+                <div className="pt-4 border-t">
+                  <Button className="w-full">
+                    <Upload className="h-4 w-4 mr-2" />
+                    Upload More Photos
+                  </Button>
                 </div>
               </div>
-              
-              <div>
-                <h3 className="text-sm font-medium mb-1">Gallery Access</h3>
-                <div className="flex items-center justify-between border rounded p-2 text-sm">
-                  <span className="truncate">https://studioclient.com/g/abc123</span>
-                  <Button variant="ghost" size="sm">Copy</Button>
-                </div>
-              </div>
-              
-              <div className="pt-4 border-t">
-                <Button className="w-full">
-                  <Upload className="h-4 w-4 mr-2" />
-                  Upload More Photos
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+          
+          {/* Add Face Detection Feature */}
+          <FaceDetectionDemo />
+        </div>
         
         <Card className="lg:col-span-2">
           <CardHeader>
