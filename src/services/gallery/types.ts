@@ -7,6 +7,8 @@ export interface Gallery {
   eventId: string;
   clientName: string;
   createdAt: string;
+  parentId?: string; // For organizing galleries hierarchically
+  isFolder?: boolean; // To differentiate between folders and actual galleries
 }
 
 export interface Photo {

@@ -9,51 +9,143 @@ import { useGallery } from '@/hooks/useGallery';
 import * as galleryService from '@/services/galleryService';
 import { useToast } from '@/components/ui/use-toast';
 import { v4 as uuidv4 } from 'uuid';
-
-// Use a proper UUID for the demo gallery
-const DEMO_GALLERY_ID = 'c0a80121-7ac0-4e1c-9a5f-8f21f4811766';
+import { FolderBrowser } from './FolderBrowser';
+import { Gallery } from '@/services/gallery/types';
 
 export function ClientGalleryDemo() {
   const [viewMode, setViewMode] = useState<'admin' | 'client'>('admin');
   const { toast } = useToast();
+  const [currentFolders, setCurrentFolders] = useState<Gallery[]>([]);
+  const [currentPath, setCurrentPath] = useState<Gallery[]>([]);
+  const [selectedGallery, setSelectedGallery] = useState<Gallery | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   
-  // Initialize the gallery if it doesn't exist yet
+  // Initialize example data if needed
   useEffect(() => {
-    const initializeGallery = async () => {
+    const initializeDemoGalleries = async () => {
       try {
-        // Check if demo gallery exists
-        const gallery = await galleryService.getGalleryById(DEMO_GALLERY_ID);
+        setIsLoading(true);
+        // Check if we have any galleries
+        const galleries = await galleryService.getGalleries();
         
-        if (!gallery) {
-          // Create demo gallery with the specific UUID
-          const newGallery = await galleryService.createGallery(
-            'Demo Gallery', 
-            'demo-event-1', 
+        if (galleries.length === 0) {
+          // Create client folders
+          const clientFolder1 = await galleryService.createGallery(
             'John & Jane Doe',
-            DEMO_GALLERY_ID
+            'client-1',
+            'John & Jane Doe',
+            uuidv4(),
+            null,
+            true
           );
           
-          if (newGallery) {
-            toast({
-              title: "Demo gallery created",
-              description: "Sample gallery has been created for demonstration purposes."
-            });
+          const clientFolder2 = await galleryService.createGallery(
+            'Smith Family',
+            'client-2',
+            'Smith Family',
+            uuidv4(),
+            null,
+            true
+          );
+          
+          // Create event galleries under the clients
+          if (clientFolder1) {
+            await galleryService.createGallery(
+              'Wedding Day',
+              'wedding-event',
+              clientFolder1.clientName,
+              uuidv4(),
+              clientFolder1.id,
+              false
+            );
+            
+            await galleryService.createGallery(
+              'Engagement Photos',
+              'engagement-event',
+              clientFolder1.clientName,
+              uuidv4(),
+              clientFolder1.id,
+              false
+            );
           }
+          
+          if (clientFolder2) {
+            await galleryService.createGallery(
+              'Family Reunion',
+              'family-reunion',
+              clientFolder2.clientName,
+              uuidv4(),
+              clientFolder2.id,
+              false
+            );
+          }
+          
+          toast({
+            title: "Demo galleries created",
+            description: "Sample client folders and galleries have been created."
+          });
         }
+        
+        // Load root folders (clients)
+        loadFolders(null);
       } catch (error) {
-        console.error("Error initializing gallery:", error);
+        console.error("Error initializing galleries:", error);
         toast({
           title: "Error",
-          description: "Failed to initialize demo gallery.",
+          description: "Failed to initialize demo galleries.",
           variant: "destructive"
         });
+      } finally {
+        setIsLoading(false);
       }
     };
     
-    initializeGallery();
+    initializeDemoGalleries();
   }, [toast]);
   
-  // Use the gallery hook
+  // Load folders based on parent ID
+  const loadFolders = async (parentItem: Gallery | null) => {
+    try {
+      setIsLoading(true);
+      const parentId = parentItem?.id || null;
+      const folders = await galleryService.getGalleriesByParent(parentId);
+      setCurrentFolders(folders);
+      
+      // Update the path
+      if (parentItem === null) {
+        // Reset to root
+        setCurrentPath([]);
+      } else {
+        // If navigating deeper, add to path
+        const newPath = [...currentPath];
+        // Check if we're going back to a parent that's already in our path
+        const existingIndex = newPath.findIndex(item => item.id === parentItem.id);
+        if (existingIndex >= 0) {
+          // Truncate the path to this point
+          setCurrentPath(newPath.slice(0, existingIndex + 1));
+        } else {
+          // Add to path
+          setCurrentPath([...newPath, parentItem]);
+        }
+      }
+    } catch (error) {
+      console.error("Error loading folders:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load galleries.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Handle gallery selection
+  const handleSelectGallery = (gallery: Gallery) => {
+    setSelectedGallery(gallery);
+  };
+  
+  // Use the gallery hook for selected gallery
   const {
     gallery,
     isLoadingGallery,
@@ -70,7 +162,7 @@ export function ClientGalleryDemo() {
     isLoadingPeople,
     selectedPeople,
     handlePersonSelect
-  } = useGallery(DEMO_GALLERY_ID);
+  } = useGallery(selectedGallery?.id);
   
   // Toggle between admin and client views
   const toggleViewMode = () => {
@@ -78,7 +170,7 @@ export function ClientGalleryDemo() {
   };
   
   // Show skeleton or loading state while data is loading
-  if (isLoadingGallery || isLoadingPhotos) {
+  if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-6">
         <div className="h-8 w-32 bg-gray-200 rounded animate-pulse mb-6"></div>
@@ -91,81 +183,94 @@ export function ClientGalleryDemo() {
     );
   }
   
-  // If no gallery data, show error
-  if (!gallery && !isLoadingGallery) {
-    return (
-      <div className="container mx-auto px-4 py-6 text-center">
-        <h2 className="text-xl font-bold mb-4">Gallery Not Found</h2>
-        <p className="text-muted-foreground mb-4">
-          The demo gallery could not be loaded. Please try refreshing the page.
-        </p>
-        <Button 
-          onClick={() => window.location.reload()}
-          variant="outline"
-        >
-          Refresh Page
-        </Button>
-      </div>
-    );
-  }
-  
-  // Client view
-  if (viewMode === 'client') {
+  // If we've selected a gallery, show it
+  if (selectedGallery) {
+    // Client view of selected gallery
+    if (viewMode === 'client') {
+      return (
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex justify-between items-center mb-4">
+            <Button variant="outline" onClick={() => setSelectedGallery(null)}>
+              Back to Gallery List
+            </Button>
+            <Button variant="outline" onClick={toggleViewMode}>
+              Switch to Admin View
+            </Button>
+          </div>
+          
+          <GalleryView 
+            eventId={selectedGallery.eventId}
+            eventName={selectedGallery.name}
+            clientName={selectedGallery.clientName}
+            photos={photos.map(photo => ({
+              id: photo.id,
+              url: photo.url,
+              thumbnail: photo.thumbnail,
+              selected: photo.selected,
+              favorite: photo.favorite
+            }))}
+            onSelectPhoto={handleSelectPhoto}
+            onFavoritePhoto={handleFavoritePhoto}
+          />
+        </div>
+      );
+    }
+    
+    // Admin view of selected gallery
     return (
       <div className="container mx-auto px-4 py-6">
-        <div className="flex justify-end mb-4">
+        <div className="flex justify-between items-center mb-6">
+          <div className="flex items-center space-x-2">
+            <Button variant="outline" onClick={() => setSelectedGallery(null)}>
+              Back to Gallery List
+            </Button>
+            <h1 className="text-2xl font-bold">{selectedGallery.name}</h1>
+          </div>
           <Button variant="outline" onClick={toggleViewMode}>
-            Switch to Admin View
+            View as Client
           </Button>
         </div>
         
-        <GalleryView 
-          eventId={gallery?.eventId || 'demo-event-1'}
-          eventName={gallery?.name || 'Demo Gallery'}
-          clientName={gallery?.clientName || 'John & Jane Doe'}
-          photos={photos.map(photo => ({
-            id: photo.id,
-            url: photo.url,
-            thumbnail: photo.thumbnail,
-            selected: photo.selected,
-            favorite: photo.favorite
-          }))}
-          onSelectPhoto={handleSelectPhoto}
-          onFavoritePhoto={handleFavoritePhoto}
-        />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-1 space-y-6">
+            <GallerySettings 
+              eventName={selectedGallery.name}
+              clientName={selectedGallery.clientName}
+              galleryId={selectedGallery.id}
+            />
+            
+            <FaceDetectionDemo 
+              people={recognizedPeople}
+              selectedPeople={selectedPeople}
+              onPersonSelect={handlePersonSelect}
+              isLoading={isLoadingPeople}
+            />
+          </div>
+          
+          <div className="lg:col-span-2">
+            <PhotoManagement photos={photos} galleryId={selectedGallery.id} />
+          </div>
+        </div>
       </div>
     );
   }
   
-  // Admin view
+  // Show folder/gallery browser
   return (
     <div className="container mx-auto px-4 py-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Client Gallery Management</h1>
+        <h1 className="text-2xl font-bold">Client Galleries</h1>
         <Button variant="outline" onClick={toggleViewMode}>
-          View as Client
+          {viewMode === 'admin' ? 'View as Client' : 'Switch to Admin View'}
         </Button>
       </div>
       
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-1 space-y-6">
-          <GallerySettings 
-            eventName={gallery?.name || 'Demo Gallery'}
-            clientName={gallery?.clientName || 'John & Jane Doe'} 
-          />
-          
-          <FaceDetectionDemo 
-            people={recognizedPeople}
-            selectedPeople={selectedPeople}
-            onPersonSelect={handlePersonSelect}
-            isLoading={isLoadingPeople}
-          />
-        </div>
-        
-        <div className="lg:col-span-2">
-          <PhotoManagement photos={photos} galleryId={DEMO_GALLERY_ID} />
-        </div>
-      </div>
+      <FolderBrowser 
+        folders={currentFolders}
+        currentPath={currentPath}
+        onNavigate={loadFolders}
+        onSelectGallery={handleSelectGallery}
+      />
     </div>
   );
 }
