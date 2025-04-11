@@ -29,8 +29,8 @@ export function ClientGalleryDemo() {
         const galleries = await galleryService.getGalleries();
         
         if (galleries.length === 0) {
-          // Create client folders
-          const clientFolder1 = await galleryService.createGallery(
+          // Create client folders (top level)
+          const johnDoeClient = await galleryService.createGallery(
             'John & Jane Doe',
             'client-1',
             'John & Jane Doe',
@@ -39,7 +39,7 @@ export function ClientGalleryDemo() {
             true
           );
           
-          const clientFolder2 = await galleryService.createGallery(
+          const smithFamilyClient = await galleryService.createGallery(
             'Smith Family',
             'client-2',
             'Smith Family',
@@ -48,41 +48,44 @@ export function ClientGalleryDemo() {
             true
           );
           
-          // Create event galleries under the clients
-          if (clientFolder1) {
+          // Create event galleries as sub-folders under the clients
+          if (johnDoeClient) {
+            // Wedding event folder
             await galleryService.createGallery(
               'Wedding Day',
               'wedding-event',
-              clientFolder1.clientName,
+              johnDoeClient.clientName,
               uuidv4(),
-              clientFolder1.id,
-              false
+              johnDoeClient.id,
+              true
             );
             
+            // Engagement event folder
             await galleryService.createGallery(
               'Engagement Photos',
               'engagement-event',
-              clientFolder1.clientName,
+              johnDoeClient.clientName,
               uuidv4(),
-              clientFolder1.id,
-              false
+              johnDoeClient.id,
+              true
             );
           }
           
-          if (clientFolder2) {
+          if (smithFamilyClient) {
+            // Family reunion event folder
             await galleryService.createGallery(
               'Family Reunion',
               'family-reunion',
-              clientFolder2.clientName,
+              smithFamilyClient.clientName,
               uuidv4(),
-              clientFolder2.id,
-              false
+              smithFamilyClient.id,
+              true
             );
           }
           
           toast({
             title: "Demo galleries created",
-            description: "Sample client folders and galleries have been created."
+            description: "Sample client folders and event folders have been created to demonstrate the hierarchy."
           });
         }
         
@@ -274,3 +277,4 @@ export function ClientGalleryDemo() {
     </div>
   );
 }
+
