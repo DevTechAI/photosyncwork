@@ -5,6 +5,7 @@ import { FolderBrowser } from '../FolderBrowser';
 import { Gallery } from '@/services/gallery/types';
 import { useToast } from '@/components/ui/use-toast';
 import * as galleryService from '@/services/galleryService';
+import { GalleryInitializer } from './GalleryInitializer';
 
 interface GalleryBrowserProps {
   viewMode: 'admin' | 'client';
@@ -88,4 +89,3 @@ export function GalleryBrowser({ viewMode, toggleViewMode, onSelectGallery }: Ga
     </div>
   );
 }
-
