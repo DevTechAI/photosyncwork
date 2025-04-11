@@ -283,7 +283,9 @@ export type Database = {
           created_at: string
           event_id: string
           id: string
+          is_folder: boolean | null
           name: string
+          parent_id: string | null
           updated_at: string
         }
         Insert: {
@@ -291,7 +293,9 @@ export type Database = {
           created_at?: string
           event_id: string
           id?: string
+          is_folder?: boolean | null
           name: string
+          parent_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -299,10 +303,20 @@ export type Database = {
           created_at?: string
           event_id?: string
           id?: string
+          is_folder?: boolean | null
           name?: string
+          parent_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "photo_galleries_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "photo_galleries"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       photos: {
         Row: {

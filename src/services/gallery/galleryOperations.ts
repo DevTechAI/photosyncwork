@@ -57,8 +57,8 @@ export async function createGallery(
       eventId: data.event_id,
       clientName: data.client_name,
       createdAt: data.created_at,
-      parentId: data.parent_id,
-      isFolder: data.is_folder
+      parentId: data.parent_id || undefined,
+      isFolder: data.is_folder || false
     };
   } catch (error) {
     console.error("Error creating gallery:", error);
@@ -84,8 +84,8 @@ export async function getGalleries(): Promise<Gallery[]> {
       eventId: gallery.event_id,
       clientName: gallery.client_name,
       createdAt: gallery.created_at,
-      parentId: gallery.parent_id,
-      isFolder: gallery.is_folder
+      parentId: gallery.parent_id || undefined,
+      isFolder: gallery.is_folder || false
     }));
   } catch (error) {
     console.error("Error fetching galleries:", error);
@@ -120,8 +120,8 @@ export async function getGalleriesByParent(parentId: string | null): Promise<Gal
       eventId: gallery.event_id,
       clientName: gallery.client_name,
       createdAt: gallery.created_at,
-      parentId: gallery.parent_id,
-      isFolder: gallery.is_folder
+      parentId: gallery.parent_id || undefined,
+      isFolder: gallery.is_folder || false
     }));
   } catch (error) {
     console.error("Error fetching galleries by parent:", error);
@@ -152,8 +152,8 @@ export async function getGalleryById(id: string): Promise<Gallery | null> {
       eventId: data.event_id,
       clientName: data.client_name,
       createdAt: data.created_at,
-      parentId: data.parent_id,
-      isFolder: data.is_folder
+      parentId: data.parent_id || undefined,
+      isFolder: data.is_folder || false
     };
   } catch (error) {
     console.error(`Error fetching gallery with id ${id}:`, error);
@@ -181,8 +181,8 @@ export async function getClientFolders(): Promise<Gallery[]> {
       eventId: gallery.event_id,
       clientName: gallery.client_name,
       createdAt: gallery.created_at,
-      parentId: gallery.parent_id,
-      isFolder: gallery.is_folder
+      parentId: gallery.parent_id || undefined,
+      isFolder: gallery.is_folder || false
     }));
   } catch (error) {
     console.error("Error fetching client folders:", error);
