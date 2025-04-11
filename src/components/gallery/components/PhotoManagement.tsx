@@ -5,6 +5,8 @@ import { PlusCircle, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import * as galleryService from '@/services/galleryService';
 import { useToast } from '@/components/ui/use-toast';
+import { Progress } from "@/components/ui/progress";
+import { useQueryClient } from '@tanstack/react-query';
 
 interface Photo {
   id: string;
@@ -21,10 +23,14 @@ interface PhotoManagementProps {
 
 export function PhotoManagement({ photos, galleryId }: PhotoManagementProps) {
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [totalFiles, setTotalFiles] = useState(0);
+  const [uploadedFiles, setUploadedFiles] = useState(0);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   
-  // Handle photo upload
-  const handlePhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle multiple photo uploads
+  const handlePhotosUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!galleryId) {
       toast({
         title: "Upload Error",
@@ -38,25 +44,56 @@ export function PhotoManagement({ photos, galleryId }: PhotoManagementProps) {
     if (!files || files.length === 0) return;
     
     setIsUploading(true);
+    setTotalFiles(files.length);
+    setUploadedFiles(0);
+    setUploadProgress(0);
+    
+    let successCount = 0;
+    let errorCount = 0;
     
     try {
-      const file = files[0];
-      const result = await galleryService.uploadPhoto(galleryId, file);
+      // Process files one by one to show progress
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        try {
+          const result = await galleryService.uploadPhoto(galleryId, file);
+          if (result) {
+            successCount++;
+          } else {
+            errorCount++;
+          }
+        } catch (error) {
+          console.error(`Error uploading file ${file.name}:`, error);
+          errorCount++;
+        }
+        
+        // Update progress
+        setUploadedFiles(i + 1);
+        setUploadProgress(Math.round(((i + 1) / files.length) * 100));
+      }
       
-      if (result) {
+      // Clear input value to allow uploading the same files again
+      event.target.value = '';
+      
+      // Show upload results
+      if (successCount > 0) {
         toast({
           title: "Upload Complete",
-          description: "Photo has been uploaded successfully"
+          description: `Successfully uploaded ${successCount} ${successCount === 1 ? 'photo' : 'photos'}${errorCount > 0 ? `, but ${errorCount} failed` : ''}.`,
+          variant: errorCount > 0 ? "default" : "default"
         });
+        
+        // Refresh photos data
+        queryClient.invalidateQueries({ queryKey: ['photos', galleryId] });
       } else {
         toast({
           title: "Upload Failed",
-          description: "There was an error uploading your photo",
+          description: "None of the photos could be uploaded",
           variant: "destructive"
         });
       }
     } catch (error) {
-      console.error("Error uploading photo:", error);
+      console.error("Error during batch upload:", error);
       toast({
         title: "Upload Error",
         description: "An unexpected error occurred during upload",
@@ -84,18 +121,22 @@ export function PhotoManagement({ photos, galleryId }: PhotoManagementProps) {
           id="photo-upload" 
           type="file" 
           accept="image/*" 
+          multiple
           className="hidden" 
-          onChange={handlePhotoUpload}
+          onChange={handlePhotosUpload}
           disabled={isUploading}
         />
       </CardHeader>
       <CardContent>
         {isUploading ? (
-          <div className="flex items-center justify-center h-32">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-              <p className="mt-2 text-sm text-muted-foreground">Uploading...</p>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between mb-1">
+              <div className="text-sm font-medium">
+                Uploading {uploadedFiles} of {totalFiles} photos...
+              </div>
+              <div className="text-sm font-medium">{uploadProgress}%</div>
             </div>
+            <Progress value={uploadProgress} className="w-full" />
           </div>
         ) : (
           <>

@@ -3,11 +3,22 @@ import { supabase } from "@/integrations/supabase/client";
 import { Gallery } from "./types";
 
 // Gallery functions
-export async function createGallery(name: string, eventId: string, clientName: string): Promise<Gallery | null> {
+export async function createGallery(name: string, eventId: string, clientName: string, id?: string): Promise<Gallery | null> {
   try {
+    const galleryData = { 
+      name, 
+      event_id: eventId, 
+      client_name: clientName 
+    };
+    
+    // If an ID is provided, use it
+    if (id) {
+      galleryData.id = id;
+    }
+    
     const { data, error } = await supabase
       .from('photo_galleries')
-      .insert([{ name, event_id: eventId, client_name: clientName }])
+      .insert([galleryData])
       .select()
       .single();
     
@@ -60,10 +71,14 @@ export async function getGalleryById(id: string): Promise<Gallery | null> {
       .from('photo_galleries')
       .select('*')
       .eq('id', id)
-      .single();
+      .maybeSingle();
     
     if (error) {
       console.error(`Error fetching gallery with id ${id}:`, error);
+      return null;
+    }
+    
+    if (!data) {
       return null;
     }
     

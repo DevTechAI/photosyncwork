@@ -8,9 +8,10 @@ import { PhotoManagement } from './components/PhotoManagement';
 import { useGallery } from '@/hooks/useGallery';
 import * as galleryService from '@/services/galleryService';
 import { useToast } from '@/components/ui/use-toast';
+import { v4 as uuidv4 } from 'uuid';
 
-// Demo gallery ID for testing - in a real app, this would be passed via URL or context
-const DEMO_GALLERY_ID = 'demo-gallery-1';
+// Use a proper UUID for the demo gallery
+const DEMO_GALLERY_ID = 'c0a80121-7ac0-4e1c-9a5f-8f21f4811766';
 
 export function ClientGalleryDemo() {
   const [viewMode, setViewMode] = useState<'admin' | 'client'>('admin');
@@ -21,25 +22,22 @@ export function ClientGalleryDemo() {
     const initializeGallery = async () => {
       try {
         // Check if demo gallery exists
-        const galleries = await galleryService.getGalleries();
-        const demoGallery = galleries.find(g => g.name === 'Demo Gallery');
+        const gallery = await galleryService.getGalleryById(DEMO_GALLERY_ID);
         
-        if (!demoGallery) {
-          // Create demo gallery
-          const gallery = await galleryService.createGallery(
+        if (!gallery) {
+          // Create demo gallery with the specific UUID
+          const newGallery = await galleryService.createGallery(
             'Demo Gallery', 
             'demo-event-1', 
-            'John & Jane Doe'
+            'John & Jane Doe',
+            DEMO_GALLERY_ID
           );
           
-          if (gallery) {
+          if (newGallery) {
             toast({
               title: "Demo gallery created",
               description: "Sample gallery has been created for demonstration purposes."
             });
-            
-            // Add mock photos - in real app, users would upload photos
-            // This is omitted for the demo as it would require uploading actual files
           }
         }
       } catch (error) {
@@ -165,7 +163,7 @@ export function ClientGalleryDemo() {
         </div>
         
         <div className="lg:col-span-2">
-          <PhotoManagement photos={photos} />
+          <PhotoManagement photos={photos} galleryId={DEMO_GALLERY_ID} />
         </div>
       </div>
     </div>
