@@ -51,7 +51,7 @@ export function PostProductionTab({ events, teamMembers }: PostProductionTabProp
                               deliverable.status === 'in-progress' ? 'bg-blue-100 text-blue-800' : 
                               'bg-gray-100 text-gray-800'
                             }`}>
-                              {deliverable.status.split('-').join(' ')}
+                              {deliverable.status ? deliverable.status.replace(/-/g, ' ') : 'pending'}
                             </div>
                           </div>
                           {deliverable.deliveryDate && (
