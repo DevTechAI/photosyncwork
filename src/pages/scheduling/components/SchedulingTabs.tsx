@@ -6,8 +6,6 @@ import { SchedulingOverview } from "./SchedulingOverview";
 import { PreProductionTab } from "./PreProductionTab";
 import { ProductionTab } from "./ProductionTab";
 import { PostProductionTab } from "./PostProductionTab";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
 import { useState, useEffect } from "react";
 
 interface SchedulingTabsProps {
@@ -76,15 +74,6 @@ export function SchedulingTabs({
   
   return (
     <div className="space-y-4">
-      {showCreateEventButton && onCreateEvent && (
-        <div className="flex justify-end">
-          <Button onClick={onCreateEvent} className="mb-4">
-            <Plus className="h-4 w-4 mr-2" />
-            Create Event
-          </Button>
-        </div>
-      )}
-      
       <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
         <TabsList className={`w-full ${isMobile ? 'flex-wrap' : 'justify-start'} mb-4`}>
           {showOverviewTab && <TabsTrigger value="overview" className={isMobile ? "flex-grow" : ""}>Overview</TabsTrigger>}
@@ -152,3 +141,4 @@ export function SchedulingTabs({
     </div>
   );
 }
+
