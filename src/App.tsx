@@ -1,6 +1,6 @@
 
 import { Routes, Route } from "react-router-dom";
-import { Toaster } from "@/components/ui/sonner";
+import { Toaster } from "sonner";
 import FinancesPage from "./pages/finances/FinancesPage";
 import { QueryProvider } from "./QueryProvider";
 import Login from "./pages/Login";

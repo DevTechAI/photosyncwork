@@ -20,7 +20,7 @@ export function PreviewPagination({
         Previous
       </Button>
       <div className="flex space-x-2">
-        {[0, 1, 2].map((index) => (
+        {[0, 1, 2, 3, 4].map((index) => (
           <Button
             key={index}
             variant={currentPageIndex === index ? "default" : "outline"}
@@ -28,13 +28,16 @@ export function PreviewPagination({
             onClick={() => setCurrentPageIndex(index)}
             className="px-3 py-1"
           >
-            {index === 0 ? "Intro" : index === 1 ? "Services" : "Estimate"}
+            {index === 0 ? "Intro" : 
+             index === 1 ? "Services" : 
+             index === 2 ? "Estimate" : 
+             index === 3 ? "Portfolio" : "Template"}
           </Button>
         ))}
       </div>
       <Button
-        onClick={() => setCurrentPageIndex(Math.min(2, currentPageIndex + 1))}
-        disabled={currentPageIndex === 2}
+        onClick={() => setCurrentPageIndex(Math.min(4, currentPageIndex + 1))}
+        disabled={currentPageIndex === 4}
         variant="outline"
       >
         Next
