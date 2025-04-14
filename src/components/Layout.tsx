@@ -1,3 +1,4 @@
+
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
@@ -13,6 +14,7 @@ import {
   FileCheck,
   LogOut,
   User,
+  ArrowLeft,
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { useEffect, useState } from "react";
@@ -66,6 +68,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     if (currentUser.role === "manager") return true;
     return item.access.includes(currentUser.role);
   });
+
+  // Determine if we're on a page that should have a back to dashboard button
+  const showBackToDashboard = location.pathname !== "/" && !location.pathname.startsWith("/login");
   
   return (
     <div className="min-h-screen bg-background flex">
@@ -145,7 +150,18 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
       {/* Top bar for mobile navigation (only visible on mobile) */}
       <header className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-background border-b z-30 flex items-center px-4">
-        <div className="flex-1">
+        <div className="flex-1 flex items-center">
+          {showBackToDashboard && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="mr-2" 
+              onClick={() => navigate("/")}
+            >
+              <ArrowLeft className="h-4 w-4 mr-1" />
+              Dashboard
+            </Button>
+          )}
           <h1 className="text-xl font-semibold">StudioSync</h1>
         </div>
         <div className="flex items-center gap-2">
