@@ -128,7 +128,7 @@ export function TeamAssignmentTab({
                       <SelectItem key={photographer.id} value={photographer.id}>{photographer.name}</SelectItem>
                     ))
                   ) : (
-                    <SelectItem disabled value="none">No photographers available</SelectItem>
+                    <SelectItem value="no-photographers-available" disabled>No photographers available</SelectItem>
                   )
                 ) : (
                   availableVideographers.length > 0 ? (
@@ -136,7 +136,7 @@ export function TeamAssignmentTab({
                       <SelectItem key={videographer.id} value={videographer.id}>{videographer.name}</SelectItem>
                     ))
                   ) : (
-                    <SelectItem disabled value="none">No videographers available</SelectItem>
+                    <SelectItem value="no-videographers-available" disabled>No videographers available</SelectItem>
                   )
                 )}
               </SelectContent>

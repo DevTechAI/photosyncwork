@@ -127,7 +127,7 @@ export function AssignTeamDialog({
                     </SelectItem>
                   ))
                 ) : (
-                  <SelectItem value="none" disabled>
+                  <SelectItem value="no-available-members" disabled>
                     No available team members for this role
                   </SelectItem>
                 )}
