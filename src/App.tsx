@@ -1,6 +1,6 @@
 
 import { Routes, Route } from "react-router-dom";
-import { Toaster } from "sonner";
+import { Toaster } from "@/components/ui/toaster";  // Updated import
 import FinancesPage from "./pages/finances/FinancesPage";
 import { QueryProvider } from "./QueryProvider";
 import Login from "./pages/Login";
@@ -44,7 +44,7 @@ function App() {
         {/* Catch-all route for 404 */}
         <Route path="*" element={<NotFound />} />
       </Routes>
-      <Toaster />
+      <Toaster />  {/* Kept the Toaster component */}
     </QueryProvider>
   );
 }
