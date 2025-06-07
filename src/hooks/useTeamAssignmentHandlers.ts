@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { ScheduledEvent, TeamMember, EventAssignment } from "@/components/scheduling/types";
 import { useToast } from "@/components/ui/use-toast";
@@ -144,24 +143,64 @@ export function useTeamAssignmentHandlers(
     setLoading(true);
     
     try {
-      // Update event stage
+      console.log("Moving event to production:", selectedEvent.id);
+      
+      // Update event stage to production
       const updatedEvent: ScheduledEvent = {
         ...selectedEvent,
-        stage: "production",
-        dataCopied: true // Mark event as copied for reference
+        stage: "production"
       };
       
-      // Update events array
+      console.log("Updated event with production stage:", updatedEvent);
+      
+      // Save to Supabase first
+      try {
+        const dbEvent = scheduledEventToDb(updatedEvent);
+        console.log("Converting to DB format:", dbEvent);
+        
+        const { error } = await supabase
+          .from('scheduled_events')
+          .update(dbEvent)
+          .eq('id', updatedEvent.id);
+          
+        if (error) {
+          console.error("Error saving to Supabase:", error);
+          throw error;
+        } else {
+          console.log("Successfully saved event to Supabase with production stage");
+        }
+      } catch (error) {
+        console.error("Error while saving to Supabase:", error);
+        // Continue with localStorage update even if Supabase fails
+      }
+      
+      // Remove from current pre-production events array
       const updatedEvents = events.filter(event => event.id !== updatedEvent.id);
       
-      // Update localStorage - using both methods to ensure data is saved
-      saveEvent(updatedEvent);
+      // Update localStorage
       try {
+        // Save pre-production events (without the moved event)
         localStorage.setItem('preProductionEvents', JSON.stringify(updatedEvents));
         
-        // Also save to production events
-        const productionEvents = JSON.parse(localStorage.getItem('productionEvents') || '[]');
-        localStorage.setItem('productionEvents', JSON.stringify([...productionEvents, updatedEvent]));
+        // Load existing events from localStorage
+        const allEventsJson = localStorage.getItem('scheduledEvents');
+        let allEvents: ScheduledEvent[] = [];
+        
+        if (allEventsJson) {
+          allEvents = JSON.parse(allEventsJson);
+        }
+        
+        // Update or add the event with production stage
+        const eventIndex = allEvents.findIndex(e => e.id === updatedEvent.id);
+        if (eventIndex >= 0) {
+          allEvents[eventIndex] = updatedEvent;
+        } else {
+          allEvents.push(updatedEvent);
+        }
+        
+        // Save back to localStorage
+        localStorage.setItem('scheduledEvents', JSON.stringify(allEvents));
+        console.log("Updated localStorage with production event");
       } catch (error) {
         console.error('Error saving to localStorage:', error);
       }

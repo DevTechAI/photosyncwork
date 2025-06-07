@@ -14,6 +14,8 @@ export function useProductionEvents() {
     const loadEvents = async () => {
       setLoading(true);
       try {
+        console.log("Loading production events from Supabase...");
+        
         // Try to load from Supabase first
         const { data: productionEvents, error } = await supabase
           .from('scheduled_events')
@@ -32,6 +34,8 @@ export function useProductionEvents() {
           
           setEvents(transformedEvents);
         } else {
+          console.log("No production events found in Supabase, checking localStorage...");
+          
           // Fallback to localStorage
           const savedEvents = localStorage.getItem("scheduledEvents");
           if (savedEvents) {
@@ -40,7 +44,11 @@ export function useProductionEvents() {
             const productionEvents = parsedEvents.filter(
               (event: ScheduledEvent) => event.stage === "production"
             );
+            console.log("Found production events in localStorage:", productionEvents);
             setEvents(productionEvents);
+          } else {
+            console.log("No events found in localStorage either");
+            setEvents([]);
           }
         }
       } catch (error) {
@@ -62,6 +70,11 @@ export function useProductionEvents() {
     };
 
     loadEvents();
+    
+    // Set up a periodic refresh to check for new production events
+    const interval = setInterval(loadEvents, 5000); // Check every 5 seconds
+    
+    return () => clearInterval(interval);
   }, []);
 
   return {
