@@ -1,5 +1,4 @@
 
-
 export const vertexShaderSource = `
   attribute vec2 a_position;
   void main() {
@@ -33,78 +32,94 @@ export const createFragmentShaderSource = (derivativesExt: boolean) => `
   float plexusLines(vec2 uv, vec2 mouse) {
     float lines = 0.0;
     
-    // More static points in a grid-like pattern
-    vec2 points[16];
+    // Opposite mouse movement for 3D-like effect
+    vec2 mouseOffset = (0.5 - mouse) * 0.4;
     
-    // Generate more points with constant positions and opposite mouse influence
-    vec2 mouseOffset = (0.5 - mouse) * 0.4; // Opposite movement
+    // Generate points with static positions - unroll the loop to avoid dynamic indexing
+    vec2 point0 = vec2(sin(u_time * 0.1 + 0.0) * 0.6, cos(u_time * 0.12 + 0.0) * 0.5) + mouseOffset;
+    vec2 point1 = vec2(sin(u_time * 0.1 + 0.5) * 0.6, cos(u_time * 0.12 + 0.6) * 0.5) + mouseOffset;
+    vec2 point2 = vec2(sin(u_time * 0.1 + 1.0) * 0.6, cos(u_time * 0.12 + 1.2) * 0.5) + mouseOffset;
+    vec2 point3 = vec2(sin(u_time * 0.1 + 1.5) * 0.6, cos(u_time * 0.12 + 1.8) * 0.5) + mouseOffset;
+    vec2 point4 = vec2(sin(u_time * 0.1 + 2.0) * 0.6, cos(u_time * 0.12 + 2.4) * 0.5) + mouseOffset;
+    vec2 point5 = vec2(sin(u_time * 0.1 + 2.5) * 0.6, cos(u_time * 0.12 + 3.0) * 0.5) + mouseOffset;
+    vec2 point6 = vec2(sin(u_time * 0.1 + 3.0) * 0.6, cos(u_time * 0.12 + 3.6) * 0.5) + mouseOffset;
+    vec2 point7 = vec2(sin(u_time * 0.1 + 3.5) * 0.6, cos(u_time * 0.12 + 4.2) * 0.5) + mouseOffset;
+    vec2 point8 = vec2(sin(u_time * 0.1 + 4.0) * 0.6, cos(u_time * 0.12 + 4.8) * 0.5) + mouseOffset;
+    vec2 point9 = vec2(sin(u_time * 0.1 + 4.5) * 0.6, cos(u_time * 0.12 + 5.4) * 0.5) + mouseOffset;
+    vec2 point10 = vec2(sin(u_time * 0.1 + 5.0) * 0.6, cos(u_time * 0.12 + 6.0) * 0.5) + mouseOffset;
+    vec2 point11 = vec2(sin(u_time * 0.1 + 5.5) * 0.6, cos(u_time * 0.12 + 6.6) * 0.5) + mouseOffset;
+    vec2 point12 = vec2(sin(u_time * 0.1 + 6.0) * 0.6, cos(u_time * 0.12 + 7.2) * 0.5) + mouseOffset;
+    vec2 point13 = vec2(sin(u_time * 0.1 + 6.5) * 0.6, cos(u_time * 0.12 + 7.8) * 0.5) + mouseOffset;
+    vec2 point14 = vec2(sin(u_time * 0.1 + 7.0) * 0.6, cos(u_time * 0.12 + 8.4) * 0.5) + mouseOffset;
+    vec2 point15 = vec2(sin(u_time * 0.1 + 7.5) * 0.6, cos(u_time * 0.12 + 9.0) * 0.5) + mouseOffset;
     
-    points[0] = vec2(sin(u_time * 0.1 + 0.0) * 0.6, cos(u_time * 0.12 + 0.0) * 0.5) + mouseOffset;
-    points[1] = vec2(sin(u_time * 0.1 + 0.5) * 0.6, cos(u_time * 0.12 + 0.6) * 0.5) + mouseOffset;
-    points[2] = vec2(sin(u_time * 0.1 + 1.0) * 0.6, cos(u_time * 0.12 + 1.2) * 0.5) + mouseOffset;
-    points[3] = vec2(sin(u_time * 0.1 + 1.5) * 0.6, cos(u_time * 0.12 + 1.8) * 0.5) + mouseOffset;
-    points[4] = vec2(sin(u_time * 0.1 + 2.0) * 0.6, cos(u_time * 0.12 + 2.4) * 0.5) + mouseOffset;
-    points[5] = vec2(sin(u_time * 0.1 + 2.5) * 0.6, cos(u_time * 0.12 + 3.0) * 0.5) + mouseOffset;
-    points[6] = vec2(sin(u_time * 0.1 + 3.0) * 0.6, cos(u_time * 0.12 + 3.6) * 0.5) + mouseOffset;
-    points[7] = vec2(sin(u_time * 0.1 + 3.5) * 0.6, cos(u_time * 0.12 + 4.2) * 0.5) + mouseOffset;
-    points[8] = vec2(sin(u_time * 0.1 + 4.0) * 0.6, cos(u_time * 0.12 + 4.8) * 0.5) + mouseOffset;
-    points[9] = vec2(sin(u_time * 0.1 + 4.5) * 0.6, cos(u_time * 0.12 + 5.4) * 0.5) + mouseOffset;
-    points[10] = vec2(sin(u_time * 0.1 + 5.0) * 0.6, cos(u_time * 0.12 + 6.0) * 0.5) + mouseOffset;
-    points[11] = vec2(sin(u_time * 0.1 + 5.5) * 0.6, cos(u_time * 0.12 + 6.6) * 0.5) + mouseOffset;
-    points[12] = vec2(sin(u_time * 0.1 + 6.0) * 0.6, cos(u_time * 0.12 + 7.2) * 0.5) + mouseOffset;
-    points[13] = vec2(sin(u_time * 0.1 + 6.5) * 0.6, cos(u_time * 0.12 + 7.8) * 0.5) + mouseOffset;
-    points[14] = vec2(sin(u_time * 0.1 + 7.0) * 0.6, cos(u_time * 0.12 + 8.4) * 0.5) + mouseOffset;
-    points[15] = vec2(sin(u_time * 0.1 + 7.5) * 0.6, cos(u_time * 0.12 + 9.0) * 0.5) + mouseOffset;
-    
-    // Static connections between specific points only
-    int connections[24]; // 12 pairs = 24 indices
-    connections[0] = 0; connections[1] = 1;
-    connections[2] = 1; connections[3] = 2;
-    connections[4] = 2; connections[5] = 3;
-    connections[6] = 3; connections[7] = 4;
-    connections[8] = 4; connections[9] = 5;
-    connections[10] = 5; connections[11] = 6;
-    connections[12] = 6; connections[13] = 7;
-    connections[14] = 7; connections[15] = 8;
-    connections[16] = 8; connections[17] = 9;
-    connections[18] = 9; connections[19] = 10;
-    connections[20] = 10; connections[21] = 11;
-    connections[22] = 11; connections[23] = 12;
-    
-    // Draw static connections with much thinner, sharper lines
-    for(int i = 0; i < 12; i++) {
-      int idx1 = connections[i * 2];
-      int idx2 = connections[i * 2 + 1];
-      
-      vec2 point1 = points[idx1];
-      vec2 point2 = points[idx2];
-      
-      vec2 lineDir = normalize(point2 - point1);
-      vec2 toPoint = uv - point1;
+    // Helper function to draw a line between two points
+    float drawLine(vec2 p1, vec2 p2) {
+      vec2 lineDir = normalize(p2 - p1);
+      vec2 toPoint = uv - p1;
       float projLength = dot(toPoint, lineDir);
-      float dist = length(point2 - point1);
+      float dist = length(p2 - p1);
       
       if(projLength > 0.0 && projLength < dist) {
-        vec2 projection = point1 + lineDir * projLength;
+        vec2 projection = p1 + lineDir * projLength;
         float lineDist = length(uv - projection);
         
         // Much thinner and sharper lines
-        float lineWidth = 0.002;
+        float lineWidth = 0.001;
         float lineStrength = 1.0 - smoothstep(0.0, lineWidth, lineDist);
         float fadeOut = 1.0 - smoothstep(0.0, dist, projLength);
         
-        lines += lineStrength * fadeOut * 0.4;
+        return lineStrength * fadeOut * 0.6;
       }
+      return 0.0;
     }
     
-    // More visible node points
-    for(int i = 0; i < 16; i++) {
-      float nodeDist = length(uv - points[i]);
-      float nodeGlow = 1.0 - smoothstep(0.0, 0.015, nodeDist);
-      lines += nodeGlow * 0.3;
-    }
+    // Static connections - unroll the connections to avoid dynamic indexing
+    lines += drawLine(point0, point1);
+    lines += drawLine(point1, point2);
+    lines += drawLine(point2, point3);
+    lines += drawLine(point3, point4);
+    lines += drawLine(point4, point5);
+    lines += drawLine(point5, point6);
+    lines += drawLine(point6, point7);
+    lines += drawLine(point7, point8);
+    lines += drawLine(point8, point9);
+    lines += drawLine(point9, point10);
+    lines += drawLine(point10, point11);
+    lines += drawLine(point11, point12);
+    lines += drawLine(point12, point13);
+    lines += drawLine(point13, point14);
+    lines += drawLine(point14, point15);
     
-    return lines;
+    // Additional cross-connections for more complex network
+    lines += drawLine(point0, point3);
+    lines += drawLine(point2, point5);
+    lines += drawLine(point4, point7);
+    lines += drawLine(point6, point9);
+    lines += drawLine(point8, point11);
+    lines += drawLine(point10, point13);
+    lines += drawLine(point12, point15);
+    
+    // More visible node points - unroll the node rendering
+    float nodeGlow = 0.0;
+    nodeGlow += (1.0 - smoothstep(0.0, 0.015, length(uv - point0))) * 0.4;
+    nodeGlow += (1.0 - smoothstep(0.0, 0.015, length(uv - point1))) * 0.4;
+    nodeGlow += (1.0 - smoothstep(0.0, 0.015, length(uv - point2))) * 0.4;
+    nodeGlow += (1.0 - smoothstep(0.0, 0.015, length(uv - point3))) * 0.4;
+    nodeGlow += (1.0 - smoothstep(0.0, 0.015, length(uv - point4))) * 0.4;
+    nodeGlow += (1.0 - smoothstep(0.0, 0.015, length(uv - point5))) * 0.4;
+    nodeGlow += (1.0 - smoothstep(0.0, 0.015, length(uv - point6))) * 0.4;
+    nodeGlow += (1.0 - smoothstep(0.0, 0.015, length(uv - point7))) * 0.4;
+    nodeGlow += (1.0 - smoothstep(0.0, 0.015, length(uv - point8))) * 0.4;
+    nodeGlow += (1.0 - smoothstep(0.0, 0.015, length(uv - point9))) * 0.4;
+    nodeGlow += (1.0 - smoothstep(0.0, 0.015, length(uv - point10))) * 0.4;
+    nodeGlow += (1.0 - smoothstep(0.0, 0.015, length(uv - point11))) * 0.4;
+    nodeGlow += (1.0 - smoothstep(0.0, 0.015, length(uv - point12))) * 0.4;
+    nodeGlow += (1.0 - smoothstep(0.0, 0.015, length(uv - point13))) * 0.4;
+    nodeGlow += (1.0 - smoothstep(0.0, 0.015, length(uv - point14))) * 0.4;
+    nodeGlow += (1.0 - smoothstep(0.0, 0.015, length(uv - point15))) * 0.4;
+    
+    return lines + nodeGlow;
   }
 
   void main() {
@@ -112,7 +127,7 @@ export const createFragmentShaderSource = (derivativesExt: boolean) => `
     vec2 mouse = u_mouse;
     
     // Fractal with opposite mouse movement (3D-like effect)
-    vec2 mouseInfluence = (0.5 - mouse) * 0.3; // Opposite movement
+    vec2 mouseInfluence = (0.5 - mouse) * 0.3;
     vec2 c = uv * 1.5 + vec2(
       cos(u_time * 0.3) * 0.3 + mouseInfluence.x, 
       sin(u_time * 0.25) * 0.2 + mouseInfluence.y
@@ -130,10 +145,10 @@ export const createFragmentShaderSource = (derivativesExt: boolean) => `
     float combined = (f * 0.3 + glass1 * 0.2 + glass2 * 0.1);
     
     // Soft color palette that blends with background
-    vec3 baseColor = vec3(0.85, 0.9, 0.95);     // Very light blue-white
-    vec3 midColor = vec3(0.75, 0.85, 0.9);      // Soft blue
-    vec3 darkColor = vec3(0.65, 0.8, 0.85);     // Slightly deeper blue
-    vec3 plexusColor = vec3(0.7, 0.8, 0.9);     // Muted blue for lines
+    vec3 baseColor = vec3(0.85, 0.9, 0.95);
+    vec3 midColor = vec3(0.75, 0.85, 0.9);
+    vec3 darkColor = vec3(0.65, 0.8, 0.85);
+    vec3 plexusColor = vec3(0.7, 0.8, 0.9);
     
     // Gentle color mapping
     vec3 fractalColor = mix(baseColor, midColor, combined * 0.5);
@@ -151,11 +166,10 @@ export const createFragmentShaderSource = (derivativesExt: boolean) => `
     finalColor += plexusColor * edge * 0.3;
     `}
     
-    // Very subtle alpha for gentle blending
-    float alpha = 0.1 + combined * 0.15 + plexus * 0.1;
-    alpha = min(alpha, 0.25);
+    // Subtle alpha for gentle blending
+    float alpha = 0.15 + combined * 0.2 + plexus * 0.15;
+    alpha = min(alpha, 0.35);
     
     gl_FragColor = vec4(finalColor, alpha);
   }
 `;
-
