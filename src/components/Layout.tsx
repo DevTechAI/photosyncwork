@@ -153,10 +153,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <div className="flex-1 flex items-center">
           {showBackToDashboard && (
             <Button 
-              variant="ghost" 
+              variant="outline" 
               size="sm" 
-              className="mr-2" 
+              className="mr-2 border-2 bg-dustyBlue-whisper/70 backdrop-blur-md hover:bg-dustyBlue-soft hover:shadow-xl transition-all duration-300" 
               onClick={() => navigate("/")}
+              style={{ 
+                borderColor: 'hsl(var(--dusty-blue))', 
+                color: 'hsl(var(--dusty-blue-dark))'
+              }}
             >
               <ArrowLeft className="h-4 w-4 mr-1" />
               Dashboard
