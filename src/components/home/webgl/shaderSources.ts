@@ -32,26 +32,25 @@ export const createFragmentShaderSource = (derivativesExt: boolean) => `
   float plexusLines(vec2 uv, vec2 mouse) {
     float lines = 0.0;
     
-    // Create fractal points for plexus connections - using unrolled loops
-    vec2 points[12];
+    // Create more fractal points for dense plexus network
+    vec2 points[20];
     
-    // Generate all points first
-    for(int i = 0; i < 12; i++) {
+    // Generate primary points
+    for(int i = 0; i < 20; i++) {
       float fi = float(i);
       points[i] = vec2(
-        sin(u_time * 0.2 + fi * 0.6) * 0.8,
-        cos(u_time * 0.25 + fi * 0.7) * 0.7
+        sin(u_time * 0.15 + fi * 0.4) * 1.2,
+        cos(u_time * 0.18 + fi * 0.5) * 1.0
       );
-      points[i] += (mouse - 0.5) * 0.2;
+      points[i] += (mouse - 0.5) * 0.15;
     }
     
-    // Create connections between all points
-    for(int i = 0; i < 12; i++) {
+    // Create connections between all points with very thin lines
+    for(int i = 0; i < 20; i++) {
       vec2 point = points[i];
-      float dist = length(uv - point);
       
-      // Connect to all subsequent points to avoid duplicates
-      for(int j = 0; j < 12; j++) {
+      // Connect to subsequent points to avoid duplicates
+      for(int j = 0; j < 20; j++) {
         if(j <= i) continue;
         
         vec2 point2 = points[j];
@@ -64,30 +63,55 @@ export const createFragmentShaderSource = (derivativesExt: boolean) => `
           vec2 projection = point + lineDir * projLength;
           float lineDist = length(uv - projection);
           
-          // Very thin lines
-          float lineStrength = 1.0 - smoothstep(0.0, 0.006, lineDist);
+          // Ultra-thin sharp lines
+          float lineStrength = 1.0 - smoothstep(0.0, 0.002, lineDist);
           float fadeOut = 1.0 - smoothstep(0.0, lineLength, projLength);
-          float connectionStrength = 1.0 - smoothstep(0.3, 1.0, lineLength);
+          float connectionStrength = 1.0 - smoothstep(0.2, 0.8, lineLength);
           
-          lines += lineStrength * fadeOut * connectionStrength * 0.12;
+          lines += lineStrength * fadeOut * connectionStrength * 0.06;
         }
       }
       
-      // Small node points
-      float nodeGlow = (1.0 - smoothstep(0.0, 0.02, dist)) * 0.15;
+      // Very small sharp node points
+      float dist = length(uv - point);
+      float nodeGlow = (1.0 - smoothstep(0.0, 0.008, dist)) * 0.08;
       lines += nodeGlow;
+    }
+    
+    // Add secondary layer of even finer connections
+    for(int i = 0; i < 15; i++) {
+      float fi = float(i);
+      vec2 secondaryPoint = vec2(
+        sin(u_time * 0.25 + fi * 0.8) * 0.8,
+        cos(u_time * 0.22 + fi * 0.9) * 0.6
+      );
+      secondaryPoint += (mouse - 0.5) * 0.1;
       
-      // Add secondary detail nodes for first 6 points
-      if(i < 6) {
-        float fi = float(i);
-        vec2 secondaryPoint = point + vec2(
-          sin(u_time * 0.3 + fi * 1.2) * 0.12,
-          cos(u_time * 0.35 + fi * 1.1) * 0.1
-        );
-        float secondaryDist = length(uv - secondaryPoint);
-        float secondaryGlow = (1.0 - smoothstep(0.0, 0.012, secondaryDist)) * 0.08;
-        lines += secondaryGlow;
+      // Connect secondary points to primary points
+      for(int j = 0; j < 10; j++) {
+        vec2 primaryPoint = points[j];
+        vec2 lineDir = normalize(primaryPoint - secondaryPoint);
+        vec2 toPoint = uv - secondaryPoint;
+        float projLength = dot(toPoint, lineDir);
+        float lineLength = length(primaryPoint - secondaryPoint);
+        
+        if(projLength > 0.0 && projLength < lineLength) {
+          vec2 projection = secondaryPoint + lineDir * projLength;
+          float lineDist = length(uv - projection);
+          
+          // Even finer lines for secondary network
+          float lineStrength = 1.0 - smoothstep(0.0, 0.001, lineDist);
+          float fadeOut = 1.0 - smoothstep(0.0, lineLength, projLength);
+          float connectionStrength = 1.0 - smoothstep(0.15, 0.6, lineLength);
+          
+          lines += lineStrength * fadeOut * connectionStrength * 0.03;
+        }
       }
+      
+      // Tiny secondary nodes
+      float secondaryDist = length(uv - secondaryPoint);
+      float secondaryGlow = (1.0 - smoothstep(0.0, 0.004, secondaryDist)) * 0.04;
+      lines += secondaryGlow;
     }
     
     return lines;
@@ -97,27 +121,27 @@ export const createFragmentShaderSource = (derivativesExt: boolean) => `
     vec2 uv = (gl_FragCoord.xy - 0.5 * u_resolution.xy) / min(u_resolution.y, u_resolution.x);
     vec2 mouse = u_mouse;
     
-    // Glass-like distortion with mouse interaction
-    float dist = length(uv - (mouse - 0.5) * 1.5);
-    vec2 distorted = uv + (mouse - 0.5) * 0.4 * exp(-dist * 2.0);
+    // Subtle glass-like distortion without mouse highlighting
+    float dist = length(uv - (mouse - 0.5) * 1.0);
+    vec2 distorted = uv + (mouse - 0.5) * 0.2 * exp(-dist * 3.0);
     
     // Enhanced fractal calculation
-    vec2 c = distorted * 1.5 + vec2(
-      cos(u_time * 0.4) * 0.4 + (mouse.x - 0.5) * 0.3, 
-      sin(u_time * 0.3) * 0.3 + (mouse.y - 0.5) * 0.3
+    vec2 c = distorted * 1.3 + vec2(
+      cos(u_time * 0.3) * 0.3 + (mouse.x - 0.5) * 0.2, 
+      sin(u_time * 0.25) * 0.25 + (mouse.y - 0.5) * 0.2
     );
     float f = fractal(vec2(0.0), c);
     
     // Multiple fractal layers for depth
-    float glass1 = fractal(distorted * 0.8 + vec2(sin(u_time * 0.6), cos(u_time * 0.8)) * 0.1, c * 0.9);
-    float glass2 = fractal(distorted * 1.2 + (mouse - 0.5) * 0.2, c * 1.1);
-    float glass3 = fractal(distorted * 2.0 + vec2(cos(u_time), sin(u_time * 1.2)) * 0.05, c * 0.7);
+    float glass1 = fractal(distorted * 0.7 + vec2(sin(u_time * 0.5), cos(u_time * 0.6)) * 0.08, c * 0.9);
+    float glass2 = fractal(distorted * 1.1 + (mouse - 0.5) * 0.15, c * 1.05);
+    float glass3 = fractal(distorted * 1.8 + vec2(cos(u_time * 0.8), sin(u_time)) * 0.04, c * 0.75);
     
-    // Add fine plexus network
+    // Dense plexus network
     float plexus = plexusLines(uv, mouse);
     
     // Combine all layers
-    float combined = (f * 0.4 + glass1 * 0.3 + glass2 * 0.2 + glass3 * 0.1);
+    float combined = (f * 0.35 + glass1 * 0.3 + glass2 * 0.2 + glass3 * 0.15);
     
     // Color palette from design system
     vec3 baseColor = vec3(0.96, 0.96, 0.98); // dusty-blue-whisper (lightest)
@@ -127,28 +151,23 @@ export const createFragmentShaderSource = (derivativesExt: boolean) => `
     
     // Map fractal values to colors
     vec3 fractalColor = mix(baseColor, midColor, combined);
-    fractalColor = mix(fractalColor, darkColor, combined * 0.6);
+    fractalColor = mix(fractalColor, darkColor, combined * 0.5);
     
-    // Add fine plexus lines
-    vec3 finalColor = mix(fractalColor, plexusColor, plexus * 0.85);
-    
-    // Enhanced glass highlights with mouse interaction
-    float mouseInfluence = 1.0 - smoothstep(0.0, 0.8, length(uv - (mouse - 0.5) * 1.5));
-    float highlight = pow(mouseInfluence, 2.0) * 0.4;
-    finalColor += vec3(highlight * 0.3, highlight * 0.4, highlight * 0.6);
+    // Add sharp plexus lines
+    vec3 finalColor = mix(fractalColor, plexusColor, plexus * 1.2);
     
     // Add fractal edge detection for more defined shapes (only if derivatives are supported)
     ${derivativesExt ? `
     float edge = abs(dFdx(combined)) + abs(dFdy(combined));
-    finalColor += plexusColor * edge * 3.0;
+    finalColor += plexusColor * edge * 2.5;
     ` : `
     // Fallback edge detection using distance-based method
-    float edge = smoothstep(0.4, 0.6, combined) - smoothstep(0.6, 0.8, combined);
-    finalColor += plexusColor * edge * 0.5;
+    float edge = smoothstep(0.35, 0.55, combined) - smoothstep(0.55, 0.75, combined);
+    finalColor += plexusColor * edge * 0.4;
     `}
     
-    // Final alpha with depth
-    float alpha = 0.3 + combined * 0.4 + plexus * 0.2;
+    // Final alpha with depth - no cursor highlights
+    float alpha = 0.25 + combined * 0.35 + plexus * 0.3;
     
     gl_FragColor = vec4(finalColor, alpha);
   }
