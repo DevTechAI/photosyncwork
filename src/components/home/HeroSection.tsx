@@ -31,7 +31,7 @@ export function HeroSection() {
           <Button 
             onClick={() => navigate('/client-portal')}
             variant="outline" 
-            className={`h-9 md:h-10 w-full md:w-auto px-4 md:px-6 py-2 border-2 text-xs md:text-sm hover:bg-transparent transition-all duration-700 ease-in-out overflow-hidden ${
+            className={`group h-9 md:h-10 w-full md:w-auto px-4 md:px-6 py-2 border-2 text-xs md:text-sm hover:bg-transparent transition-all duration-700 ease-in-out overflow-hidden ${
               buttonsVisible ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0'
             }`}
             style={{ 
@@ -40,7 +40,7 @@ export function HeroSection() {
               backgroundColor: 'transparent'
             }}
           >
-            <Globe className="h-3 w-3 md:h-4 md:w-4 mr-2" />
+            <Globe className="h-3 w-3 md:h-4 md:w-4 mr-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             <span className="font-medium">Client Portal</span>
           </Button>
 
@@ -48,7 +48,7 @@ export function HeroSection() {
           <Button 
             onClick={() => navigate('/photographers')}
             variant="outline" 
-            className={`h-9 md:h-10 w-full md:w-auto px-4 md:px-6 py-2 border-2 text-xs md:text-sm hover:bg-transparent transition-all duration-700 ease-in-out overflow-hidden md:absolute md:left-1/2 md:transform md:-translate-x-1/2 ${
+            className={`group h-9 md:h-10 w-full md:w-auto px-4 md:px-6 py-2 border-2 text-xs md:text-sm hover:bg-transparent transition-all duration-700 ease-in-out overflow-hidden md:absolute md:left-1/2 md:transform md:-translate-x-1/2 ${
               buttonsVisible ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'
             }`}
             style={{ 
@@ -57,7 +57,7 @@ export function HeroSection() {
               backgroundColor: 'transparent'
             }}
           >
-            <Users className="h-3 w-3 md:h-4 md:w-4 mr-2" />
+            <Users className="h-3 w-3 md:h-4 md:w-4 mr-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             <span className="font-medium">Photographers Portal</span>
           </Button>
 
@@ -65,7 +65,7 @@ export function HeroSection() {
           <Button 
             onClick={() => navigate('/hire')}
             variant="outline" 
-            className={`h-9 md:h-10 w-full md:w-auto px-4 md:px-6 py-2 border-2 text-xs md:text-sm hover:bg-transparent transition-all duration-700 ease-in-out overflow-hidden ${
+            className={`group h-9 md:h-10 w-full md:w-auto px-4 md:px-6 py-2 border-2 text-xs md:text-sm hover:bg-transparent transition-all duration-700 ease-in-out overflow-hidden ${
               buttonsVisible ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
             }`}
             style={{ 
@@ -74,7 +74,7 @@ export function HeroSection() {
               backgroundColor: 'transparent'
             }}
           >
-            <UserPlus className="h-3 w-3 md:h-4 md:w-4 mr-2" />
+            <UserPlus className="h-3 w-3 md:h-4 md:w-4 mr-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             <span className="font-medium">Hire a Teammate</span>
           </Button>
         </div>
