@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Camera, Users, Calendar, Globe, UserPlus, ArrowRight } from "lucide-react";
@@ -24,43 +25,43 @@ export default function Home() {
           <Button 
             onClick={() => navigate('/client-portal')}
             variant="outline" 
-            className="h-14 flex flex-col gap-1 border-2 hover:bg-transparent px-3 py-2"
+            className="h-10 px-6 py-2 border-2 hover:bg-transparent transition-all duration-300 ease-in-out overflow-hidden group relative"
             style={{ 
               borderColor: '#b99364', 
               color: '#b99364',
               backgroundColor: 'transparent'
             }}
           >
-            <Globe className="h-5 w-5" />
-            <span className="text-xs font-medium">Client Portal</span>
+            <Globe className="h-4 w-4 absolute -left-8 group-hover:left-2 transition-all duration-300 ease-in-out" />
+            <span className="text-sm font-medium group-hover:ml-6 transition-all duration-300 ease-in-out">Client Portal</span>
           </Button>
 
           <Button 
             onClick={() => navigate('/photographers')}
             variant="outline" 
-            className="h-14 flex flex-col gap-1 border-2 hover:bg-transparent px-3 py-2"
+            className="h-10 px-6 py-2 border-2 hover:bg-transparent transition-all duration-300 ease-in-out overflow-hidden group relative"
             style={{ 
               borderColor: '#b99364', 
               color: '#b99364',
               backgroundColor: 'transparent'
             }}
           >
-            <Users className="h-5 w-5" />
-            <span className="text-xs font-medium">Photographers Portal</span>
+            <Users className="h-4 w-4 absolute -left-8 group-hover:left-2 transition-all duration-300 ease-in-out" />
+            <span className="text-sm font-medium group-hover:ml-6 transition-all duration-300 ease-in-out">Photographers Portal</span>
           </Button>
 
           <Button 
             onClick={() => navigate('/hire')}
             variant="outline" 
-            className="h-14 flex flex-col gap-1 border-2 hover:bg-transparent px-3 py-2"
+            className="h-10 px-6 py-2 border-2 hover:bg-transparent transition-all duration-300 ease-in-out overflow-hidden group relative"
             style={{ 
               borderColor: '#b99364', 
               color: '#b99364',
               backgroundColor: 'transparent'
             }}
           >
-            <UserPlus className="h-5 w-5" />
-            <span className="text-xs font-medium">Hire a Teammate</span>
+            <UserPlus className="h-4 w-4 absolute -left-8 group-hover:left-2 transition-all duration-300 ease-in-out" />
+            <span className="text-sm font-medium group-hover:ml-6 transition-all duration-300 ease-in-out">Hire a Teammate</span>
           </Button>
         </div>
 
