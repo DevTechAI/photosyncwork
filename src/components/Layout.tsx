@@ -149,7 +149,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       )}
 
       {/* Top bar for mobile navigation (only visible on mobile) */}
-      <header className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-yellow border-b z-30 flex items-center px-4">
+      <header className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-background border-b z-30 flex items-center px-4">
         <div className="flex-1 flex items-center">
           {showBackToDashboard && (
             <Button 
@@ -162,12 +162,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               Dashboard
             </Button>
           )}
-          <h1 className="text-xl font-semibold text-velvet-dark">StudioSync</h1>
+          <h1 className="text-xl font-semibold">StudioSync</h1>
         </div>
         <div className="flex items-center gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="text-velvet-dark hover:bg-yellow-light">
+              <Button variant="ghost" size="icon">
                 <User className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
