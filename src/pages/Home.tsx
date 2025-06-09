@@ -79,16 +79,16 @@ export default function Home() {
               <span className="text-sm font-medium group-hover:ml-6 transition-all duration-300 ease-in-out">Hire a Teammate</span>
             </Button>
           </div>
-        </div>
-
-        {/* Scroll Indicator - Bottom of page, below buttons */}
-        <div 
-          className={`absolute bottom-4 left-1/2 transform -translate-x-1/2 transition-all duration-500 ${
-            logoHovered ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
-          }`}
-        >
-          <div className="w-6 h-10 border-2 rounded-full flex justify-center" style={{ borderColor: '#b99364' }}>
-            <div className="w-1 h-3 rounded-full mt-2 animate-pulse" style={{ backgroundColor: '#b99364' }}></div>
+          
+          {/* Scroll Indicator - Centered below buttons */}
+          <div 
+            className={`flex justify-center mt-8 transition-all duration-500 ${
+              logoHovered ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+            }`}
+          >
+            <div className="w-6 h-10 border-2 rounded-full flex justify-center" style={{ borderColor: '#b99364' }}>
+              <div className="w-1 h-3 rounded-full mt-2 animate-pulse" style={{ backgroundColor: '#b99364' }}></div>
+            </div>
           </div>
         </div>
       </section>
