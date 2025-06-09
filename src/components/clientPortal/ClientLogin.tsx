@@ -49,6 +49,8 @@ export function ClientLogin({ onLogin, loading, error }: ClientLoginProps) {
                   onChange={(e) => setAccessCode(e.target.value)}
                   className="pl-10"
                   disabled={loading}
+                  autoComplete="off"
+                  autoFocus
                 />
               </div>
             </div>
