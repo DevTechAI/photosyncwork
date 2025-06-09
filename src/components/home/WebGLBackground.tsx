@@ -12,10 +12,16 @@ export function WebGLBackground() {
     if (!canvas) return;
 
     const gl = canvas.getContext('webgl');
-    if (!gl) return;
+    if (!gl) {
+      console.error('WebGL not supported');
+      return;
+    }
+
+    console.log('WebGL context created successfully');
 
     // Check for and enable the derivatives extension
     const derivativesExt = gl.getExtension('OES_standard_derivatives');
+    console.log('Derivatives extension:', derivativesExt ? 'supported' : 'not supported');
     
     // Vertex shader source
     const vertexShaderSource = `
@@ -149,7 +155,7 @@ export function WebGLBackground() {
         `}
         
         // Final alpha with depth
-        float alpha = 0.2 + combined * 0.5 + plexus * 0.3;
+        float alpha = 0.3 + combined * 0.4 + plexus * 0.3;
         
         gl_FragColor = vec4(finalColor, alpha);
       }
@@ -191,10 +197,18 @@ export function WebGLBackground() {
     const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
     const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
     
-    if (!vertexShader || !fragmentShader) return;
+    if (!vertexShader || !fragmentShader) {
+      console.error('Failed to create shaders');
+      return;
+    }
     
     const program = createProgram(gl, vertexShader, fragmentShader);
-    if (!program) return;
+    if (!program) {
+      console.error('Failed to create shader program');
+      return;
+    }
+
+    console.log('Shaders compiled and program linked successfully');
 
     // Create buffer for full-screen quad
     const positionBuffer = gl.createBuffer();
@@ -230,6 +244,9 @@ export function WebGLBackground() {
       
       timeRef.current += 0.016;
       
+      gl.clearColor(0.0, 0.0, 0.0, 0.0);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      
       gl.useProgram(program);
       gl.enable(gl.BLEND);
       gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
@@ -251,6 +268,7 @@ export function WebGLBackground() {
     window.addEventListener('resize', resize);
     window.addEventListener('mousemove', handleMouseMove);
     
+    console.log('Starting WebGL animation');
     render();
 
     return () => {
