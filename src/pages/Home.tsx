@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Camera, Users, Calendar, Globe } from "lucide-react";
@@ -16,7 +17,7 @@ export default function Home() {
               <img 
                 src="/lovable-uploads/9746c35f-4225-4a04-b96f-ced8b3d8c0ec.png" 
                 alt="StudioSync Logo" 
-                className="h-12 w-auto object-contain"
+                className="h-16 w-auto object-contain"
               />
             </div>
             <div className="flex items-center gap-4">
