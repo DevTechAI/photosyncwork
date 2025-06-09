@@ -21,7 +21,7 @@ export default function Home() {
               />
             </div>
             <div className="flex items-center gap-4">
-              <Button onClick={() => navigate('/login')} variant="outline" className="border-white/30 text-white hover:bg-white/10 hover:text-white">
+              <Button onClick={() => navigate('/login')} variant="outline" className="border-velvet-whisper/30 text-velvet-whisper hover:bg-velvet-whisper/10 hover:text-velvet-whisper">
                 Sign In
               </Button>
             </div>
