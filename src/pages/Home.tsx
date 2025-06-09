@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Camera, Users, Calendar, Globe } from "lucide-react";
@@ -8,17 +7,17 @@ export default function Home() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
+    <div className="min-h-screen bg-gradient-to-b from-royal to-royal-dark">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
+      <header className="bg-white/95 backdrop-blur-sm shadow-sm border-b">
         <div className="max-w-6xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-lg">
+              <div className="p-2 bg-royal/10 rounded-lg">
                 <img 
                   src="/lovable-uploads/9746c35f-4225-4a04-b96f-ced8b3d8c0ec.png" 
                   alt="StudioSync Logo" 
-                  className="h-8 w-8 object-contain"
+                  className="h-8 w-8 object-contain mix-blend-multiply"
                 />
               </div>
               <div>
@@ -38,10 +37,10 @@ export default function Home() {
       {/* Hero Section */}
       <main className="max-w-6xl mx-auto px-4 py-12">
         <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">
+          <h2 className="text-4xl font-bold text-white mb-4">
             Welcome to StudioSync
           </h2>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          <p className="text-xl text-royal-foreground/90 max-w-2xl mx-auto">
             The complete platform for photographers, videographers, and their clients to collaborate seamlessly
           </p>
         </div>
@@ -49,7 +48,7 @@ export default function Home() {
         {/* Navigation Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
           {/* Client Portal Card */}
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/client-portal')}>
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer bg-white/95 backdrop-blur-sm" onClick={() => navigate('/client-portal')}>
             <CardHeader className="text-center">
               <div className="mx-auto mb-4 p-4 bg-blue-50 rounded-full w-fit">
                 <Globe className="h-12 w-12 text-blue-600" />
@@ -73,7 +72,7 @@ export default function Home() {
           </Card>
 
           {/* Photographers Portal Card */}
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/photographers')}>
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer bg-white/95 backdrop-blur-sm" onClick={() => navigate('/photographers')}>
             <CardHeader className="text-center">
               <div className="mx-auto mb-4 p-4 bg-purple-50 rounded-full w-fit">
                 <Users className="h-12 w-12 text-purple-600" />
@@ -99,35 +98,35 @@ export default function Home() {
 
         {/* Features Section */}
         <div className="mt-16 text-center">
-          <h3 className="text-2xl font-bold text-gray-900 mb-8">Why Choose StudioSync?</h3>
+          <h3 className="text-2xl font-bold text-white mb-8">Why Choose StudioSync?</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="text-center">
-              <div className="mx-auto mb-4 p-3 bg-green-50 rounded-full w-fit">
-                <Calendar className="h-8 w-8 text-green-600" />
+              <div className="mx-auto mb-4 p-3 bg-white/20 backdrop-blur-sm rounded-full w-fit">
+                <Calendar className="h-8 w-8 text-white" />
               </div>
-              <h4 className="text-lg font-semibold mb-2">Streamlined Workflow</h4>
-              <p className="text-gray-600">From pre-production to delivery, manage every aspect of your photography business</p>
+              <h4 className="text-lg font-semibold mb-2 text-white">Streamlined Workflow</h4>
+              <p className="text-royal-foreground/80">From pre-production to delivery, manage every aspect of your photography business</p>
             </div>
             <div className="text-center">
-              <div className="mx-auto mb-4 p-3 bg-orange-50 rounded-full w-fit">
-                <Users className="h-8 w-8 text-orange-600" />
+              <div className="mx-auto mb-4 p-3 bg-white/20 backdrop-blur-sm rounded-full w-fit">
+                <Users className="h-8 w-8 text-white" />
               </div>
-              <h4 className="text-lg font-semibold mb-2">Client Collaboration</h4>
-              <p className="text-gray-600">Keep clients engaged with real-time updates and seamless communication</p>
+              <h4 className="text-lg font-semibold mb-2 text-white">Client Collaboration</h4>
+              <p className="text-royal-foreground/80">Keep clients engaged with real-time updates and seamless communication</p>
             </div>
             <div className="text-center">
-              <div className="mx-auto mb-4 p-3 bg-blue-50 rounded-full w-fit">
-                <Camera className="h-8 w-8 text-blue-600" />
+              <div className="mx-auto mb-4 p-3 bg-white/20 backdrop-blur-sm rounded-full w-fit">
+                <Camera className="h-8 w-8 text-white" />
               </div>
-              <h4 className="text-lg font-semibold mb-2">Professional Tools</h4>
-              <p className="text-gray-600">Everything you need to run a successful photography or videography business</p>
+              <h4 className="text-lg font-semibold mb-2 text-white">Professional Tools</h4>
+              <p className="text-royal-foreground/80">Everything you need to run a successful photography or videography business</p>
             </div>
           </div>
         </div>
       </main>
 
       {/* Footer */}
-      <footer className="bg-white border-t mt-16">
+      <footer className="bg-white/95 backdrop-blur-sm border-t mt-16">
         <div className="max-w-6xl mx-auto px-4 py-8 text-center text-gray-600">
           <p>&copy; 2024 StudioSync. All rights reserved.</p>
         </div>
