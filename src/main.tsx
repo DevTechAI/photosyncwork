@@ -4,11 +4,14 @@ import App from './App.tsx'
 import './index.css'
 import { BrowserRouter } from 'react-router-dom'
 import { UserProvider } from './contexts/UserContext'
+import { QueryProvider } from './QueryProvider'
 
 createRoot(document.getElementById("root")!).render(
   <BrowserRouter>
     <UserProvider>
-      <App />
+      <QueryProvider>
+        <App />
+      </QueryProvider>
     </UserProvider>
   </BrowserRouter>
 );
