@@ -3,9 +3,16 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Camera, Users, Calendar, Globe } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { LogoGenerator } from "@/components/ui/logo-generator";
+import { useState } from "react";
 
 export default function Home() {
   const navigate = useNavigate();
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+
+  const handleLogoGenerated = (url: string) => {
+    setLogoUrl(url);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
@@ -15,16 +22,27 @@ export default function Home() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-primary/10 rounded-lg">
-                <Camera className="h-8 w-8 text-primary" />
+                {logoUrl ? (
+                  <img 
+                    src={logoUrl} 
+                    alt="StudioSync Logo" 
+                    className="h-8 w-8 object-contain"
+                  />
+                ) : (
+                  <Camera className="h-8 w-8 text-primary" />
+                )}
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">StudioSync</h1>
                 <p className="text-sm text-gray-600">Professional Photography & Videography Platform</p>
               </div>
             </div>
-            <Button onClick={() => navigate('/login')} variant="outline">
-              Sign In
-            </Button>
+            <div className="flex items-center gap-4">
+              <LogoGenerator onLogoGenerated={handleLogoGenerated} />
+              <Button onClick={() => navigate('/login')} variant="outline">
+                Sign In
+              </Button>
+            </div>
           </div>
         </div>
       </header>
