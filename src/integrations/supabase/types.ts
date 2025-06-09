@@ -9,6 +9,125 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      client_deliverables: {
+        Row: {
+          created_at: string
+          download_count: number
+          event_id: string
+          file_name: string
+          file_size: number | null
+          file_type: string
+          file_url: string
+          id: string
+          is_approved: boolean
+          is_watermarked: boolean
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          download_count?: number
+          event_id: string
+          file_name: string
+          file_size?: number | null
+          file_type: string
+          file_url: string
+          id?: string
+          is_approved?: boolean
+          is_watermarked?: boolean
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          download_count?: number
+          event_id?: string
+          file_name?: string
+          file_size?: number | null
+          file_type?: string
+          file_url?: string
+          id?: string
+          is_approved?: boolean
+          is_watermarked?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      client_feedback: {
+        Row: {
+          created_at: string
+          deliverable_id: string | null
+          event_id: string
+          feedback_text: string | null
+          id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          deliverable_id?: string | null
+          event_id: string
+          feedback_text?: string | null
+          id?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          deliverable_id?: string | null
+          event_id?: string
+          feedback_text?: string | null
+          id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_feedback_deliverable_id_fkey"
+            columns: ["deliverable_id"]
+            isOneToOne: false
+            referencedRelation: "client_deliverables"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_portal_access: {
+        Row: {
+          access_code: string
+          client_email: string | null
+          client_name: string
+          created_at: string
+          event_id: string
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          password_hash: string | null
+          updated_at: string
+        }
+        Insert: {
+          access_code: string
+          client_email?: string | null
+          client_name: string
+          created_at?: string
+          event_id: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          password_hash?: string | null
+          updated_at?: string
+        }
+        Update: {
+          access_code?: string
+          client_email?: string | null
+          client_name?: string
+          created_at?: string
+          event_id?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          password_hash?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       companies: {
         Row: {
           address: string | null

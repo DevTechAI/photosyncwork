@@ -3,14 +3,16 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { UserCircle, Calendar, Clock, CheckCircle } from "lucide-react";
+import { UserCircle, Calendar, Clock, CheckCircle, Upload } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { ScheduledEvent } from "@/components/scheduling/types";
+import { supabase } from "@/integrations/supabase/client";
+import { CreateClientAccess } from "./CreateClientAccess";
 
 interface Deliverable {
   id: string;
@@ -34,6 +36,9 @@ export function ProductionDeliverablesTab({
   const { toast } = useToast();
   const [editingDeliverable, setEditingDeliverable] = useState<Deliverable | null>(null);
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showUploadDialog, setShowUploadDialog] = useState(false);
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
   
   const deliverables = selectedEvent.deliverables || [];
   
@@ -77,6 +82,49 @@ export function ProductionDeliverablesTab({
     });
     setShowEditDialog(false);
   };
+
+  const handleFileUpload = async () => {
+    if (!uploadFile) return;
+
+    setUploading(true);
+    try {
+      // Here you would typically upload to Supabase Storage
+      // For now, we'll create a placeholder URL
+      const fileUrl = `https://placeholder-cdn.com/${uploadFile.name}`;
+      
+      const { error } = await supabase
+        .from('client_deliverables')
+        .insert({
+          event_id: selectedEvent.id,
+          file_name: uploadFile.name,
+          file_url: fileUrl,
+          file_type: uploadFile.type,
+          file_size: uploadFile.size,
+          is_approved: true, // Auto-approve for demo
+          is_watermarked: false
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "File uploaded",
+        description: "Deliverable has been added to client portal."
+      });
+
+      setShowUploadDialog(false);
+      setUploadFile(null);
+
+    } catch (error: any) {
+      console.error('Error uploading file:', error);
+      toast({
+        title: "Upload failed",
+        description: "Failed to upload file. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
   
   const getStatusBadgeVariant = (status: Deliverable['status']) => {
     switch (status) {
@@ -110,7 +158,60 @@ export function ProductionDeliverablesTab({
   
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-medium">Project Deliverables</h3>
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-medium">Project Deliverables</h3>
+        <div className="flex gap-2">
+          <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
+            <DialogTrigger asChild>
+              <Button size="sm" className="gap-2">
+                <Upload className="h-4 w-4" />
+                Upload Deliverable
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Upload Client Deliverable</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="file-upload">Select File</Label>
+                  <Input
+                    id="file-upload"
+                    type="file"
+                    accept="image/*,video/*"
+                    onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setShowUploadDialog(false)}
+                    className="flex-1"
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={handleFileUpload}
+                    disabled={!uploadFile || uploading}
+                    className="flex-1"
+                  >
+                    {uploading ? "Uploading..." : "Upload"}
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+          <CreateClientAccess 
+            selectedEvent={selectedEvent}
+            onAccessCreated={() => {
+              toast({
+                title: "Client access created",
+                description: "Your client can now access their portal."
+              });
+            }}
+          />
+        </div>
+      </div>
       
       {deliverables.length === 0 ? (
         <Card className="p-4">
