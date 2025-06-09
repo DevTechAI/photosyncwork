@@ -108,31 +108,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-        {/* Add direct routes for workflow pages */}
-        <Route
-          path="/pre-production"
-          element={
-            <ProtectedRoute requiredModule="workflow">
-              <PreProductionPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/production"
-          element={
-            <ProtectedRoute requiredModule="workflow">
-              <ProductionPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/post-production"
-          element={
-            <ProtectedRoute requiredModule="workflow">
-              <PostProductionPage />
-            </ProtectedRoute>
-          }
-        />
         <Route
           path="/realtime-test"
           element={

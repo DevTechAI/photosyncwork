@@ -38,51 +38,49 @@ export default function Login() {
   };
   
   return (
-    <div className="flex min-h-screen items-center justify-center bg-white p-4">
-      <Card className="w-full max-w-md p-8 bg-white border-gray-300">
+    <div className="flex min-h-screen items-center justify-center bg-gray-50">
+      <Card className="w-full max-w-md p-8">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-semibold text-gray-900">StudioSync</h1>
-          <p className="text-gray-600 mt-2">Studio Success System</p>
+          <h1 className="text-3xl font-semibold">StudioSync</h1>
+          <p className="text-muted-foreground mt-2">Studio Success System</p>
         </div>
         
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="email" className="text-gray-700">Email Address</Label>
+            <Label htmlFor="email">Email Address</Label>
             <Input
               id="email"
               type="email"
               placeholder="Enter your email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="bg-white border-gray-300 text-gray-900"
               required
             />
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="password" className="text-gray-700">Password</Label>
+            <Label htmlFor="password">Password</Label>
             <Input
               id="password"
               type="password"
               placeholder="Enter your password (any password works)"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="bg-white border-gray-300 text-gray-900"
               required
             />
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-muted-foreground">
               For demo purposes, any password will work. Only email is validated.
             </p>
           </div>
           
-          <Button type="submit" className="w-full bg-gray-800 hover:bg-gray-700 text-white">
+          <Button type="submit" className="w-full">
             Sign In
           </Button>
         </form>
         
-        <div className="mt-8 border-t border-gray-200 pt-6">
-          <h3 className="text-sm font-medium mb-2 text-gray-900">Demo Accounts:</h3>
-          <div className="space-y-1 text-sm text-gray-600">
+        <div className="mt-8 border-t pt-6">
+          <h3 className="text-sm font-medium mb-2">Demo Accounts:</h3>
+          <div className="space-y-1 text-sm text-muted-foreground">
             <p>Manager: admin@example.com</p>
             <p>Accounts: finance@example.com</p>
             <p>CRM: crm@example.com</p>
