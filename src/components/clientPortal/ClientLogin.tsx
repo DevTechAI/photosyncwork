@@ -27,8 +27,8 @@ export function ClientLogin({ onLogin, loading, error }: ClientLoginProps) {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 p-3 bg-primary/10 rounded-full w-fit">
-            <Camera className="h-8 w-8 text-primary" />
+          <div className="mx-auto mb-4 p-3 bg-muted rounded-full w-fit">
+            <Camera className="h-8 w-8 text-muted-foreground" />
           </div>
           <CardTitle className="text-2xl font-bold">Client Portal</CardTitle>
           <CardDescription>
