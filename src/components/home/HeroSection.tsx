@@ -7,7 +7,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 export function HeroSection() {
   const navigate = useNavigate();
-  const [logoHovered, setLogoHovered] = useState(false);
+  const [buttonsVisible, setButtonsVisible] = useState(false);
   const isMobile = useIsMobile();
   
   return (
@@ -15,8 +15,7 @@ export function HeroSection() {
       {/* Logo */}
       <div 
         className="mb-12 cursor-pointer transition-all duration-300 hover:scale-105"
-        onMouseEnter={() => setLogoHovered(true)}
-        onMouseLeave={() => setLogoHovered(false)}
+        onMouseEnter={() => setButtonsVisible(true)}
       >
         <img 
           src="/lovable-uploads/b5a2c474-15f8-4a49-b102-73278d7c52f1.png" 
@@ -33,7 +32,7 @@ export function HeroSection() {
             onClick={() => navigate('/client-portal')}
             variant="outline" 
             className={`h-9 md:h-10 w-full md:w-auto px-4 md:px-6 py-2 border-2 text-xs md:text-sm hover:bg-transparent transition-all duration-700 ease-in-out overflow-hidden ${
-              logoHovered ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0'
+              buttonsVisible ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0'
             }`}
             style={{ 
               borderColor: '#b99364', 
@@ -50,7 +49,7 @@ export function HeroSection() {
             onClick={() => navigate('/photographers')}
             variant="outline" 
             className={`h-9 md:h-10 w-full md:w-auto px-4 md:px-6 py-2 border-2 text-xs md:text-sm hover:bg-transparent transition-all duration-700 ease-in-out overflow-hidden md:absolute md:left-1/2 md:transform md:-translate-x-1/2 ${
-              logoHovered ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'
+              buttonsVisible ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'
             }`}
             style={{ 
               borderColor: '#b99364', 
@@ -67,7 +66,7 @@ export function HeroSection() {
             onClick={() => navigate('/hire')}
             variant="outline" 
             className={`h-9 md:h-10 w-full md:w-auto px-4 md:px-6 py-2 border-2 text-xs md:text-sm hover:bg-transparent transition-all duration-700 ease-in-out overflow-hidden ${
-              logoHovered ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
+              buttonsVisible ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
             }`}
             style={{ 
               borderColor: '#b99364', 
@@ -84,7 +83,7 @@ export function HeroSection() {
       {/* Scroll Indicator - Aligned with center button */}
       <div 
         className={`absolute bottom-4 left-1/2 transform -translate-x-1/2 transition-all duration-500 ${
-          logoHovered ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+          buttonsVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
         }`}
       >
         <div className="w-5 h-8 md:w-6 md:h-10 border-2 rounded-full flex justify-center" style={{ borderColor: '#b99364' }}>
