@@ -11,31 +11,31 @@ export default function Home() {
     <div className="min-h-screen" style={{ backgroundColor: '#1a2238' }}>
       {/* Header */}
       <header className="backdrop-blur-sm shadow-sm border-b border-gray-700/20" style={{ backgroundColor: '#0e0e11' }}>
-        <div className="max-w-6xl mx-auto px-4 py-4">
+        <div className="max-w-6xl mx-auto px-4 py-3">
           <div className="flex items-center justify-center">
             <img 
               src="/lovable-uploads/b5a2c474-15f8-4a49-b102-73278d7c52f1.png" 
               alt="StudioSync Logo" 
-              className="h-20 w-auto object-contain"
+              className="h-23 w-auto object-contain"
             />
             <div className="absolute right-4 flex items-center gap-4">
               <Button 
                 onClick={() => navigate('/hire')} 
                 variant="outline" 
-                className="border-2 hover:bg-transparent"
+                className="border-2 hover:bg-transparent px-3 py-1 rounded-sm h-8"
                 style={{ 
                   borderColor: '#b99364', 
                   color: '#b99364',
                   backgroundColor: 'transparent'
                 }}
               >
-                <UserPlus className="h-4 w-4 mr-2" />
+                <UserPlus className="h-4 w-4 mr-1" />
                 Hire Talent
               </Button>
               <Button 
                 onClick={() => navigate('/login')} 
                 variant="outline" 
-                className="border-2 hover:bg-transparent"
+                className="border-2 hover:bg-transparent px-3 py-1 rounded-sm h-8"
                 style={{ 
                   borderColor: '#b99364', 
                   color: '#b99364',
@@ -89,10 +89,10 @@ export default function Home() {
                   <li>✓ Track project progress</li>
                 </ul>
                 <Button 
-                  className="w-full text-white hover:opacity-90 transition-opacity" 
+                  className="w-full text-white hover:opacity-90 transition-opacity px-4 py-1 rounded-sm h-9" 
                   size="lg"
                   style={{ 
-                    backgroundColor: '#556ee6'
+                    backgroundColor: '#1a2238'
                   }}
                 >
                   Access Client Portal
@@ -126,10 +126,10 @@ export default function Home() {
                   <li>✓ Financial tracking & invoicing</li>
                 </ul>
                 <Button 
-                  className="w-full text-white hover:opacity-90 transition-opacity" 
+                  className="w-full text-white hover:opacity-90 transition-opacity px-4 py-1 rounded-sm h-9" 
                   size="lg"
                   style={{ 
-                    backgroundColor: '#556ee6'
+                    backgroundColor: '#1a2238'
                   }}
                 >
                   Access Studio Dashboard
