@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Camera, Users, Calendar, Globe, UserPlus } from "lucide-react";
+import { Camera, Users, Calendar, Globe, UserPlus, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export default function Home() {
@@ -9,168 +9,245 @@ export default function Home() {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#1a2238' }}>
-      {/* Header */}
-      <header className="backdrop-blur-sm shadow-sm border-b border-gray-700/20" style={{ backgroundColor: '#0e0e11' }}>
-        <div className="max-w-6xl mx-auto px-4 py-3">
-          <div className="flex items-center justify-center">
-            <img 
-              src="/lovable-uploads/b5a2c474-15f8-4a49-b102-73278d7c52f1.png" 
-              alt="StudioSync Logo" 
-              className="h-14 w-auto object-contain"
-            />
-            <div className="absolute right-4 flex items-center gap-4">
-              <Button 
-                onClick={() => navigate('/hire')} 
-                variant="outline" 
-                className="border-2 hover:bg-transparent px-3 py-1 rounded-sm h-8"
-                style={{ 
-                  borderColor: '#b99364', 
-                  color: '#b99364',
-                  backgroundColor: 'transparent'
-                }}
-              >
-                <UserPlus className="h-4 w-4 mr-1" />
-                Hire Talent
-              </Button>
-              <Button 
-                onClick={() => navigate('/login')} 
-                variant="outline" 
-                className="border-2 hover:bg-transparent px-3 py-1 rounded-sm h-8"
-                style={{ 
-                  borderColor: '#b99364', 
-                  color: '#b99364',
-                  backgroundColor: 'transparent'
-                }}
-              >
-                Sign In
-              </Button>
-            </div>
+      {/* Hero Section - Full Screen */}
+      <section className="min-h-screen flex flex-col items-center justify-center px-4">
+        {/* Logo */}
+        <div className="mb-12">
+          <img 
+            src="/lovable-uploads/b5a2c474-15f8-4a49-b102-73278d7c52f1.png" 
+            alt="StudioSync Logo" 
+            className="h-24 w-auto object-contain mx-auto"
+          />
+        </div>
+
+        {/* Four Main Buttons */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-4xl w-full">
+          <Button 
+            onClick={() => navigate('/client-portal')}
+            variant="outline" 
+            className="h-20 flex flex-col gap-2 border-2 hover:bg-transparent"
+            style={{ 
+              borderColor: '#b99364', 
+              color: '#b99364',
+              backgroundColor: 'transparent'
+            }}
+          >
+            <Globe className="h-6 w-6" />
+            <span className="text-sm font-medium">Client Portal</span>
+          </Button>
+
+          <Button 
+            onClick={() => navigate('/photographers')}
+            variant="outline" 
+            className="h-20 flex flex-col gap-2 border-2 hover:bg-transparent"
+            style={{ 
+              borderColor: '#b99364', 
+              color: '#b99364',
+              backgroundColor: 'transparent'
+            }}
+          >
+            <Users className="h-6 w-6" />
+            <span className="text-sm font-medium">Photographers Portal</span>
+          </Button>
+
+          <Button 
+            onClick={() => navigate('/hire')}
+            variant="outline" 
+            className="h-20 flex flex-col gap-2 border-2 hover:bg-transparent"
+            style={{ 
+              borderColor: '#b99364', 
+              color: '#b99364',
+              backgroundColor: 'transparent'
+            }}
+          >
+            <UserPlus className="h-6 w-6" />
+            <span className="text-sm font-medium">Hire a Teammate</span>
+          </Button>
+
+          <Button 
+            onClick={() => navigate('/login')}
+            variant="outline" 
+            className="h-20 flex flex-col gap-2 border-2 hover:bg-transparent"
+            style={{ 
+              borderColor: '#b99364', 
+              color: '#b99364',
+              backgroundColor: 'transparent'
+            }}
+          >
+            <ArrowRight className="h-6 w-6" />
+            <span className="text-sm font-medium">Sign In</span>
+          </Button>
+        </div>
+
+        {/* Scroll Indicator */}
+        <div className="absolute bottom-8 animate-bounce">
+          <div className="w-6 h-10 border-2 rounded-full flex justify-center" style={{ borderColor: '#b99364' }}>
+            <div className="w-1 h-3 rounded-full mt-2 animate-pulse" style={{ backgroundColor: '#b99364' }}></div>
           </div>
         </div>
-      </header>
+      </section>
 
-      {/* Hero Section */}
-      <main className="max-w-6xl mx-auto px-4 py-12">
-        <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold mb-4" style={{ color: '#b99364' }}>
-            Welcome to StudioSync
+      {/* About Us Section */}
+      <section className="py-20 px-4" style={{ backgroundColor: '#f7f5f2' }}>
+        <div className="max-w-6xl mx-auto text-center">
+          <h2 className="text-4xl font-bold mb-8" style={{ color: '#1a2238' }}>
+            About StudioSync
           </h2>
-          <p className="text-xl max-w-2xl mx-auto" style={{ color: '#999999' }}>
-            The complete platform for photographers, videographers, and their clients to collaborate seamlessly
+          <p className="text-xl max-w-3xl mx-auto mb-12" style={{ color: '#999999' }}>
+            StudioSync is the complete platform designed for photographers, videographers, and their clients. 
+            We streamline every aspect of your creative business, from initial consultation to final delivery, 
+            making collaboration seamless and professional.
           </p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16">
+            <div className="text-center">
+              <div className="mx-auto mb-6 p-4 rounded-full w-fit" style={{ backgroundColor: '#b99364' }}>
+                <Camera className="h-10 w-10 text-white" />
+              </div>
+              <h3 className="text-xl font-semibold mb-4" style={{ color: '#1a2238' }}>For Creatives</h3>
+              <p style={{ color: '#999999' }}>
+                Manage your entire workflow from scheduling to delivery. Handle clients, projects, 
+                team collaboration, and financial tracking all in one place.
+              </p>
+            </div>
+            
+            <div className="text-center">
+              <div className="mx-auto mb-6 p-4 rounded-full w-fit" style={{ backgroundColor: '#b99364' }}>
+                <Users className="h-10 w-10 text-white" />
+              </div>
+              <h3 className="text-xl font-semibold mb-4" style={{ color: '#1a2238' }}>For Clients</h3>
+              <p style={{ color: '#999999' }}>
+                Stay connected with your photographer throughout the entire process. View progress, 
+                provide feedback, and access your deliverables through a beautiful client portal.
+              </p>
+            </div>
+            
+            <div className="text-center">
+              <div className="mx-auto mb-6 p-4 rounded-full w-fit" style={{ backgroundColor: '#b99364' }}>
+                <Globe className="h-10 w-10 text-white" />
+              </div>
+              <h3 className="text-xl font-semibold mb-4" style={{ color: '#1a2238' }}>For Teams</h3>
+              <p style={{ color: '#999999' }}>
+                Scale your business by collaborating with other photographers, editors, and specialists. 
+                Find talent or offer your services through our marketplace.
+              </p>
+            </div>
+          </div>
         </div>
+      </section>
 
-        {/* Navigation Cards - Dark Section */}
-        <div className="py-16 -mx-4 px-4" style={{ backgroundColor: '#1a2238' }}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            {/* Client Portal Card */}
-            <Card 
-              className="hover:shadow-lg transition-shadow cursor-pointer backdrop-blur-sm border-2 hover:shadow-xl"
-              style={{ 
-                backgroundColor: '#f7f5f2', 
-                borderColor: '#b99364'
-              }}
-              onClick={() => navigate('/client-portal')}
-            >
-              <CardHeader className="text-center">
-                <div className="mx-auto mb-4 p-4 rounded-full w-fit" style={{ backgroundColor: '#b99364' }}>
-                  <Globe className="h-12 w-12 text-white" />
+      {/* Why Choose Us Section */}
+      <section className="py-20 px-4" style={{ backgroundColor: '#1a2238' }}>
+        <div className="max-w-6xl mx-auto text-center">
+          <h2 className="text-4xl font-bold mb-8" style={{ color: '#b99364' }}>
+            Why Choose StudioSync?
+          </h2>
+          <p className="text-xl max-w-3xl mx-auto mb-16" style={{ color: '#f7f5f2' }}>
+            We understand the unique challenges of running a creative business. That's why we've built 
+            a platform that addresses every aspect of your workflow.
+          </p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <Card className="text-center border-2" style={{ backgroundColor: '#f7f5f2', borderColor: '#b99364' }}>
+              <CardHeader>
+                <div className="mx-auto mb-4 p-3 rounded-full w-fit" style={{ backgroundColor: '#b99364' }}>
+                  <Calendar className="h-6 w-6 text-white" />
                 </div>
-                <CardTitle className="text-2xl" style={{ color: '#1a2238' }}>Client Portal</CardTitle>
-                <CardDescription className="text-base" style={{ color: '#999999' }}>
-                  Access your project deliverables, view photos and videos, and provide feedback
-                </CardDescription>
+                <CardTitle className="text-lg" style={{ color: '#1a2238' }}>Streamlined Workflow</CardTitle>
               </CardHeader>
-              <CardContent className="text-center">
-                <ul className="text-sm space-y-2 mb-6" style={{ color: '#999999' }}>
-                  <li>✓ View and download your photos & videos</li>
-                  <li>✓ Browse gallery of your events</li>
-                  <li>✓ Provide feedback and approvals</li>
-                  <li>✓ Track project progress</li>
-                </ul>
-                <Button 
-                  className="w-full text-white hover:opacity-90 transition-opacity px-4 py-1 rounded-sm h-9" 
-                  size="lg"
-                  style={{ 
-                    backgroundColor: '#1a2238'
-                  }}
-                >
-                  Access Client Portal
-                </Button>
+              <CardContent>
+                <p className="text-sm" style={{ color: '#999999' }}>
+                  From booking to delivery, manage every step of your creative process in one platform.
+                </p>
               </CardContent>
             </Card>
 
-            {/* Photographers Portal Card */}
-            <Card 
-              className="hover:shadow-lg transition-shadow cursor-pointer backdrop-blur-sm border-2 hover:shadow-xl"
-              style={{ 
-                backgroundColor: '#f7f5f2', 
-                borderColor: '#b99364'
-              }}
+            <Card className="text-center border-2" style={{ backgroundColor: '#f7f5f2', borderColor: '#b99364' }}>
+              <CardHeader>
+                <div className="mx-auto mb-4 p-3 rounded-full w-fit" style={{ backgroundColor: '#b99364' }}>
+                  <Users className="h-6 w-6 text-white" />
+                </div>
+                <CardTitle className="text-lg" style={{ color: '#1a2238' }}>Client Collaboration</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm" style={{ color: '#999999' }}>
+                  Keep clients engaged with real-time updates and seamless communication tools.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="text-center border-2" style={{ backgroundColor: '#f7f5f2', borderColor: '#b99364' }}>
+              <CardHeader>
+                <div className="mx-auto mb-4 p-3 rounded-full w-fit" style={{ backgroundColor: '#b99364' }}>
+                  <Camera className="h-6 w-6 text-white" />
+                </div>
+                <CardTitle className="text-lg" style={{ color: '#1a2238' }}>Professional Tools</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm" style={{ color: '#999999' }}>
+                  Access industry-leading tools for project management, financial tracking, and team coordination.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="text-center border-2" style={{ backgroundColor: '#f7f5f2', borderColor: '#b99364' }}>
+              <CardHeader>
+                <div className="mx-auto mb-4 p-3 rounded-full w-fit" style={{ backgroundColor: '#b99364' }}>
+                  <UserPlus className="h-6 w-6 text-white" />
+                </div>
+                <CardTitle className="text-lg" style={{ color: '#1a2238' }}>Talent Network</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm" style={{ color: '#999999' }}>
+                  Connect with skilled photographers, editors, and specialists to grow your business.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Get Started Section */}
+      <section className="py-20 px-4" style={{ backgroundColor: '#f7f5f2' }}>
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-4xl font-bold mb-8" style={{ color: '#1a2238' }}>
+            Ready to Get Started?
+          </h2>
+          <p className="text-xl mb-12" style={{ color: '#999999' }}>
+            Join thousands of photographers and videographers who have transformed their business with StudioSync.
+          </p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-2xl mx-auto">
+            <Button 
               onClick={() => navigate('/photographers')}
+              size="lg"
+              className="h-16 text-lg text-white"
+              style={{ backgroundColor: '#1a2238' }}
             >
-              <CardHeader className="text-center">
-                <div className="mx-auto mb-4 p-4 rounded-full w-fit" style={{ backgroundColor: '#b99364' }}>
-                  <Users className="h-12 w-12 text-white" />
-                </div>
-                <CardTitle className="text-2xl" style={{ color: '#1a2238' }}>Photographers Portal</CardTitle>
-                <CardDescription className="text-base" style={{ color: '#999999' }}>
-                  Manage your studio, clients, projects, and team collaboration
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="text-center">
-                <ul className="text-sm space-y-2 mb-6" style={{ color: '#999999' }}>
-                  <li>✓ Project management & scheduling</li>
-                  <li>✓ Client relationship management</li>
-                  <li>✓ Team collaboration tools</li>
-                  <li>✓ Financial tracking & invoicing</li>
-                </ul>
-                <Button 
-                  className="w-full text-white hover:opacity-90 transition-opacity px-4 py-1 rounded-sm h-9" 
-                  size="lg"
-                  style={{ 
-                    backgroundColor: '#1a2238'
-                  }}
-                >
-                  Access Studio Dashboard
-                </Button>
-              </CardContent>
-            </Card>
+              <Camera className="h-6 w-6 mr-2" />
+              Start as a Photographer
+            </Button>
+            
+            <Button 
+              onClick={() => navigate('/client-portal')}
+              variant="outline"
+              size="lg"
+              className="h-16 text-lg border-2"
+              style={{ 
+                borderColor: '#b99364', 
+                color: '#b99364'
+              }}
+            >
+              <Globe className="h-6 w-6 mr-2" />
+              Access Client Portal
+            </Button>
           </div>
         </div>
+      </section>
 
-        {/* Features Section - Light Section */}
-        <div className="mt-16 text-center py-16" style={{ backgroundColor: '#f7f5f2' }}>
-          <h3 className="text-2xl font-bold mb-8" style={{ color: '#b99364' }}>Why Choose StudioSync?</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="mx-auto mb-4 p-3 backdrop-blur-sm rounded-full w-fit" style={{ backgroundColor: '#b99364' }}>
-                <Calendar className="h-8 w-8 text-white" />
-              </div>
-              <h4 className="text-lg font-semibold mb-2" style={{ color: '#1a2238' }}>Streamlined Workflow</h4>
-              <p style={{ color: '#999999' }}>From pre-production to delivery, manage every aspect of your photography business</p>
-            </div>
-            <div className="text-center">
-              <div className="mx-auto mb-4 p-3 backdrop-blur-sm rounded-full w-fit" style={{ backgroundColor: '#b99364' }}>
-                <Users className="h-8 w-8 text-white" />
-              </div>
-              <h4 className="text-lg font-semibold mb-2" style={{ color: '#1a2238' }}>Client Collaboration</h4>
-              <p style={{ color: '#999999' }}>Keep clients engaged with real-time updates and seamless communication</p>
-            </div>
-            <div className="text-center">
-              <div className="mx-auto mb-4 p-3 backdrop-blur-sm rounded-full w-fit" style={{ backgroundColor: '#b99364' }}>
-                <Camera className="h-8 w-8 text-white" />
-              </div>
-              <h4 className="text-lg font-semibold mb-2" style={{ color: '#1a2238' }}>Professional Tools</h4>
-              <p style={{ color: '#999999' }}>Everything you need to run a successful photography or videography business</p>
-            </div>
-          </div>
-        </div>
-      </main>
-
-      {/* Footer - Dark Section */}
-      <footer className="backdrop-blur-sm border-t border-gray-700/20 mt-16" style={{ backgroundColor: '#0e0e11' }}>
-        <div className="max-w-6xl mx-auto px-4 py-8 text-center" style={{ color: '#f7f5f2' }}>
+      {/* Footer */}
+      <footer className="py-8 px-4 border-t border-gray-700/20" style={{ backgroundColor: '#0e0e11' }}>
+        <div className="max-w-6xl mx-auto text-center" style={{ color: '#f7f5f2' }}>
           <p>&copy; 2024 StudioSync. All rights reserved.</p>
         </div>
       </footer>
