@@ -46,9 +46,9 @@ export function HeroSection() {
               color: 'hsl(var(--dusty-blue-dark))'
             }}
           >
-            <div className="flex items-center justify-center w-full">
-              <Globe className="h-3 w-3 md:h-4 md:w-4 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-4 group-hover:translate-x-0 group-hover:mr-2" />
-              <span className="font-medium font-playfair whitespace-nowrap">Client Portal</span>
+            <div className="flex items-center justify-center w-full relative">
+              <Globe className="h-3 w-3 md:h-4 md:w-4 absolute left-0 opacity-0 group-hover:opacity-100 transition-all duration-300" />
+              <span className="font-medium font-playfair whitespace-nowrap group-hover:ml-6">Client Portal</span>
             </div>
           </Button>
 
@@ -64,9 +64,9 @@ export function HeroSection() {
               color: 'hsl(var(--dusty-blue-dark))'
             }}
           >
-            <div className="flex items-center justify-center w-full">
-              <Users className="h-3 w-3 md:h-4 md:w-4 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-4 group-hover:translate-x-0 group-hover:mr-2" />
-              <span className="font-medium font-playfair whitespace-nowrap">Photographers Portal</span>
+            <div className="flex items-center justify-center w-full relative">
+              <Users className="h-3 w-3 md:h-4 md:w-4 absolute left-0 opacity-0 group-hover:opacity-100 transition-all duration-300" />
+              <span className="font-medium font-playfair whitespace-nowrap group-hover:ml-6">Photographers Portal</span>
             </div>
           </Button>
 
@@ -82,9 +82,9 @@ export function HeroSection() {
               color: 'hsl(var(--dusty-blue-dark))'
             }}
           >
-            <div className="flex items-center justify-center w-full">
-              <UserPlus className="h-3 w-3 md:h-4 md:w-4 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-4 group-hover:translate-x-0 group-hover:mr-2" />
-              <span className="font-medium font-playfair whitespace-nowrap">Hire a Teammate</span>
+            <div className="flex items-center justify-center w-full relative">
+              <UserPlus className="h-3 w-3 md:h-4 md:w-4 absolute left-0 opacity-0 group-hover:opacity-100 transition-all duration-300" />
+              <span className="font-medium font-playfair whitespace-nowrap group-hover:ml-6">Hire a Teammate</span>
             </div>
           </Button>
         </div>
