@@ -10,7 +10,10 @@ export function useWebGL(canvasRef: React.RefObject<HTMLCanvasElement>) {
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas) {
+      console.log('Canvas not found');
+      return;
+    }
 
     const gl = canvas.getContext('webgl');
     if (!gl) {
@@ -25,14 +28,21 @@ export function useWebGL(canvasRef: React.RefObject<HTMLCanvasElement>) {
     console.log('Derivatives extension:', derivativesExt ? 'supported' : 'not supported');
     
     const fragmentShaderSource = createFragmentShaderSource(!!derivativesExt);
+    console.log('Fragment shader source length:', fragmentShaderSource.length);
 
     const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
-    const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
-    
-    if (!vertexShader || !fragmentShader) {
-      console.error('Failed to create shaders');
+    if (!vertexShader) {
+      console.error('Failed to create vertex shader');
       return;
     }
+    console.log('Vertex shader created successfully');
+
+    const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
+    if (!fragmentShader) {
+      console.error('Failed to create fragment shader');
+      return;
+    }
+    console.log('Fragment shader created successfully');
     
     const program = createProgram(gl, vertexShader, fragmentShader);
     if (!program) {
@@ -44,6 +54,8 @@ export function useWebGL(canvasRef: React.RefObject<HTMLCanvasElement>) {
 
     const positionBuffer = createFullScreenQuadBuffer(gl);
     const locations = getShaderLocations(gl, program);
+    
+    console.log('Locations:', locations);
 
     function resize() {
       if (!canvas) return;
@@ -51,6 +63,7 @@ export function useWebGL(canvasRef: React.RefObject<HTMLCanvasElement>) {
       canvas.width = window.innerWidth * window.devicePixelRatio;
       canvas.height = window.innerHeight * window.devicePixelRatio;
       gl.viewport(0, 0, canvas.width, canvas.height);
+      console.log('Canvas resized to:', canvas.width, 'x', canvas.height);
     }
 
     function handleMouseMove(event: MouseEvent) {
@@ -66,10 +79,14 @@ export function useWebGL(canvasRef: React.RefObject<HTMLCanvasElement>) {
     }
 
     function render() {
-      if (!gl || !program) return;
+      if (!gl || !program) {
+        console.error('GL or program not available in render');
+        return;
+      }
       
       timeRef.current += 0.016;
       
+      // Clear with transparent background
       gl.clearColor(0.0, 0.0, 0.0, 0.0);
       gl.clear(gl.COLOR_BUFFER_BIT);
       
@@ -77,15 +94,30 @@ export function useWebGL(canvasRef: React.RefObject<HTMLCanvasElement>) {
       gl.enable(gl.BLEND);
       gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
       
-      gl.uniform2f(locations.resolution, canvas!.width, canvas!.height);
-      gl.uniform2f(locations.mouse, mouseRef.current.x, mouseRef.current.y);
-      gl.uniform1f(locations.time, timeRef.current);
+      // Set uniforms
+      if (locations.resolution) {
+        gl.uniform2f(locations.resolution, canvas!.width, canvas!.height);
+      }
+      if (locations.mouse) {
+        gl.uniform2f(locations.mouse, mouseRef.current.x, mouseRef.current.y);
+      }
+      if (locations.time) {
+        gl.uniform1f(locations.time, timeRef.current);
+      }
       
+      // Set up vertex attributes
       gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
       gl.enableVertexAttribArray(locations.position);
       gl.vertexAttribPointer(locations.position, 2, gl.FLOAT, false, 0, 0);
       
+      // Draw
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+      
+      // Check for GL errors
+      const error = gl.getError();
+      if (error !== gl.NO_ERROR) {
+        console.error('WebGL error:', error);
+      }
       
       animationRef.current = requestAnimationFrame(render);
     }
@@ -98,6 +130,7 @@ export function useWebGL(canvasRef: React.RefObject<HTMLCanvasElement>) {
     render();
 
     return () => {
+      console.log('Cleaning up WebGL');
       window.removeEventListener('resize', resize);
       window.removeEventListener('mousemove', handleMouseMove);
       if (animationRef.current) {

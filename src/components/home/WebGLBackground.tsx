@@ -1,11 +1,18 @@
 
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import { useWebGL } from './webgl/useWebGL';
 
 export function WebGLBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   
   useWebGL(canvasRef);
+
+  useEffect(() => {
+    console.log('WebGLBackground component mounted');
+    return () => {
+      console.log('WebGLBackground component unmounted');
+    };
+  }, []);
 
   return (
     <canvas
@@ -14,7 +21,8 @@ export function WebGLBackground() {
       style={{ 
         width: '100vw',
         height: '100vh',
-        background: 'transparent'
+        background: 'transparent',
+        display: 'block'
       }}
     />
   );
