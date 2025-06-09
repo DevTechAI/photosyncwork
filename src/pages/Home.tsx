@@ -16,7 +16,7 @@ export default function Home() {
             <img 
               src="/lovable-uploads/b5a2c474-15f8-4a49-b102-73278d7c52f1.png" 
               alt="StudioSync Logo" 
-              className="h-23 w-auto object-contain"
+              className="h-5 w-auto object-contain"
             />
             <div className="absolute right-4 flex items-center gap-4">
               <Button 
