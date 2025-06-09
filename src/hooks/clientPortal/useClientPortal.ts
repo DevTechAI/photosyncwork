@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { ClientPortalData, ClientDeliverable, ClientFeedback } from "@/types/clientPortal";
+import { ClientPortalData, ClientDeliverable, ClientFeedback, ClientPortalAccess } from "@/types/clientPortal";
 import { useToast } from "@/components/ui/use-toast";
 
 export function useClientPortal(accessCode: string) {
@@ -68,10 +68,48 @@ export function useClientPortal(accessCode: string) {
         .eq('id', accessData.event_id)
         .single();
 
+      // Transform database objects to match TypeScript interfaces
+      const transformedAccess: ClientPortalAccess = {
+        id: accessData.id,
+        eventId: accessData.event_id,
+        accessCode: accessData.access_code,
+        clientName: accessData.client_name,
+        clientEmail: accessData.client_email,
+        passwordHash: accessData.password_hash,
+        expiresAt: accessData.expires_at,
+        isActive: accessData.is_active,
+        createdAt: accessData.created_at,
+        updatedAt: accessData.updated_at
+      };
+
+      const transformedDeliverables: ClientDeliverable[] = (deliverables || []).map(d => ({
+        id: d.id,
+        eventId: d.event_id,
+        fileName: d.file_name,
+        fileUrl: d.file_url,
+        fileType: d.file_type,
+        fileSize: d.file_size,
+        isApproved: d.is_approved,
+        isWatermarked: d.is_watermarked,
+        downloadCount: d.download_count,
+        createdAt: d.created_at,
+        updatedAt: d.updated_at
+      }));
+
+      const transformedFeedback: ClientFeedback[] = (feedback || []).map(f => ({
+        id: f.id,
+        eventId: f.event_id,
+        deliverableId: f.deliverable_id,
+        feedbackText: f.feedback_text,
+        status: f.status as 'pending' | 'approved' | 'revision_requested',
+        createdAt: f.created_at,
+        updatedAt: f.updated_at
+      }));
+
       setPortalData({
-        access: accessData,
-        deliverables: deliverables || [],
-        feedback: feedback || [],
+        access: transformedAccess,
+        deliverables: transformedDeliverables,
+        feedback: transformedFeedback,
         eventDetails: eventData || undefined
       });
 

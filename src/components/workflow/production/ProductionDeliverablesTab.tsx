@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +11,7 @@ import { UserCircle, Calendar, Clock, CheckCircle, Upload } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { ScheduledEvent } from "@/components/scheduling/types";
 import { supabase } from "@/integrations/supabase/client";
-import { CreateClientAccess } from "./CreateClientAccess";
+import { CreateClientAccess } from "@/components/clientPortal/CreateClientAccess";
 
 interface Deliverable {
   id: string;
