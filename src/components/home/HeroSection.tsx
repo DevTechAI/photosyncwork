@@ -38,7 +38,7 @@ export function HeroSection() {
           <Button 
             onClick={() => navigate('/client-portal')}
             variant="outline" 
-            className={`group h-9 md:h-10 px-4 md:px-6 py-2 border-2 text-xs md:text-sm transition-all duration-700 ease-in-out overflow-hidden bg-dustyBlue-whisper/70 backdrop-blur-md hover:bg-dustyBlue-soft hover:shadow-xl hover:px-8 md:hover:px-10 ${
+            className={`group h-9 md:h-10 px-4 md:px-6 py-2 border-2 text-xs md:text-sm transition-all duration-700 ease-in-out overflow-hidden bg-dustyBlue-whisper/70 backdrop-blur-md hover:bg-dustyBlue-soft hover:shadow-xl hover:px-8 md:hover:px-10 flex items-center justify-center ${
               buttonsVisible ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0'
             }`}
             style={{ 
@@ -46,17 +46,15 @@ export function HeroSection() {
               color: 'hsl(var(--dusty-blue-dark))'
             }}
           >
-            <div className="flex items-center justify-center">
-              <Globe className="h-3 w-3 md:h-4 md:w-4 mr-0 group-hover:mr-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-4 group-hover:translate-x-0" />
-              <span className="font-medium font-playfair whitespace-nowrap">Client Portal</span>
-            </div>
+            <Globe className="h-3 w-3 md:h-4 md:w-4 mr-0 group-hover:mr-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-4 group-hover:translate-x-0" />
+            <span className="font-medium font-playfair whitespace-nowrap">Client Portal</span>
           </Button>
 
           {/* Center Button - Photographers Portal */}
           <Button 
             onClick={() => navigate('/photographers')}
             variant="outline" 
-            className={`group h-9 md:h-10 px-4 md:px-6 py-2 border-2 text-xs md:text-sm transition-all duration-700 ease-in-out overflow-hidden md:absolute md:left-1/2 md:transform md:-translate-x-1/2 bg-dustyBlue-whisper/70 backdrop-blur-md hover:bg-dustyBlue-soft hover:shadow-xl hover:px-8 md:hover:px-12 ${
+            className={`group h-9 md:h-10 px-4 md:px-6 py-2 border-2 text-xs md:text-sm transition-all duration-700 ease-in-out overflow-hidden md:absolute md:left-1/2 md:transform md:-translate-x-1/2 bg-dustyBlue-whisper/70 backdrop-blur-md hover:bg-dustyBlue-soft hover:shadow-xl hover:px-8 md:hover:px-12 flex items-center justify-center ${
               buttonsVisible ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'
             }`}
             style={{ 
@@ -64,17 +62,15 @@ export function HeroSection() {
               color: 'hsl(var(--dusty-blue-dark))'
             }}
           >
-            <div className="flex items-center justify-center">
-              <Users className="h-3 w-3 md:h-4 md:w-4 mr-0 group-hover:mr-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-4 group-hover:translate-x-0" />
-              <span className="font-medium font-playfair whitespace-nowrap">Photographers Portal</span>
-            </div>
+            <Users className="h-3 w-3 md:h-4 md:w-4 mr-0 group-hover:mr-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-4 group-hover:translate-x-0" />
+            <span className="font-medium font-playfair whitespace-nowrap">Photographers Portal</span>
           </Button>
 
           {/* Right Button - Hire a Teammate */}
           <Button 
             onClick={() => navigate('/hire')}
             variant="outline" 
-            className={`group h-9 md:h-10 px-4 md:px-6 py-2 border-2 text-xs md:text-sm transition-all duration-700 ease-in-out overflow-hidden bg-dustyBlue-whisper/70 backdrop-blur-md hover:bg-dustyBlue-soft hover:shadow-xl hover:px-8 md:hover:px-10 ${
+            className={`group h-9 md:h-10 px-4 md:px-6 py-2 border-2 text-xs md:text-sm transition-all duration-700 ease-in-out overflow-hidden bg-dustyBlue-whisper/70 backdrop-blur-md hover:bg-dustyBlue-soft hover:shadow-xl hover:px-8 md:hover:px-10 flex items-center justify-center ${
               buttonsVisible ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
             }`}
             style={{ 
@@ -82,10 +78,8 @@ export function HeroSection() {
               color: 'hsl(var(--dusty-blue-dark))'
             }}
           >
-            <div className="flex items-center justify-center">
-              <UserPlus className="h-3 w-3 md:h-4 md:w-4 mr-0 group-hover:mr-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-4 group-hover:translate-x-0" />
-              <span className="font-medium font-playfair whitespace-nowrap">Hire a Teammate</span>
-            </div>
+            <UserPlus className="h-3 w-3 md:h-4 md:w-4 mr-0 group-hover:mr-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-4 group-hover:translate-x-0" />
+            <span className="font-medium font-playfair whitespace-nowrap">Hire a Teammate</span>
           </Button>
         </div>
       </div>
