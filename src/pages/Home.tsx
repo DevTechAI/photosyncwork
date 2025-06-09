@@ -12,18 +12,12 @@ export default function Home() {
       <header className="bg-white/95 backdrop-blur-sm shadow-sm border-b">
         <div className="max-w-6xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-royal/10 rounded-lg">
-                <img 
-                  src="/lovable-uploads/9746c35f-4225-4a04-b96f-ced8b3d8c0ec.png" 
-                  alt="StudioSync Logo" 
-                  className="h-8 w-8 object-contain mix-blend-multiply"
-                />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">StudioSync</h1>
-                <p className="text-sm text-gray-600">Professional Photography & Videography Platform</p>
-              </div>
+            <div className="flex items-center">
+              <img 
+                src="/lovable-uploads/9746c35f-4225-4a04-b96f-ced8b3d8c0ec.png" 
+                alt="StudioSync Logo" 
+                className="h-12 w-auto object-contain"
+              />
             </div>
             <div className="flex items-center gap-4">
               <Button onClick={() => navigate('/login')} variant="outline">
