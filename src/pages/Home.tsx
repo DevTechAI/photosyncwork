@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Camera, Users, Calendar, Globe, UserPlus, ArrowRight } from "lucide-react";
@@ -26,19 +25,8 @@ export default function Home() {
           />
         </div>
 
-        {/* Scroll Indicator - Only show when logo is hovered */}
-        <div 
-          className={`absolute bottom-24 transition-all duration-500 ${
-            logoHovered ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
-          }`}
-        >
-          <div className="w-6 h-10 border-2 rounded-full flex justify-center" style={{ borderColor: '#b99364' }}>
-            <div className="w-1 h-3 rounded-full mt-2 animate-pulse" style={{ backgroundColor: '#b99364' }}></div>
-          </div>
-        </div>
-
         {/* Three Main Buttons - Bottom of Screen */}
-        <div className="absolute bottom-8 left-0 right-0 px-8 overflow-hidden">
+        <div className="absolute bottom-16 left-0 right-0 px-8 overflow-hidden">
           <div className="flex justify-between items-center max-w-7xl mx-auto">
             {/* Left Button - Client Portal */}
             <Button 
@@ -90,6 +78,17 @@ export default function Home() {
               <UserPlus className="h-4 w-4 absolute -left-8 group-hover:left-2 transition-all duration-300 ease-in-out" />
               <span className="text-sm font-medium group-hover:ml-6 transition-all duration-300 ease-in-out">Hire a Teammate</span>
             </Button>
+          </div>
+        </div>
+
+        {/* Scroll Indicator - Bottom of page, below buttons */}
+        <div 
+          className={`absolute bottom-4 left-1/2 transform -translate-x-1/2 transition-all duration-500 ${
+            logoHovered ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+          }`}
+        >
+          <div className="w-6 h-10 border-2 rounded-full flex justify-center" style={{ borderColor: '#b99364' }}>
+            <div className="w-1 h-3 rounded-full mt-2 animate-pulse" style={{ backgroundColor: '#b99364' }}></div>
           </div>
         </div>
       </section>
