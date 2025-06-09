@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -7,7 +6,9 @@ import { Routes, Route } from "react-router-dom";
 import { UserProvider } from "@/contexts/UserContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
+import Home from "./pages/Home";
 import Login from "./pages/Login";
+import PhotographersPortal from "./pages/PhotographersPortal";
 import NotFound from "./pages/NotFound";
 import SchedulingPage from "./pages/scheduling/SchedulingPage";
 import EstimatesPage from "./pages/estimates/EstimatesPage";
@@ -30,6 +31,8 @@ function App() {
           <Toaster />
           <Sonner />
           <Routes>
+            <Route path="/home" element={<Home />} />
+            <Route path="/photographers" element={<PhotographersPortal />} />
             <Route path="/login" element={<Login />} />
             <Route path="/client-portal" element={<ClientPortal />} />
             <Route path="/gallery" element={<Gallery />} />
