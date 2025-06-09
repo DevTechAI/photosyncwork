@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Camera, Users, Calendar, Globe, UserPlus, ArrowRight } from "lucide-react";
@@ -20,8 +19,8 @@ export default function Home() {
           />
         </div>
 
-        {/* Four Main Buttons */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-4xl w-full">
+        {/* Three Main Buttons */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl w-full">
           <Button 
             onClick={() => navigate('/client-portal')}
             variant="outline" 
@@ -62,20 +61,6 @@ export default function Home() {
           >
             <UserPlus className="h-5 w-5" />
             <span className="text-xs font-medium">Hire a Teammate</span>
-          </Button>
-
-          <Button 
-            onClick={() => navigate('/login')}
-            variant="outline" 
-            className="h-14 flex flex-col gap-1 border-2 hover:bg-transparent px-3 py-2"
-            style={{ 
-              borderColor: '#b99364', 
-              color: '#b99364',
-              backgroundColor: 'transparent'
-            }}
-          >
-            <ArrowRight className="h-5 w-5" />
-            <span className="text-xs font-medium">Sign In</span>
           </Button>
         </div>
 
