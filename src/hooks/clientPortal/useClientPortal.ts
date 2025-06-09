@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ClientPortalData, ClientDeliverable, ClientFeedback, ClientPortalAccess } from "@/types/clientPortal";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 export function useClientPortal(accessCode: string) {
   const [portalData, setPortalData] = useState<ClientPortalData | null>(null);

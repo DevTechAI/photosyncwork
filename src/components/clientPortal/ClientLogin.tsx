@@ -47,10 +47,11 @@ export function ClientLogin({ onLogin, loading, error }: ClientLoginProps) {
                   placeholder="Enter your access code"
                   value={accessCode}
                   onChange={(e) => setAccessCode(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 cursor-text"
                   disabled={loading}
                   autoComplete="off"
                   autoFocus
+                  style={{ cursor: loading ? 'not-allowed' : 'text' }}
                 />
               </div>
             </div>
