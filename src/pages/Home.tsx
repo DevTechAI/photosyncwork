@@ -8,7 +8,7 @@ export default function Home() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-velvet-whisper to-velvet-soft">
+    <div className="min-h-screen bg-velvet" style={{ backgroundColor: 'hsl(228, 45%, 25%)' }}>
       {/* Header */}
       <header className="bg-velvet backdrop-blur-sm shadow-sm border-b border-velvet-light/20">
         <div className="max-w-6xl mx-auto px-4 py-6">
@@ -32,10 +32,10 @@ export default function Home() {
       {/* Hero Section */}
       <main className="max-w-6xl mx-auto px-4 py-12">
         <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold text-velvet-dark mb-4">
+          <h2 className="text-4xl font-bold mb-4" style={{ color: '#b99364' }}>
             Welcome to StudioSync
           </h2>
-          <p className="text-xl text-velvet-muted max-w-2xl mx-auto">
+          <p className="text-xl max-w-2xl mx-auto" style={{ color: '#b99364' }}>
             The complete platform for photographers, videographers, and their clients to collaborate seamlessly
           </p>
         </div>
@@ -46,15 +46,15 @@ export default function Home() {
           <Card className="hover:shadow-lg transition-shadow cursor-pointer bg-white/95 backdrop-blur-sm border-velvet/20 hover:border-velvet/40" onClick={() => navigate('/client-portal')}>
             <CardHeader className="text-center">
               <div className="mx-auto mb-4 p-4 bg-velvet/10 rounded-full w-fit">
-                <Globe className="h-12 w-12 text-velvet-dark" />
+                <Globe className="h-12 w-12" style={{ color: '#b99364' }} />
               </div>
-              <CardTitle className="text-2xl text-velvet-dark">Client Portal</CardTitle>
-              <CardDescription className="text-base text-velvet-muted">
+              <CardTitle className="text-2xl" style={{ color: '#b99364' }}>Client Portal</CardTitle>
+              <CardDescription className="text-base" style={{ color: '#b99364' }}>
                 Access your project deliverables, view photos and videos, and provide feedback
               </CardDescription>
             </CardHeader>
             <CardContent className="text-center">
-              <ul className="text-sm text-velvet-muted space-y-2 mb-6">
+              <ul className="text-sm space-y-2 mb-6" style={{ color: '#b99364' }}>
                 <li>✓ View and download your photos & videos</li>
                 <li>✓ Browse gallery of your events</li>
                 <li>✓ Provide feedback and approvals</li>
@@ -70,15 +70,15 @@ export default function Home() {
           <Card className="hover:shadow-lg transition-shadow cursor-pointer bg-white/95 backdrop-blur-sm border-velvet/20 hover:border-velvet/40" onClick={() => navigate('/photographers')}>
             <CardHeader className="text-center">
               <div className="mx-auto mb-4 p-4 bg-velvet/10 rounded-full w-fit">
-                <Users className="h-12 w-12 text-velvet-dark" />
+                <Users className="h-12 w-12" style={{ color: '#b99364' }} />
               </div>
-              <CardTitle className="text-2xl text-velvet-dark">Photographers Portal</CardTitle>
-              <CardDescription className="text-base text-velvet-muted">
+              <CardTitle className="text-2xl" style={{ color: '#b99364' }}>Photographers Portal</CardTitle>
+              <CardDescription className="text-base" style={{ color: '#b99364' }}>
                 Manage your studio, clients, projects, and team collaboration
               </CardDescription>
             </CardHeader>
             <CardContent className="text-center">
-              <ul className="text-sm text-velvet-muted space-y-2 mb-6">
+              <ul className="text-sm space-y-2 mb-6" style={{ color: '#b99364' }}>
                 <li>✓ Project management & scheduling</li>
                 <li>✓ Client relationship management</li>
                 <li>✓ Team collaboration tools</li>
@@ -93,28 +93,28 @@ export default function Home() {
 
         {/* Features Section */}
         <div className="mt-16 text-center">
-          <h3 className="text-2xl font-bold text-velvet-dark mb-8">Why Choose StudioSync?</h3>
+          <h3 className="text-2xl font-bold mb-8" style={{ color: '#b99364' }}>Why Choose StudioSync?</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="text-center">
               <div className="mx-auto mb-4 p-3 bg-velvet/20 backdrop-blur-sm rounded-full w-fit">
-                <Calendar className="h-8 w-8 text-velvet-dark" />
+                <Calendar className="h-8 w-8" style={{ color: '#b99364' }} />
               </div>
-              <h4 className="text-lg font-semibold mb-2 text-velvet-dark">Streamlined Workflow</h4>
-              <p className="text-velvet-muted">From pre-production to delivery, manage every aspect of your photography business</p>
+              <h4 className="text-lg font-semibold mb-2" style={{ color: '#b99364' }}>Streamlined Workflow</h4>
+              <p style={{ color: '#b99364' }}>From pre-production to delivery, manage every aspect of your photography business</p>
             </div>
             <div className="text-center">
               <div className="mx-auto mb-4 p-3 bg-velvet/20 backdrop-blur-sm rounded-full w-fit">
-                <Users className="h-8 w-8 text-velvet-dark" />
+                <Users className="h-8 w-8" style={{ color: '#b99364' }} />
               </div>
-              <h4 className="text-lg font-semibold mb-2 text-velvet-dark">Client Collaboration</h4>
-              <p className="text-velvet-muted">Keep clients engaged with real-time updates and seamless communication</p>
+              <h4 className="text-lg font-semibold mb-2" style={{ color: '#b99364' }}>Client Collaboration</h4>
+              <p style={{ color: '#b99364' }}>Keep clients engaged with real-time updates and seamless communication</p>
             </div>
             <div className="text-center">
               <div className="mx-auto mb-4 p-3 bg-velvet/20 backdrop-blur-sm rounded-full w-fit">
-                <Camera className="h-8 w-8 text-velvet-dark" />
+                <Camera className="h-8 w-8" style={{ color: '#b99364' }} />
               </div>
-              <h4 className="text-lg font-semibold mb-2 text-velvet-dark">Professional Tools</h4>
-              <p className="text-velvet-muted">Everything you need to run a successful photography or videography business</p>
+              <h4 className="text-lg font-semibold mb-2" style={{ color: '#b99364' }}>Professional Tools</h4>
+              <p style={{ color: '#b99364' }}>Everything you need to run a successful photography or videography business</p>
             </div>
           </div>
         </div>
@@ -122,7 +122,7 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="bg-white/95 backdrop-blur-sm border-t border-velvet/10 mt-16">
-        <div className="max-w-6xl mx-auto px-4 py-8 text-center text-velvet-muted">
+        <div className="max-w-6xl mx-auto px-4 py-8 text-center" style={{ color: '#b99364' }}>
           <p>&copy; 2024 StudioSync. All rights reserved.</p>
         </div>
       </footer>
