@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Camera, Users, Calendar, Globe, UserPlus, ArrowRight } from "lucide-react";
@@ -27,7 +28,7 @@ export default function Home() {
 
         {/* Three Main Buttons - Bottom of Screen */}
         <div className="absolute bottom-16 left-0 right-0 px-8 overflow-hidden">
-          <div className="flex justify-between items-center max-w-7xl mx-auto">
+          <div className="flex justify-center items-center gap-8 max-w-7xl mx-auto">
             {/* Left Button - Client Portal */}
             <Button 
               onClick={() => navigate('/client-portal')}
