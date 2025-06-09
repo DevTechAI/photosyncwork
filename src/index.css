@@ -41,12 +41,12 @@
     --royal-light: 220 10% 92%;
     --royal-dark: 220 20% 82%;
 
-    --ocean: 210 70% 75%;
-    --ocean-dark: 210 55% 55%;
-    --ocean-light: 210 45% 85%;
-    --ocean-muted: 210 35% 65%;
-    --sky: 200 35% 95%;
-    --sky-light: 200 25% 98%;
+    --velvet: 228 45% 25%;
+    --velvet-dark: 228 55% 20%;
+    --velvet-light: 228 35% 35%;
+    --velvet-muted: 228 25% 45%;
+    --velvet-soft: 228 20% 85%;
+    --velvet-whisper: 228 15% 95%;
 
     --radius: 0.75rem;
   }

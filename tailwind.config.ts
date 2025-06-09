@@ -57,15 +57,13 @@ export default {
           light: "hsl(var(--royal-light))",
           dark: "hsl(var(--royal-dark))",
         },
-        ocean: {
-          DEFAULT: "hsl(var(--ocean))",
-          dark: "hsl(var(--ocean-dark))",
-          light: "hsl(var(--ocean-light))",
-          muted: "hsl(var(--ocean-muted))",
-        },
-        sky: {
-          DEFAULT: "hsl(var(--sky))",
-          light: "hsl(var(--sky-light))",
+        velvet: {
+          DEFAULT: "hsl(var(--velvet))",
+          dark: "hsl(var(--velvet-dark))",
+          light: "hsl(var(--velvet-light))",
+          muted: "hsl(var(--velvet-muted))",
+          soft: "hsl(var(--velvet-soft))",
+          whisper: "hsl(var(--velvet-whisper))",
         },
       },
       borderRadius: {
