@@ -57,15 +57,15 @@ export default {
           light: "hsl(var(--royal-light))",
           dark: "hsl(var(--royal-dark))",
         },
-        gold: {
-          DEFAULT: "hsl(var(--gold))",
-          dark: "hsl(var(--gold-dark))",
-          light: "hsl(var(--gold-light))",
-          muted: "hsl(var(--gold-muted))",
+        ocean: {
+          DEFAULT: "hsl(var(--ocean))",
+          dark: "hsl(var(--ocean-dark))",
+          light: "hsl(var(--ocean-light))",
+          muted: "hsl(var(--ocean-muted))",
         },
-        cream: {
-          DEFAULT: "hsl(var(--cream))",
-          light: "hsl(var(--cream-light))",
+        sky: {
+          DEFAULT: "hsl(var(--sky))",
+          light: "hsl(var(--sky-light))",
         },
       },
       borderRadius: {

@@ -41,12 +41,12 @@
     --royal-light: 220 10% 92%;
     --royal-dark: 220 20% 82%;
 
-    --gold: 35 65% 65%;
-    --gold-dark: 35 45% 45%;
-    --gold-light: 35 45% 85%;
-    --gold-muted: 35 25% 55%;
-    --cream: 35 25% 95%;
-    --cream-light: 35 15% 98%;
+    --ocean: 210 70% 75%;
+    --ocean-dark: 210 55% 55%;
+    --ocean-light: 210 45% 85%;
+    --ocean-muted: 210 35% 65%;
+    --sky: 200 35% 95%;
+    --sky-light: 200 25% 98%;
 
     --radius: 0.75rem;
   }
