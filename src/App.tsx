@@ -7,6 +7,7 @@ import { UserProvider } from "@/contexts/UserContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Home from "./pages/Home";
+import Hire from "./pages/Hire";
 import Login from "./pages/Login";
 import PhotographersPortal from "./pages/PhotographersPortal";
 import NotFound from "./pages/NotFound";
@@ -32,6 +33,7 @@ function App() {
           <Sonner />
           <Routes>
             <Route path="/home" element={<Home />} />
+            <Route path="/hire" element={<Hire />} />
             <Route path="/photographers" element={<PhotographersPortal />} />
             <Route path="/login" element={<Login />} />
             <Route path="/client-portal" element={<ClientPortal />} />

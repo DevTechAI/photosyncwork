@@ -1,6 +1,7 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Camera, Users, Calendar, Globe } from "lucide-react";
+import { Camera, Users, Calendar, Globe, UserPlus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export default function Home() {
@@ -17,7 +18,20 @@ export default function Home() {
               alt="StudioSync Logo" 
               className="h-20 w-auto object-contain"
             />
-            <div className="absolute right-4">
+            <div className="absolute right-4 flex items-center gap-4">
+              <Button 
+                onClick={() => navigate('/hire')} 
+                variant="outline" 
+                className="border-2 hover:bg-transparent"
+                style={{ 
+                  borderColor: '#b99364', 
+                  color: '#b99364',
+                  backgroundColor: 'transparent'
+                }}
+              >
+                <UserPlus className="h-4 w-4 mr-2" />
+                Hire Talent
+              </Button>
               <Button 
                 onClick={() => navigate('/login')} 
                 variant="outline" 
