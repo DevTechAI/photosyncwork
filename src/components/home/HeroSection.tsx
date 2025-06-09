@@ -13,11 +13,11 @@ export function HeroSection() {
   
   return (
     <section className="min-h-screen flex flex-col items-center justify-center px-4 relative overflow-hidden">
-      {/* WebGL Background */}
+      {/* WebGL Background - Full Screen */}
       <WebGLBackground />
       
-      {/* Gradient Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-dustyBlue-whisper/80 via-warmWhite/70 to-sage-light/60 z-10"></div>
+      {/* Gradient Overlay - Reduced opacity to show WebGL background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-dustyBlue-whisper/40 via-warmWhite/30 to-sage-light/20 z-10"></div>
       
       {/* Logo */}
       <div 

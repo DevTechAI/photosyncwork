@@ -10,12 +10,10 @@ export function WebGLBackground() {
   return (
     <canvas
       ref={canvasRef}
-      className="fixed top-4 right-4 pointer-events-none z-10 rounded-lg shadow-lg"
+      className="fixed inset-0 w-full h-full pointer-events-none z-0"
       style={{ 
-        width: '10vw',
-        height: '10vh',
-        minWidth: '120px',
-        minHeight: '80px',
+        width: '100vw',
+        height: '100vh',
         background: 'transparent'
       }}
     />

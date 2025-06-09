@@ -47,20 +47,18 @@ export function useWebGL(canvasRef: React.RefObject<HTMLCanvasElement>) {
 
     function resize() {
       if (!canvas) return;
-      // Set canvas internal resolution to match display size
-      const rect = canvas.getBoundingClientRect();
-      canvas.width = rect.width * window.devicePixelRatio;
-      canvas.height = rect.height * window.devicePixelRatio;
+      // Set canvas size to full viewport
+      canvas.width = window.innerWidth * window.devicePixelRatio;
+      canvas.height = window.innerHeight * window.devicePixelRatio;
       gl.viewport(0, 0, canvas.width, canvas.height);
     }
 
     function handleMouseMove(event: MouseEvent) {
-      // Convert global mouse position to relative to the small canvas
-      const rect = canvas.getBoundingClientRect();
-      const x = (event.clientX - rect.left) / rect.width;
-      const y = 1.0 - (event.clientY - rect.top) / rect.height;
+      // Convert global mouse position to normalized coordinates (0-1)
+      const x = event.clientX / window.innerWidth;
+      const y = 1.0 - (event.clientY / window.innerHeight);
       
-      // Clamp values to 0-1 range and apply smoothing
+      // Apply smoothing to mouse movement
       mouseRef.current = {
         x: Math.max(0, Math.min(1, x)),
         y: Math.max(0, Math.min(1, y))
