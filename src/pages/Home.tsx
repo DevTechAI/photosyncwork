@@ -10,7 +10,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-velvet-whisper to-velvet-soft">
       {/* Header */}
-      <header className="bg-white/95 backdrop-blur-sm shadow-sm border-b border-velvet/10">
+      <header className="bg-velvet backdrop-blur-sm shadow-sm border-b border-velvet-light/20">
         <div className="max-w-6xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
@@ -21,7 +21,7 @@ export default function Home() {
               />
             </div>
             <div className="flex items-center gap-4">
-              <Button onClick={() => navigate('/login')} variant="outline" className="border-velvet/30 text-velvet-dark hover:bg-velvet/10">
+              <Button onClick={() => navigate('/login')} variant="outline" className="border-white/30 text-white hover:bg-white/10 hover:text-white">
                 Sign In
               </Button>
             </div>
