@@ -19,6 +19,8 @@ import ProductionPage from "./pages/workflow/ProductionPage";
 import PostProductionPage from "./pages/workflow/PostProductionPage";
 import RealtimeTestPage from "./pages/RealtimeTestPage";
 import ClientPortal from "./pages/ClientPortal";
+import Gallery from "./pages/Gallery";
+import VideoPlayer from "./pages/VideoPlayer";
 
 function App() {
   return (
@@ -30,6 +32,8 @@ function App() {
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/client-portal" element={<ClientPortal />} />
+            <Route path="/gallery" element={<Gallery />} />
+            <Route path="/video-player/:videoId" element={<VideoPlayer />} />
             <Route
               path="/"
               element={
