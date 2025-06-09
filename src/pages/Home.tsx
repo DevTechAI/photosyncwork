@@ -8,7 +8,7 @@ export default function Home() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-velvet via-velvet-light to-velvet-muted">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
       {/* Header */}
       <header className="bg-velvet backdrop-blur-sm shadow-sm border-b border-velvet-light/20">
         <div className="max-w-6xl mx-auto px-4 py-6">
