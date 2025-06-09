@@ -32,32 +32,30 @@ export const createFragmentShaderSource = (derivativesExt: boolean) => `
   float plexusLines(vec2 uv, vec2 mouse) {
     float lines = 0.0;
     
-    // Fixed array of points with constant size
-    vec2 points[20];
+    // Smaller array of points for more subtle effect
+    vec2 points[12];
     
-    // Generate points with dynamic movement
-    for(int i = 0; i < 20; i++) {
+    // Generate points with more subtle movement
+    for(int i = 0; i < 12; i++) {
       float fi = float(i);
       points[i] = vec2(
-        sin(u_time * 0.2 + fi * 0.5) * 1.8,
-        cos(u_time * 0.25 + fi * 0.6) * 1.5
+        sin(u_time * 0.15 + fi * 0.4) * 0.8,
+        cos(u_time * 0.18 + fi * 0.5) * 0.7
       );
-      points[i] += (mouse - 0.5) * 0.3;
+      points[i] += (mouse - 0.5) * 0.2;
     }
     
     // Create connections between points
-    for(int i = 0; i < 20; i++) {
+    for(int i = 0; i < 12; i++) {
       vec2 point1 = points[i];
       
-      // Connect to next few points to create network
-      for(int j = 0; j < 20; j++) {
-        if(i == j) continue;
-        
+      // Connect to fewer points for cleaner look
+      for(int j = i + 1; j < 12; j++) {
         vec2 point2 = points[j];
         float dist = length(point2 - point1);
         
-        // Only connect nearby points
-        if(dist > 1.2) continue;
+        // Only connect very nearby points
+        if(dist > 0.8) continue;
         
         vec2 lineDir = normalize(point2 - point1);
         vec2 toPoint = uv - point1;
@@ -67,19 +65,19 @@ export const createFragmentShaderSource = (derivativesExt: boolean) => `
           vec2 projection = point1 + lineDir * projLength;
           float lineDist = length(uv - projection);
           
-          // Very thin, sharp lines
-          float lineWidth = 0.002;
+          // Very thin lines
+          float lineWidth = 0.001;
           float lineStrength = 1.0 - smoothstep(0.0, lineWidth, lineDist);
           float fadeOut = 1.0 - smoothstep(0.0, dist, projLength);
           
-          lines += lineStrength * fadeOut * 0.8;
+          lines += lineStrength * fadeOut * 0.3;
         }
       }
       
-      // Add node points
+      // Smaller node points
       float nodeDist = length(uv - point1);
-      float nodeGlow = 1.0 - smoothstep(0.0, 0.01, nodeDist);
-      lines += nodeGlow * 0.5;
+      float nodeGlow = 1.0 - smoothstep(0.0, 0.005, nodeDist);
+      lines += nodeGlow * 0.2;
     }
     
     return lines;
@@ -89,48 +87,48 @@ export const createFragmentShaderSource = (derivativesExt: boolean) => `
     vec2 uv = (gl_FragCoord.xy - 0.5 * u_resolution.xy) / min(u_resolution.y, u_resolution.x);
     vec2 mouse = u_mouse;
     
-    // Enhanced fractal calculation with more visible patterns
-    vec2 c = uv * 1.5 + vec2(
-      cos(u_time * 0.4) * 0.4 + (mouse.x - 0.5) * 0.3, 
-      sin(u_time * 0.3) * 0.3 + (mouse.y - 0.5) * 0.3
+    // Smaller, more subtle fractal calculation
+    vec2 c = uv * 0.8 + vec2(
+      cos(u_time * 0.3) * 0.2 + (mouse.x - 0.5) * 0.15, 
+      sin(u_time * 0.25) * 0.15 + (mouse.y - 0.5) * 0.15
     );
     float f = fractal(vec2(0.0), c);
     
-    // Multiple fractal layers for depth and complexity
-    float glass1 = fractal(uv * 0.8 + vec2(sin(u_time * 0.6), cos(u_time * 0.7)) * 0.1, c * 0.9);
-    float glass2 = fractal(uv * 1.2, c * 1.1);
+    // Lighter fractal layers
+    float glass1 = fractal(uv * 0.5 + vec2(sin(u_time * 0.4), cos(u_time * 0.5)) * 0.05, c * 0.7);
+    float glass2 = fractal(uv * 0.9, c * 0.8);
     
-    // Dense plexus network
+    // Subtle plexus network
     float plexus = plexusLines(uv, mouse);
     
-    // Combine fractal layers with higher intensity
-    float combined = (f * 0.6 + glass1 * 0.3 + glass2 * 0.1) * 2.0;
+    // Much more subtle combination
+    float combined = (f * 0.4 + glass1 * 0.2 + glass2 * 0.1) * 0.8;
     
-    // High contrast color palette - much more visible
-    vec3 baseColor = vec3(0.2, 0.4, 0.8);      // Strong blue
-    vec3 midColor = vec3(0.4, 0.6, 0.9);       // Brighter blue
-    vec3 darkColor = vec3(0.1, 0.2, 0.6);      // Deep blue
-    vec3 plexusColor = vec3(0.8, 0.9, 1.0);    // Bright white-blue for lines
+    // Very subtle color palette that blends with background
+    vec3 baseColor = vec3(0.85, 0.87, 0.92);      // Very light blue-gray
+    vec3 midColor = vec3(0.78, 0.82, 0.88);       // Slightly darker blue-gray
+    vec3 darkColor = vec3(0.88, 0.90, 0.94);      // Almost white
+    vec3 plexusColor = vec3(0.75, 0.80, 0.87);    // Subtle blue-gray for lines
     
-    // Enhanced color mapping with much higher contrast
-    vec3 fractalColor = mix(baseColor, midColor, combined);
-    fractalColor = mix(fractalColor, darkColor, combined * 0.5);
+    // Very subtle color mapping
+    vec3 fractalColor = mix(baseColor, midColor, combined * 0.3);
+    fractalColor = mix(fractalColor, darkColor, combined * 0.2);
     
-    // Make plexus lines very visible
-    vec3 finalColor = mix(fractalColor, plexusColor, plexus * 3.0);
+    // Blend plexus lines very subtly
+    vec3 finalColor = mix(fractalColor, plexusColor, plexus * 0.8);
     
-    // Add fractal edge detection for more defined shapes
+    // Add very subtle edge detection
     ${derivativesExt ? `
     float edge = abs(dFdx(combined)) + abs(dFdy(combined));
-    finalColor += plexusColor * edge * 5.0;
+    finalColor += plexusColor * edge * 0.5;
     ` : `
-    float edge = smoothstep(0.2, 0.4, combined) - smoothstep(0.6, 0.8, combined);
-    finalColor += plexusColor * edge * 2.0;
+    float edge = smoothstep(0.1, 0.3, combined) - smoothstep(0.4, 0.6, combined);
+    finalColor += plexusColor * edge * 0.3;
     `}
     
-    // Much higher alpha for strong visibility
-    float alpha = 0.7 + combined * 0.8 + plexus * 1.2;
-    alpha = min(alpha, 1.0);
+    // Very low alpha for subtle blending with background
+    float alpha = 0.15 + combined * 0.2 + plexus * 0.3;
+    alpha = min(alpha, 0.4);
     
     gl_FragColor = vec4(finalColor, alpha);
   }
