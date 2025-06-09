@@ -45,8 +45,9 @@ export const createFragmentShaderSource = (derivativesExt: boolean) => `
       
       float dist = length(uv - point);
       
-      // Create lines between points
-      for(int j = i + 1; j < 8; j++) {
+      // Create lines between points - fix the loop variable issue
+      for(int j = 0; j < 8; j++) {
+        if(j <= i) continue; // Skip if j <= i to avoid duplicate connections
         float fj = float(j);
         vec2 point2 = vec2(
           sin(u_time * 0.25 + fj * 0.7) * 0.7,
