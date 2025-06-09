@@ -4,7 +4,7 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Photo Financial Maven</title>
     
     <!-- Mobile browser theme colors -->
@@ -16,6 +16,26 @@
     <!-- Prevent yellow/colored browser chrome -->
     <meta name="format-detection" content="telephone=no" />
     <meta name="mobile-web-app-capable" content="yes" />
+    
+    <!-- Additional mobile styling -->
+    <style>
+      html, body {
+        background-color: #ffffff !important;
+        overflow-x: hidden;
+      }
+      
+      /* Hide mobile browser UI elements */
+      @media screen and (max-width: 768px) {
+        html {
+          height: -webkit-fill-available;
+        }
+        
+        body {
+          min-height: -webkit-fill-available;
+          background-color: #ffffff !important;
+        }
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
