@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Camera, Users, Calendar, Globe } from "lucide-react";
@@ -8,7 +7,7 @@ export default function Home() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#f7f5f2' }}>
+    <div className="min-h-screen" style={{ backgroundColor: '#1a2238' }}>
       {/* Header */}
       <header className="backdrop-blur-sm shadow-sm border-b border-gray-700/20" style={{ backgroundColor: '#0e0e11' }}>
         <div className="max-w-6xl mx-auto px-4 py-6">
@@ -130,7 +129,7 @@ export default function Home() {
         </div>
 
         {/* Features Section - Light Section */}
-        <div className="mt-16 text-center py-16">
+        <div className="mt-16 text-center py-16" style={{ backgroundColor: '#f7f5f2' }}>
           <h3 className="text-2xl font-bold mb-8" style={{ color: '#b99364' }}>Why Choose StudioSync?</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="text-center">
