@@ -36,10 +36,10 @@
     --input: 240 5.9% 90%;
     --ring: 240 5.9% 10%;
 
-    --royal: 250 60% 85%;
+    --royal: 220 15% 88%;
     --royal-foreground: 0 0% 98%;
-    --royal-light: 250 50% 90%;
-    --royal-dark: 250 70% 75%;
+    --royal-light: 220 10% 92%;
+    --royal-dark: 220 20% 82%;
 
     --radius: 0.75rem;
   }
