@@ -9,12 +9,12 @@ export function GetStartedSection() {
   const isMobile = useIsMobile();
   
   return (
-    <section className="py-12 md:py-20 px-4" style={{ backgroundColor: '#f7f5f2' }}>
+    <section className="py-12 md:py-20 px-4 bg-cream">
       <div className="max-w-4xl mx-auto text-center">
-        <h2 className="text-3xl md:text-4xl font-bold mb-4 md:mb-8" style={{ color: '#1a2238' }}>
+        <h2 className="text-3xl md:text-4xl font-bold mb-4 md:mb-8 font-playfair text-velvet-dark">
           Ready to Get Started?
         </h2>
-        <p className="text-lg md:text-xl mb-8 md:mb-12" style={{ color: '#999999' }}>
+        <p className="text-lg md:text-xl mb-8 md:mb-12 text-velvet-muted">
           Join thousands of photographers and videographers who have transformed their business with StudioSync.
         </p>
         
@@ -22,8 +22,8 @@ export function GetStartedSection() {
           <Button 
             onClick={() => navigate('/photographers')}
             size={isMobile ? "default" : "lg"}
-            className={`h-12 md:h-16 text-base md:text-lg text-white flex items-center justify-center w-full`}
-            style={{ backgroundColor: '#1a2238' }}
+            className={`h-12 md:h-16 text-base md:text-lg text-warmWhite flex items-center justify-center w-full font-playfair shadow-lg hover:shadow-xl transition-shadow`}
+            style={{ backgroundColor: 'hsl(var(--dusty-blue))' }}
           >
             <Camera className="h-5 w-5 md:h-6 md:w-6 mr-2" />
             Start as a Photographer
@@ -33,10 +33,10 @@ export function GetStartedSection() {
             onClick={() => navigate('/client-portal')}
             variant="outline"
             size={isMobile ? "default" : "lg"}
-            className={`h-12 md:h-16 text-base md:text-lg border-2 w-full`}
+            className={`h-12 md:h-16 text-base md:text-lg border-2 w-full font-playfair shadow-lg hover:shadow-xl transition-shadow bg-dustyBlue-whisper/50 backdrop-blur-sm`}
             style={{ 
-              borderColor: '#b99364', 
-              color: '#b99364'
+              borderColor: 'hsl(var(--dusty-blue))', 
+              color: 'hsl(var(--dusty-blue-dark))'
             }}
           >
             <Globe className="h-5 w-5 md:h-6 md:w-6 mr-2" />

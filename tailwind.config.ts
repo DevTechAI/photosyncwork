@@ -16,6 +16,7 @@ export default {
     extend: {
       fontFamily: {
         inter: ["Inter", ...fontFamily.sans],
+        playfair: ["Playfair Display", "serif"],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -65,6 +66,20 @@ export default {
           soft: "hsl(var(--velvet-soft))",
           whisper: "hsl(var(--velvet-whisper))",
         },
+        dustyBlue: {
+          DEFAULT: "hsl(var(--dusty-blue))",
+          light: "hsl(var(--dusty-blue-light))",
+          dark: "hsl(var(--dusty-blue-dark))",
+          muted: "hsl(var(--dusty-blue-muted))",
+          soft: "hsl(var(--dusty-blue-soft))",
+          whisper: "hsl(var(--dusty-blue-whisper))",
+        },
+        sage: {
+          DEFAULT: "hsl(var(--sage))",
+          light: "hsl(var(--sage-light))",
+        },
+        cream: "hsl(var(--cream))",
+        warmWhite: "hsl(var(--warm-white))",
       },
       borderRadius: {
         lg: "var(--radius)",

@@ -1,5 +1,6 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -7,46 +8,58 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
+    --background: 250 250 252;
+    --foreground: 220 20% 20%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
-    --card-hover: 0 0% 98%;
+    --card: 250 250 252;
+    --card-foreground: 220 20% 20%;
+    --card-hover: 245 245 250;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
+    --popover: 250 250 252;
+    --popover-foreground: 220 20% 20%;
 
-    --primary: 240 5.9% 10%;
-    --primary-foreground: 0 0% 98%;
+    --primary: 210 25% 45%;
+    --primary-foreground: 250 250 252;
 
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
+    --secondary: 215 20% 85%;
+    --secondary-foreground: 220 20% 25%;
 
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
+    --muted: 215 20% 90%;
+    --muted-foreground: 220 15% 45%;
 
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
+    --accent: 215 20% 85%;
+    --accent-foreground: 220 20% 25%;
 
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive-foreground: 250 250 252;
 
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 240 5.9% 10%;
+    --border: 215 20% 80%;
+    --input: 215 20% 80%;
+    --ring: 210 25% 45%;
 
-    --royal: 220 15% 88%;
-    --royal-foreground: 0 0% 98%;
-    --royal-light: 220 10% 92%;
-    --royal-dark: 220 20% 82%;
+    --royal: 215 20% 88%;
+    --royal-foreground: 250 250 252;
+    --royal-light: 215 15% 92%;
+    --royal-dark: 215 25% 82%;
 
-    --velvet: 228 45% 25%;
-    --velvet-dark: 228 55% 20%;
-    --velvet-light: 228 35% 35%;
-    --velvet-muted: 228 25% 45%;
-    --velvet-soft: 228 20% 85%;
-    --velvet-whisper: 228 15% 95%;
+    --velvet: 220 25% 30%;
+    --velvet-dark: 220 30% 25%;
+    --velvet-light: 220 20% 40%;
+    --velvet-muted: 220 15% 50%;
+    --velvet-soft: 215 20% 85%;
+    --velvet-whisper: 215 15% 95%;
+
+    --dusty-blue: 210 25% 60%;
+    --dusty-blue-light: 210 20% 75%;
+    --dusty-blue-dark: 210 30% 45%;
+    --dusty-blue-muted: 210 15% 70%;
+    --dusty-blue-soft: 210 20% 90%;
+    --dusty-blue-whisper: 210 15% 96%;
+
+    --sage: 140 15% 65%;
+    --sage-light: 140 12% 80%;
+    --cream: 45 25% 92%;
+    --warm-white: 45 15% 98%;
 
     --radius: 0.75rem;
   }

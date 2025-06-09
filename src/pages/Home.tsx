@@ -7,7 +7,7 @@ import { Footer } from "@/components/home/Footer";
 
 export default function Home() {
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#1a2238' }}>
+    <div className="min-h-screen bg-gradient-to-br from-dustyBlue-whisper to-warmWhite">
       <HeroSection />
       <AboutSection />
       <WhyChooseUsSection />
