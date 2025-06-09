@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,8 +7,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { ClientPortalData, ClientDeliverable } from "@/types/clientPortal";
-import { Download, MessageSquare, Calendar, MapPin, FileText, Image, Video, ThumbsUp, ThumbsDown } from "lucide-react";
+import { Download, MessageSquare, Calendar, MapPin, FileText, Image, Video, ThumbsUp, ThumbsDown, GalleryHorizontal } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { useNavigate } from "react-router-dom";
 
 interface ClientDashboardProps {
   portalData: ClientPortalData;
@@ -19,6 +19,7 @@ interface ClientDashboardProps {
 }
 
 export function ClientDashboard({ portalData, onSubmitFeedback, onDownloadFile, onLogout }: ClientDashboardProps) {
+  const navigate = useNavigate();
   const [feedbackText, setFeedbackText] = useState("");
   const [selectedDeliverable, setSelectedDeliverable] = useState<string | undefined>();
   const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
@@ -55,9 +56,19 @@ export function ClientDashboard({ portalData, onSubmitFeedback, onDownloadFile, 
               </p>
             )}
           </div>
-          <Button variant="outline" onClick={onLogout}>
-            Logout
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => navigate('/gallery')}
+              className="flex items-center gap-2"
+            >
+              <GalleryHorizontal className="h-4 w-4" />
+              Gallery
+            </Button>
+            <Button variant="outline" onClick={onLogout}>
+              Logout
+            </Button>
+          </div>
         </div>
       </div>
 
