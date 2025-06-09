@@ -8,7 +8,7 @@ export default function Home() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-velvet" style={{ backgroundColor: 'hsl(228, 45%, 25%)' }}>
+    <div className="min-h-screen bg-gradient-to-br from-velvet via-velvet-light to-velvet-muted">
       {/* Header */}
       <header className="bg-velvet backdrop-blur-sm shadow-sm border-b border-velvet-light/20">
         <div className="max-w-6xl mx-auto px-4 py-6">
