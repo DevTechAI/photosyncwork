@@ -27,7 +27,7 @@ export function HeroSection() {
 
       {/* Three Main Buttons - Bottom of Screen */}
       <div className="absolute bottom-16 left-0 right-0 px-4 md:px-8 overflow-hidden">
-        <div className="flex flex-col md:flex-row justify-center items-center gap-3 md:gap-8 max-w-xs md:max-w-7xl mx-auto">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-3 md:gap-8 max-w-xs md:max-w-7xl mx-auto relative">
           {/* Left Button - Client Portal */}
           <Button 
             onClick={() => navigate('/client-portal')}
@@ -49,7 +49,7 @@ export function HeroSection() {
           <Button 
             onClick={() => navigate('/photographers')}
             variant="outline" 
-            className={`h-9 md:h-10 w-full md:w-auto px-4 md:px-6 py-2 border-2 text-xs md:text-sm hover:bg-transparent transition-all duration-700 ease-in-out overflow-hidden ${
+            className={`h-9 md:h-10 w-full md:w-auto px-4 md:px-6 py-2 border-2 text-xs md:text-sm hover:bg-transparent transition-all duration-700 ease-in-out overflow-hidden md:absolute md:left-1/2 md:transform md:-translate-x-1/2 ${
               logoHovered ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'
             }`}
             style={{ 
@@ -81,7 +81,7 @@ export function HeroSection() {
         </div>
       </div>
 
-      {/* Scroll Indicator - Absolutely positioned at bottom center */}
+      {/* Scroll Indicator - Aligned with center button */}
       <div 
         className={`absolute bottom-4 left-1/2 transform -translate-x-1/2 transition-all duration-500 ${
           logoHovered ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
