@@ -17,7 +17,7 @@ export default function Home() {
               <img 
                 src="/lovable-uploads/975fd3f7-81ca-4879-af49-a6619fae8aba.png" 
                 alt="StudioSync Logo" 
-                className="h-16 w-auto object-contain"
+                className="h-28 w-auto object-contain"
               />
             </div>
             <div className="flex items-center gap-4">
