@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Camera, Users, Calendar, Globe } from "lucide-react";
@@ -12,14 +13,15 @@ export default function Home() {
       <header className="backdrop-blur-sm shadow-sm border-b border-gray-700/20" style={{ backgroundColor: '#0e0e11' }}>
         <div className="max-w-6xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
-            <div className="flex items-center">
+            <div className="flex-1" />
+            <div className="flex items-center justify-center">
               <img 
                 src="/lovable-uploads/b5a2c474-15f8-4a49-b102-73278d7c52f1.png" 
                 alt="StudioSync Logo" 
                 className="h-28 w-auto object-contain"
               />
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex-1 flex items-center justify-end gap-4">
               <Button 
                 onClick={() => navigate('/login')} 
                 variant="outline" 
