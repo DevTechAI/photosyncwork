@@ -16,7 +16,7 @@ export default function Home() {
           <img 
             src="/lovable-uploads/b5a2c474-15f8-4a49-b102-73278d7c52f1.png" 
             alt="StudioSync Logo" 
-            className="h-24 w-auto object-contain mx-auto"
+            className="h-20 w-auto object-contain mx-auto"
           />
         </div>
 
@@ -25,57 +25,57 @@ export default function Home() {
           <Button 
             onClick={() => navigate('/client-portal')}
             variant="outline" 
-            className="h-20 flex flex-col gap-2 border-2 hover:bg-transparent"
+            className="h-14 flex flex-col gap-1 border-2 hover:bg-transparent px-3 py-2"
             style={{ 
               borderColor: '#b99364', 
               color: '#b99364',
               backgroundColor: 'transparent'
             }}
           >
-            <Globe className="h-6 w-6" />
-            <span className="text-sm font-medium">Client Portal</span>
+            <Globe className="h-5 w-5" />
+            <span className="text-xs font-medium">Client Portal</span>
           </Button>
 
           <Button 
             onClick={() => navigate('/photographers')}
             variant="outline" 
-            className="h-20 flex flex-col gap-2 border-2 hover:bg-transparent"
+            className="h-14 flex flex-col gap-1 border-2 hover:bg-transparent px-3 py-2"
             style={{ 
               borderColor: '#b99364', 
               color: '#b99364',
               backgroundColor: 'transparent'
             }}
           >
-            <Users className="h-6 w-6" />
-            <span className="text-sm font-medium">Photographers Portal</span>
+            <Users className="h-5 w-5" />
+            <span className="text-xs font-medium">Photographers Portal</span>
           </Button>
 
           <Button 
             onClick={() => navigate('/hire')}
             variant="outline" 
-            className="h-20 flex flex-col gap-2 border-2 hover:bg-transparent"
+            className="h-14 flex flex-col gap-1 border-2 hover:bg-transparent px-3 py-2"
             style={{ 
               borderColor: '#b99364', 
               color: '#b99364',
               backgroundColor: 'transparent'
             }}
           >
-            <UserPlus className="h-6 w-6" />
-            <span className="text-sm font-medium">Hire a Teammate</span>
+            <UserPlus className="h-5 w-5" />
+            <span className="text-xs font-medium">Hire a Teammate</span>
           </Button>
 
           <Button 
             onClick={() => navigate('/login')}
             variant="outline" 
-            className="h-20 flex flex-col gap-2 border-2 hover:bg-transparent"
+            className="h-14 flex flex-col gap-1 border-2 hover:bg-transparent px-3 py-2"
             style={{ 
               borderColor: '#b99364', 
               color: '#b99364',
               backgroundColor: 'transparent'
             }}
           >
-            <ArrowRight className="h-6 w-6" />
-            <span className="text-sm font-medium">Sign In</span>
+            <ArrowRight className="h-5 w-5" />
+            <span className="text-xs font-medium">Sign In</span>
           </Button>
         </div>
 
