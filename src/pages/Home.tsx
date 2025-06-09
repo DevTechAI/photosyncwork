@@ -1,17 +1,24 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Camera, Users, Calendar, Globe, UserPlus, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 
 export default function Home() {
   const navigate = useNavigate();
-
+  const [logoHovered, setLogoHovered] = useState(false);
+  
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#1a2238' }}>
       {/* Hero Section - Full Screen */}
       <section className="min-h-screen flex flex-col items-center justify-center px-4 relative">
         {/* Logo */}
-        <div className="mb-12">
+        <div 
+          className="mb-12 cursor-pointer transition-all duration-300 hover:scale-105"
+          onMouseEnter={() => setLogoHovered(true)}
+          onMouseLeave={() => setLogoHovered(false)}
+        >
           <img 
             src="/lovable-uploads/b5a2c474-15f8-4a49-b102-73278d7c52f1.png" 
             alt="StudioSync Logo" 
@@ -19,21 +26,27 @@ export default function Home() {
           />
         </div>
 
-        {/* Scroll Indicator */}
-        <div className="absolute bottom-32 animate-bounce">
+        {/* Scroll Indicator - Only show when logo is hovered */}
+        <div 
+          className={`absolute bottom-24 transition-all duration-500 ${
+            logoHovered ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+          }`}
+        >
           <div className="w-6 h-10 border-2 rounded-full flex justify-center" style={{ borderColor: '#b99364' }}>
             <div className="w-1 h-3 rounded-full mt-2 animate-pulse" style={{ backgroundColor: '#b99364' }}></div>
           </div>
         </div>
 
         {/* Three Main Buttons - Bottom of Screen */}
-        <div className="absolute bottom-8 left-0 right-0 px-8">
+        <div className="absolute bottom-8 left-0 right-0 px-8 overflow-hidden">
           <div className="flex justify-between items-center max-w-7xl mx-auto">
-            {/* Left Button */}
+            {/* Left Button - Client Portal */}
             <Button 
               onClick={() => navigate('/client-portal')}
               variant="outline" 
-              className="h-10 px-6 py-2 border-2 hover:bg-transparent transition-all duration-300 ease-in-out overflow-hidden group relative"
+              className={`h-10 px-6 py-2 border-2 hover:bg-transparent transition-all duration-700 ease-in-out overflow-hidden ${
+                logoHovered ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0'
+              }`}
               style={{ 
                 borderColor: '#b99364', 
                 color: '#b99364',
@@ -44,11 +57,13 @@ export default function Home() {
               <span className="text-sm font-medium group-hover:ml-6 transition-all duration-300 ease-in-out">Client Portal</span>
             </Button>
 
-            {/* Center Button */}
+            {/* Center Button - Photographers Portal */}
             <Button 
               onClick={() => navigate('/photographers')}
               variant="outline" 
-              className="h-10 px-6 py-2 border-2 hover:bg-transparent transition-all duration-300 ease-in-out overflow-hidden group relative"
+              className={`h-10 px-6 py-2 border-2 hover:bg-transparent transition-all duration-700 ease-in-out overflow-hidden ${
+                logoHovered ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'
+              }`}
               style={{ 
                 borderColor: '#b99364', 
                 color: '#b99364',
@@ -59,11 +74,13 @@ export default function Home() {
               <span className="text-sm font-medium group-hover:ml-6 transition-all duration-300 ease-in-out">Photographers Portal</span>
             </Button>
 
-            {/* Right Button */}
+            {/* Right Button - Hire a Teammate */}
             <Button 
               onClick={() => navigate('/hire')}
               variant="outline" 
-              className="h-10 px-6 py-2 border-2 hover:bg-transparent transition-all duration-300 ease-in-out overflow-hidden group relative"
+              className={`h-10 px-6 py-2 border-2 hover:bg-transparent transition-all duration-700 ease-in-out overflow-hidden ${
+                logoHovered ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
+              }`}
               style={{ 
                 borderColor: '#b99364', 
                 color: '#b99364',
