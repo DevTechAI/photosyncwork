@@ -15,7 +15,7 @@ export default function Home() {
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <img 
-                src="/lovable-uploads/9746c35f-4225-4a04-b96f-ced8b3d8c0ec.png" 
+                src="/lovable-uploads/975fd3f7-81ca-4879-af49-a6619fae8aba.png" 
                 alt="StudioSync Logo" 
                 className="h-16 w-auto object-contain"
               />
