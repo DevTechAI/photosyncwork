@@ -46,8 +46,10 @@ export function HeroSection() {
               color: 'hsl(var(--dusty-blue-dark))'
             }}
           >
-            <Globe className="h-3 w-3 md:h-4 md:w-4 mr-0 group-hover:mr-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-4 group-hover:translate-x-0" />
-            <span className="font-medium font-playfair whitespace-nowrap">Client Portal</span>
+            <div className="flex items-center justify-center">
+              <Globe className="h-3 w-3 md:h-4 md:w-4 mr-0 group-hover:mr-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-4 group-hover:translate-x-0" />
+              <span className="font-medium font-playfair whitespace-nowrap">Client Portal</span>
+            </div>
           </Button>
 
           {/* Center Button - Photographers Portal */}
@@ -62,8 +64,10 @@ export function HeroSection() {
               color: 'hsl(var(--dusty-blue-dark))'
             }}
           >
-            <Users className="h-3 w-3 md:h-4 md:w-4 mr-0 group-hover:mr-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-4 group-hover:translate-x-0" />
-            <span className="font-medium font-playfair whitespace-nowrap">Photographers Portal</span>
+            <div className="flex items-center justify-center">
+              <Users className="h-3 w-3 md:h-4 md:w-4 mr-0 group-hover:mr-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-4 group-hover:translate-x-0" />
+              <span className="font-medium font-playfair whitespace-nowrap">Photographers Portal</span>
+            </div>
           </Button>
 
           {/* Right Button - Hire a Teammate */}
@@ -78,8 +82,10 @@ export function HeroSection() {
               color: 'hsl(var(--dusty-blue-dark))'
             }}
           >
-            <UserPlus className="h-3 w-3 md:h-4 md:w-4 mr-0 group-hover:mr-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-4 group-hover:translate-x-0" />
-            <span className="font-medium font-playfair whitespace-nowrap">Hire a Teammate</span>
+            <div className="flex items-center justify-center">
+              <UserPlus className="h-3 w-3 md:h-4 md:w-4 mr-0 group-hover:mr-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-4 group-hover:translate-x-0" />
+              <span className="font-medium font-playfair whitespace-nowrap">Hire a Teammate</span>
+            </div>
           </Button>
         </div>
       </div>
