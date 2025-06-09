@@ -14,6 +14,9 @@ export function WebGLBackground() {
     const gl = canvas.getContext('webgl');
     if (!gl) return;
 
+    // Check for and enable the derivatives extension
+    const derivativesExt = gl.getExtension('OES_standard_derivatives');
+    
     // Vertex shader source
     const vertexShaderSource = `
       attribute vec2 a_position;
@@ -22,8 +25,9 @@ export function WebGLBackground() {
       }
     `;
 
-    // Enhanced fragment shader with plexus effect
+    // Enhanced fragment shader with conditional derivatives support
     const fragmentShaderSource = `
+      ${derivativesExt ? '#extension GL_OES_standard_derivatives : enable' : ''}
       precision mediump float;
       uniform vec2 u_resolution;
       uniform vec2 u_mouse;
@@ -134,9 +138,15 @@ export function WebGLBackground() {
         float highlight = pow(mouseInfluence, 2.0) * 0.4;
         finalColor += vec3(highlight * 0.3, highlight * 0.4, highlight * 0.6);
         
-        // Add fractal edge detection for more defined shapes
+        // Add fractal edge detection for more defined shapes (only if derivatives are supported)
+        ${derivativesExt ? `
         float edge = abs(dFdx(combined)) + abs(dFdy(combined));
         finalColor += plexusColor * edge * 3.0;
+        ` : `
+        // Fallback edge detection using distance-based method
+        float edge = smoothstep(0.4, 0.6, combined) - smoothstep(0.6, 0.8, combined);
+        finalColor += plexusColor * edge * 0.5;
+        `}
         
         // Final alpha with depth
         float alpha = 0.2 + combined * 0.5 + plexus * 0.3;
