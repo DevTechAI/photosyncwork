@@ -1,18 +1,43 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Camera, Users, Calendar, Globe } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { LogoGenerator } from "@/components/ui/logo-generator";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Home() {
   const navigate = useNavigate();
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [isGeneratingLogo, setIsGeneratingLogo] = useState(false);
 
-  const handleLogoGenerated = (url: string) => {
-    setLogoUrl(url);
+  const generateLogo = async () => {
+    if (logoUrl) return; // Don't generate if we already have a logo
+    
+    setIsGeneratingLogo(true);
+    try {
+      const { data, error: functionError } = await supabase.functions.invoke('generate-logo');
+
+      if (functionError) {
+        throw new Error(functionError.message);
+      }
+
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to generate logo');
+      }
+
+      // Convert base64 to data URL
+      const logoDataUrl = `data:image/png;base64,${data.imageData}`;
+      setLogoUrl(logoDataUrl);
+    } catch (err) {
+      console.error('Error generating logo:', err);
+    } finally {
+      setIsGeneratingLogo(false);
+    }
   };
+
+  useEffect(() => {
+    generateLogo();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
@@ -28,6 +53,8 @@ export default function Home() {
                     alt="StudioSync Logo" 
                     className="h-8 w-8 object-contain"
                   />
+                ) : isGeneratingLogo ? (
+                  <div className="h-8 w-8 bg-gray-200 animate-pulse rounded" />
                 ) : (
                   <Camera className="h-8 w-8 text-primary" />
                 )}
@@ -38,7 +65,6 @@ export default function Home() {
               </div>
             </div>
             <div className="flex items-center gap-4">
-              <LogoGenerator onLogoGenerated={handleLogoGenerated} />
               <Button onClick={() => navigate('/login')} variant="outline">
                 Sign In
               </Button>
