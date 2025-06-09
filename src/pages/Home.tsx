@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Camera, Users, Calendar, Globe } from "lucide-react";
@@ -78,11 +77,10 @@ export default function Home() {
                   <li>✓ Track project progress</li>
                 </ul>
                 <Button 
-                  className="w-full text-white border-2 hover:bg-transparent transition-colors" 
+                  className="w-full text-white hover:opacity-90 transition-opacity" 
                   size="lg"
                   style={{ 
-                    backgroundColor: '#556ee6',
-                    borderColor: '#b99364'
+                    backgroundColor: '#556ee6'
                   }}
                 >
                   Access Client Portal
@@ -116,11 +114,10 @@ export default function Home() {
                   <li>✓ Financial tracking & invoicing</li>
                 </ul>
                 <Button 
-                  className="w-full text-white border-2 hover:bg-transparent transition-colors" 
+                  className="w-full text-white hover:opacity-90 transition-opacity" 
                   size="lg"
                   style={{ 
-                    backgroundColor: '#556ee6',
-                    borderColor: '#b99364'
+                    backgroundColor: '#556ee6'
                   }}
                 >
                   Access Studio Dashboard
