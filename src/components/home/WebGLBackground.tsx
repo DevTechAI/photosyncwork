@@ -1,0 +1,197 @@
+
+import { useEffect, useRef } from 'react';
+
+export function WebGLBackground() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const animationRef = useRef<number>();
+  const mouseRef = useRef({ x: 0.5, y: 0.5 });
+  const timeRef = useRef(0);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const gl = canvas.getContext('webgl');
+    if (!gl) return;
+
+    // Vertex shader source
+    const vertexShaderSource = `
+      attribute vec2 a_position;
+      void main() {
+        gl_Position = vec4(a_position, 0.0, 1.0);
+      }
+    `;
+
+    // Fragment shader source with fractal glass effect
+    const fragmentShaderSource = `
+      precision mediump float;
+      uniform vec2 u_resolution;
+      uniform vec2 u_mouse;
+      uniform float u_time;
+
+      vec3 hsv2rgb(vec3 c) {
+        vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+        vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
+        return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+      }
+
+      float fractal(vec2 z, vec2 c) {
+        float n = 0.0;
+        for(int i = 0; i < 32; i++) {
+          if(dot(z, z) > 4.0) break;
+          z = vec2(z.x * z.x - z.y * z.y, 2.0 * z.x * z.y) + c;
+          n += 1.0;
+        }
+        return n / 32.0;
+      }
+
+      void main() {
+        vec2 uv = (gl_FragCoord.xy - 0.5 * u_resolution.xy) / min(u_resolution.y, u_resolution.x);
+        vec2 mouse = (u_mouse - 0.5) * 2.0;
+        
+        // Create glass-like distortion
+        float dist = length(uv - mouse * 0.3);
+        vec2 distorted = uv + mouse * 0.2 * exp(-dist * 3.0);
+        
+        // Fractal calculation with time animation
+        vec2 c = distorted * 2.0 + vec2(cos(u_time * 0.5) * 0.3, sin(u_time * 0.3) * 0.2);
+        float f = fractal(vec2(0.0), c);
+        
+        // Glass effect with multiple layers
+        float glass1 = fractal(distorted + vec2(sin(u_time) * 0.1, cos(u_time * 1.3) * 0.1), c * 0.8);
+        float glass2 = fractal(distorted * 1.5 + mouse * 0.1, c * 1.2);
+        
+        // Combine layers with transparency
+        float combined = (f + glass1 * 0.6 + glass2 * 0.4) / 3.0;
+        
+        // Color mapping with dusty blue palette
+        vec3 color1 = vec3(0.82, 0.86, 0.95); // dusty-blue-whisper
+        vec3 color2 = vec3(0.60, 0.70, 0.85); // dusty-blue-light
+        vec3 color3 = vec3(0.45, 0.55, 0.75); // dusty-blue
+        
+        vec3 finalColor = mix(color1, color2, combined);
+        finalColor = mix(finalColor, color3, combined * 0.5);
+        
+        // Add glass-like highlights
+        float highlight = pow(max(0.0, 1.0 - dist * 2.0), 3.0) * 0.3;
+        finalColor += vec3(highlight);
+        
+        gl_FragColor = vec4(finalColor, 0.3 + combined * 0.4);
+      }
+    `;
+
+    function createShader(gl: WebGLRenderingContext, type: number, source: string) {
+      const shader = gl.createShader(type);
+      if (!shader) return null;
+      
+      gl.shaderSource(shader, source);
+      gl.compileShader(shader);
+      
+      if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+        console.error('Shader compile error:', gl.getShaderInfoLog(shader));
+        gl.deleteShader(shader);
+        return null;
+      }
+      
+      return shader;
+    }
+
+    function createProgram(gl: WebGLRenderingContext, vertexShader: WebGLShader, fragmentShader: WebGLShader) {
+      const program = gl.createProgram();
+      if (!program) return null;
+      
+      gl.attachShader(program, vertexShader);
+      gl.attachShader(program, fragmentShader);
+      gl.linkProgram(program);
+      
+      if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+        console.error('Program link error:', gl.getProgramInfoLog(program));
+        gl.deleteProgram(program);
+        return null;
+      }
+      
+      return program;
+    }
+
+    const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
+    const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
+    
+    if (!vertexShader || !fragmentShader) return;
+    
+    const program = createProgram(gl, vertexShader, fragmentShader);
+    if (!program) return;
+
+    // Create buffer for full-screen quad
+    const positionBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+      -1, -1,
+       1, -1,
+      -1,  1,
+       1,  1,
+    ]), gl.STATIC_DRAW);
+
+    const positionLocation = gl.getAttribLocation(program, 'a_position');
+    const resolutionLocation = gl.getUniformLocation(program, 'u_resolution');
+    const mouseLocation = gl.getUniformLocation(program, 'u_mouse');
+    const timeLocation = gl.getUniformLocation(program, 'u_time');
+
+    function resize() {
+      if (!canvas) return;
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      gl.viewport(0, 0, canvas.width, canvas.height);
+    }
+
+    function handleMouseMove(event: MouseEvent) {
+      mouseRef.current = {
+        x: event.clientX / window.innerWidth,
+        y: 1.0 - event.clientY / window.innerHeight
+      };
+    }
+
+    function render() {
+      if (!gl || !program) return;
+      
+      timeRef.current += 0.016;
+      
+      gl.useProgram(program);
+      gl.enable(gl.BLEND);
+      gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+      
+      gl.uniform2f(resolutionLocation, canvas!.width, canvas!.height);
+      gl.uniform2f(mouseLocation, mouseRef.current.x, mouseRef.current.y);
+      gl.uniform1f(timeLocation, timeRef.current);
+      
+      gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+      gl.enableVertexAttribArray(positionLocation);
+      gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+      
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+      
+      animationRef.current = requestAnimationFrame(render);
+    }
+
+    resize();
+    window.addEventListener('resize', resize);
+    window.addEventListener('mousemove', handleMouseMove);
+    
+    render();
+
+    return () => {
+      window.removeEventListener('resize', resize);
+      window.removeEventListener('mousemove', handleMouseMove);
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, []);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className="fixed inset-0 w-full h-full pointer-events-none z-0"
+      style={{ background: 'transparent' }}
+    />
+  );
+}
