@@ -22,6 +22,7 @@ import RealtimeTestPage from "./pages/RealtimeTestPage";
 import ClientPortal from "./pages/ClientPortal";
 import Gallery from "./pages/Gallery";
 import VideoPlayer from "./pages/VideoPlayer";
+import Portfolio from "./pages/Portfolio";
 
 function App() {
   return (
@@ -36,6 +37,7 @@ function App() {
         <Route path="/client-portal" element={<ClientPortal />} />
         <Route path="/gallery" element={<Gallery />} />
         <Route path="/video-player/:videoId" element={<VideoPlayer />} />
+        <Route path="/portfolio" element={<Portfolio />} />
         <Route
           path="/"
           element={
