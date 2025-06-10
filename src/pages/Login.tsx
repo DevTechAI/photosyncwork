@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { User, ArrowRight } from "lucide-react";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -77,6 +78,26 @@ export default function Login() {
             Sign In
           </Button>
         </form>
+
+        <div className="mt-6 pt-6 border-t">
+          <Button 
+            onClick={() => navigate('/portfolio')} 
+            variant="outline"
+            className="w-full mb-4"
+          >
+            <User className="h-4 w-4 mr-2" />
+            Create Portfolio (No Login Required)
+          </Button>
+          
+          <Button 
+            onClick={() => navigate('/hire')} 
+            variant="outline"
+            className="w-full"
+          >
+            <ArrowRight className="h-4 w-4 mr-2" />
+            Browse Available Talent
+          </Button>
+        </div>
         
         <div className="mt-8 border-t pt-6">
           <h3 className="text-sm font-medium mb-2">Demo Accounts:</h3>

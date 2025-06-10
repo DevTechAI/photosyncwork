@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Camera, ArrowRight } from "lucide-react";
+import { Camera, ArrowRight, User } from "lucide-react";
 
 export default function PhotographersPortal() {
   const navigate = useNavigate();
@@ -47,6 +47,19 @@ export default function PhotographersPortal() {
             >
               Sign In to Dashboard
               <ArrowRight className="h-4 w-4 ml-2" />
+            </Button>
+
+            <Button 
+              onClick={() => navigate('/portfolio')} 
+              variant="outline"
+              className="w-full border-2 bg-dustyBlue-whisper/70 backdrop-blur-md hover:bg-dustyBlue-soft hover:shadow-xl transition-all duration-300"
+              style={{ 
+                borderColor: 'hsl(var(--dusty-blue))', 
+                color: 'hsl(var(--dusty-blue-dark))'
+              }}
+            >
+              <User className="h-4 w-4 mr-2" />
+              Create Portfolio
             </Button>
             
             <Button 

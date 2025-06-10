@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, Plus, Search, MapPin, Camera, Video, Edit, Briefcase } from "lucide-react";
+import { Users, Plus, Search, MapPin, Camera, Video, Edit, Briefcase, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { PostJobForm } from "@/components/hire/PostJobForm";
 import { FreelancerCard } from "@/components/hire/FreelancerCard";
@@ -107,7 +107,14 @@ export default function Hire() {
             <h1 className="text-2xl font-bold" style={{ color: '#b99364' }}>
               Hire Talent
             </h1>
-            <div />
+            <Button 
+              onClick={() => navigate('/portfolio')} 
+              variant="outline"
+              className="text-white border-white hover:bg-white hover:text-black"
+            >
+              <User className="h-4 w-4 mr-2" />
+              Create Portfolio
+            </Button>
           </div>
         </div>
       </header>
@@ -118,9 +125,25 @@ export default function Hire() {
           <h2 className="text-3xl font-bold mb-4" style={{ color: '#1a2238' }}>
             Find Your Perfect Creative Partner
           </h2>
-          <p className="text-lg max-w-2xl mx-auto" style={{ color: '#999999' }}>
+          <p className="text-lg max-w-2xl mx-auto mb-6" style={{ color: '#999999' }}>
             Connect with talented photographers, videographers, and editors to grow your business
           </p>
+          <Card className="max-w-md mx-auto p-4 bg-blue-50 border-blue-200">
+            <CardContent className="pt-0">
+              <h3 className="font-semibold text-blue-900 mb-2">Are you a photographer?</h3>
+              <p className="text-sm text-blue-700 mb-3">
+                Create your professional portfolio to showcase your work and get hired by clients.
+              </p>
+              <Button 
+                onClick={() => navigate('/portfolio')}
+                className="w-full"
+                style={{ backgroundColor: '#556ee6' }}
+              >
+                <User className="h-4 w-4 mr-2" />
+                Create Your Portfolio
+              </Button>
+            </CardContent>
+          </Card>
         </div>
 
         <Tabs defaultValue="browse" className="w-full">

@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { Camera, Globe } from "lucide-react";
+import { Camera, Globe, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -18,7 +18,7 @@ export function GetStartedSection() {
           Join thousands of photographers and videographers who have transformed their business with StudioSync.
         </p>
         
-        <div className="grid grid-cols-1 gap-4 md:gap-8 max-w-sm md:max-w-2xl mx-auto">
+        <div className="grid grid-cols-1 gap-4 md:gap-6 max-w-sm md:max-w-3xl mx-auto">
           <Button 
             onClick={() => navigate('/photographers')}
             size={isMobile ? "default" : "lg"}
@@ -27,6 +27,20 @@ export function GetStartedSection() {
           >
             <Camera className="h-5 w-5 md:h-6 md:w-6 mr-2" />
             Start as a Photographer
+          </Button>
+
+          <Button 
+            onClick={() => navigate('/portfolio')}
+            variant="outline"
+            size={isMobile ? "default" : "lg"}
+            className={`h-12 md:h-16 text-base md:text-lg border-2 w-full font-playfair shadow-lg hover:shadow-xl transition-shadow bg-dustyBlue-whisper/50 backdrop-blur-sm`}
+            style={{ 
+              borderColor: 'hsl(var(--dusty-blue))', 
+              color: 'hsl(var(--dusty-blue-dark))'
+            }}
+          >
+            <User className="h-5 w-5 md:h-6 md:w-6 mr-2" />
+            Create Your Portfolio
           </Button>
           
           <Button 
