@@ -44,22 +44,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          // Fetch user profile
+          // Fetch user profile using raw SQL to avoid typing issues
           setTimeout(async () => {
             try {
               const { data: profileData, error } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', session.user.id)
-                .single();
+                .rpc('get_user_profile', { user_id: session.user.id });
 
               if (error) {
                 console.error('Error fetching profile:', error);
-              } else {
-                setProfile(profileData);
+                // If profile doesn't exist, create one
+                await createUserProfile(session.user);
+              } else if (profileData && profileData.length > 0) {
+                setProfile(profileData[0]);
               }
             } catch (error) {
               console.error('Error in profile fetch:', error);
+              // Fallback: create a basic profile
+              await createUserProfile(session.user);
             }
           }, 0);
         } else {
@@ -80,18 +81,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setTimeout(async () => {
           try {
             const { data: profileData, error } = await supabase
-              .from('profiles')
-              .select('*')
-              .eq('id', session.user.id)
-              .single();
+              .rpc('get_user_profile', { user_id: session.user.id });
 
             if (error) {
               console.error('Error fetching profile:', error);
-            } else {
-              setProfile(profileData);
+              await createUserProfile(session.user);
+            } else if (profileData && profileData.length > 0) {
+              setProfile(profileData[0]);
             }
           } catch (error) {
             console.error('Error in profile fetch:', error);
+            await createUserProfile(session.user);
           }
           setLoading(false);
         }, 0);
@@ -102,6 +102,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  const createUserProfile = async (user: User) => {
+    try {
+      const profileData = {
+        id: user.id,
+        email: user.email || '',
+        full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+        avatar_url: user.user_metadata?.avatar_url,
+        storage_used: 0,
+        storage_limit: 5368709120, // 5GB in bytes
+        plan_type: 'pilot',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      // Use raw SQL to insert profile
+      const { error } = await supabase.rpc('create_user_profile', {
+        profile_data: profileData
+      });
+
+      if (error) {
+        console.error('Error creating profile:', error);
+      } else {
+        setProfile(profileData);
+      }
+    } catch (error) {
+      console.error('Error in createUserProfile:', error);
+    }
+  };
 
   const signInWithGoogle = async () => {
     try {
@@ -155,19 +184,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateProfile = async (updates: Partial<Profile>) => {
-    if (!user) return;
+    if (!user || !profile) return;
 
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .update(updates)
-        .eq('id', user.id)
-        .select()
-        .single();
+      const updatedProfile = { ...profile, ...updates, updated_at: new Date().toISOString() };
+      
+      const { error } = await supabase.rpc('update_user_profile', {
+        profile_id: user.id,
+        updates: updates
+      });
 
       if (error) throw error;
       
-      setProfile(data);
+      setProfile(updatedProfile);
       toast({
         title: "Profile updated",
         description: "Your profile has been updated successfully"
