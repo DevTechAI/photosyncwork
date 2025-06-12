@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -44,25 +45,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          // Fetch user profile using raw SQL to avoid typing issues
-          setTimeout(async () => {
-            try {
-              const { data: profileData, error } = await supabase
-                .rpc('get_user_profile', { user_id: session.user.id }) as { data: Profile[] | null, error: any };
+          // Fetch user profile using direct table query
+          try {
+            const { data: profileData, error } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', session.user.id)
+              .single();
 
-              if (error) {
-                console.error('Error fetching profile:', error);
-                // If profile doesn't exist, create one
-                await createUserProfile(session.user);
-              } else if (profileData && profileData.length > 0) {
-                setProfile(profileData[0]);
-              }
-            } catch (error) {
-              console.error('Error in profile fetch:', error);
-              // Fallback: create a basic profile
+            if (error) {
+              console.error('Error fetching profile:', error);
+              // If profile doesn't exist, create one
               await createUserProfile(session.user);
+            } else {
+              setProfile(profileData);
             }
-          }, 0);
+          } catch (error) {
+            console.error('Error in profile fetch:', error);
+            // Fallback: create a basic profile
+            await createUserProfile(session.user);
+          }
         } else {
           setProfile(null);
         }
@@ -81,13 +83,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setTimeout(async () => {
           try {
             const { data: profileData, error } = await supabase
-              .rpc('get_user_profile', { user_id: session.user.id }) as { data: Profile[] | null, error: any };
+              .from('profiles')
+              .select('*')
+              .eq('id', session.user.id)
+              .single();
 
             if (error) {
               console.error('Error fetching profile:', error);
               await createUserProfile(session.user);
-            } else if (profileData && profileData.length > 0) {
-              setProfile(profileData[0]);
+            } else {
+              setProfile(profileData);
             }
           } catch (error) {
             console.error('Error in profile fetch:', error);
@@ -117,10 +122,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         updated_at: new Date().toISOString()
       };
 
-      // Use raw SQL to insert profile
-      const { error } = await supabase.rpc('create_user_profile', {
-        profile_data: profileData
-      }) as { error: any };
+      // Use direct table insert
+      const { error } = await supabase
+        .from('profiles')
+        .insert([profileData]);
 
       if (error) {
         console.error('Error creating profile:', error);
@@ -231,10 +236,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const updatedProfile = { ...profile, ...updates, updated_at: new Date().toISOString() };
       
-      const { error } = await supabase.rpc('update_user_profile', {
-        profile_id: user.id,
-        updates: updates
-      }) as { error: any };
+      const { error } = await supabase
+        .from('profiles')
+        .update(updates)
+        .eq('id', user.id);
 
       if (error) throw error;
       
