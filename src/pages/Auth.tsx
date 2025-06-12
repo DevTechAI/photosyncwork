@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,16 +21,21 @@ export default function Auth() {
   const [fullName, setFullName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const redirectedRef = useRef(false);
   
   const from = location.state?.from?.pathname || "/dashboard";
 
   useEffect(() => {
-    console.log('Auth page: user state changed', user?.email, 'loading:', loading);
+    console.log('Auth page: user state changed', user?.email, 'loading:', loading, 'redirected:', redirectedRef.current);
     
-    // Only redirect if user is authenticated and not loading
-    if (user && !loading) {
+    // Only redirect if user is authenticated, not loading, and we haven't redirected yet
+    if (user && !loading && !redirectedRef.current) {
       console.log('Redirecting authenticated user to:', from);
-      navigate(from, { replace: true });
+      redirectedRef.current = true;
+      // Use a small delay to prevent rapid redirects
+      setTimeout(() => {
+        navigate(from, { replace: true });
+      }, 100);
     }
   }, [user, loading, navigate, from]);
 
@@ -46,8 +51,8 @@ export default function Auth() {
     );
   }
 
-  // Don't render auth form if user is already authenticated
-  if (user) {
+  // Don't render auth form if user is already authenticated and we've initiated redirect
+  if (user && redirectedRef.current) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
