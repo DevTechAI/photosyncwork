@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,6 +13,7 @@ export default function Auth() {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
+  const hasRedirectedRef = useRef(false);
   
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
@@ -25,14 +25,15 @@ export default function Auth() {
   const from = location.state?.from?.pathname || "/dashboard";
 
   useEffect(() => {
-    console.log('Auth page: user state changed', user?.email, 'loading:', loading);
+    console.log('Auth page: user state changed', user?.email, 'loading:', loading, 'hasRedirected:', hasRedirectedRef.current);
     
-    // Simple redirect logic - if user is authenticated and not loading, redirect
-    if (user && !loading) {
+    // Only redirect if user is authenticated, not loading, and we haven't redirected yet
+    if (user && !loading && !hasRedirectedRef.current) {
       console.log('Redirecting authenticated user to:', from);
+      hasRedirectedRef.current = true;
       navigate(from, { replace: true });
     }
-  }, [user, loading, navigate, from]);
+  }, [user, loading]); // Removed navigate and from from dependencies to prevent re-runs
 
   // Show loading state while checking auth
   if (loading) {
