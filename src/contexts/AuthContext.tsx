@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,7 +20,8 @@ interface AuthContextType {
   profile: Profile | null;
   session: Session | null;
   loading: boolean;
-  signInWithGoogle: () => Promise<void>;
+  signInWithEmail: (email: string, password: string) => Promise<{ error: any }>;
+  signUpWithEmail: (email: string, password: string, fullName?: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<void>;
 }
@@ -132,30 +132,72 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const signInWithGoogle = async () => {
+  const signInWithEmail = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/`,
-        }
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       });
       
       if (error) {
-        console.error('Google sign in error:', error);
+        console.error('Email sign in error:', error);
         toast({
           title: "Sign in failed",
           description: error.message,
           variant: "destructive"
         });
+        return { error };
       }
+      
+      return { error: null };
     } catch (error: any) {
-      console.error('Google sign in error:', error);
+      console.error('Email sign in error:', error);
       toast({
         title: "Sign in failed",
-        description: "Failed to sign in with Google",
+        description: "Failed to sign in with email",
         variant: "destructive"
       });
+      return { error };
+    }
+  };
+
+  const signUpWithEmail = async (email: string, password: string, fullName?: string) => {
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName || email.split('@')[0],
+          },
+          emailRedirectTo: `${window.location.origin}/`
+        }
+      });
+      
+      if (error) {
+        console.error('Email sign up error:', error);
+        toast({
+          title: "Sign up failed",
+          description: error.message,
+          variant: "destructive"
+        });
+        return { error };
+      }
+      
+      toast({
+        title: "Account created!",
+        description: "Please check your email to verify your account.",
+      });
+      
+      return { error: null };
+    } catch (error: any) {
+      console.error('Email sign up error:', error);
+      toast({
+        title: "Sign up failed",
+        description: "Failed to create account",
+        variant: "destructive"
+      });
+      return { error };
     }
   };
 
@@ -215,7 +257,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     profile,
     session,
     loading,
-    signInWithGoogle,
+    signInWithEmail,
+    signUpWithEmail,
     signOut,
     updateProfile
   };
