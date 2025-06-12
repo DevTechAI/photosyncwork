@@ -4,8 +4,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, Image as ImageIcon } from "lucide-react";
+import { Plus, Trash2, Image as ImageIcon, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { FileUploader } from "./FileUploader";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 interface GalleryImage {
   id: string;
@@ -22,6 +30,9 @@ interface PortfolioGalleryProps {
 
 export function PortfolioGallery({ images, isEditing = false, onImagesChange }: PortfolioGalleryProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [showUploader, setShowUploader] = useState(false);
+  const [newImageTitle, setNewImageTitle] = useState("");
+  const [newImageCategory, setNewImageCategory] = useState("Portfolio");
   const { toast } = useToast();
 
   const categories = ["all", ...Array.from(new Set(images.map(img => img.category)))];
@@ -48,6 +59,29 @@ export function PortfolioGallery({ images, isEditing = false, onImagesChange }: 
     });
   };
 
+  const handleUploadComplete = (url: string, fileName: string) => {
+    const newImage: GalleryImage = {
+      id: Date.now().toString(),
+      url: url,
+      title: newImageTitle || fileName,
+      category: newImageCategory
+    };
+    
+    if (onImagesChange) {
+      onImagesChange([...images, newImage]);
+    }
+    
+    toast({
+      title: "Image uploaded",
+      description: "Your image has been uploaded to S3 and added to the gallery."
+    });
+
+    // Reset form
+    setNewImageTitle("");
+    setNewImageCategory("Portfolio");
+    setShowUploader(false);
+  };
+
   const handleRemoveImage = (imageId: string) => {
     if (onImagesChange) {
       onImagesChange(images.filter(img => img.id !== imageId));
@@ -68,10 +102,50 @@ export function PortfolioGallery({ images, isEditing = false, onImagesChange }: 
             Portfolio Gallery
           </CardTitle>
           {isEditing && (
-            <Button onClick={handleAddImage} size="sm">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Image
-            </Button>
+            <div className="flex gap-2">
+              <Dialog open={showUploader} onOpenChange={setShowUploader}>
+                <DialogTrigger asChild>
+                  <Button size="sm">
+                    <Upload className="h-4 w-4 mr-2" />
+                    Upload to S3
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Upload Image to S3</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium">Image Title</label>
+                      <Input
+                        value={newImageTitle}
+                        onChange={(e) => setNewImageTitle(e.target.value)}
+                        placeholder="Enter image title"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Category</label>
+                      <Input
+                        value={newImageCategory}
+                        onChange={(e) => setNewImageCategory(e.target.value)}
+                        placeholder="Enter category"
+                      />
+                    </div>
+                    <FileUploader
+                      onUploadComplete={handleUploadComplete}
+                      acceptedFileTypes="image/*"
+                      maxFileSize={10}
+                      folder="portfolio"
+                    />
+                  </div>
+                </DialogContent>
+              </Dialog>
+              
+              <Button onClick={handleAddImage} size="sm" variant="outline">
+                <Plus className="h-4 w-4 mr-2" />
+                Add Sample
+              </Button>
+            </div>
           )}
         </div>
       </CardHeader>
@@ -127,9 +201,14 @@ export function PortfolioGallery({ images, isEditing = false, onImagesChange }: 
               <ImageIcon className="h-12 w-12 mx-auto mb-2 opacity-50" />
               <p>No images in this category</p>
               {isEditing && (
-                <Button onClick={handleAddImage} variant="outline" className="mt-2">
-                  Add your first image
-                </Button>
+                <div className="flex gap-2 justify-center mt-4">
+                  <Button onClick={() => setShowUploader(true)} variant="outline">
+                    Upload your first image
+                  </Button>
+                  <Button onClick={handleAddImage} variant="outline">
+                    Add sample image
+                  </Button>
+                </div>
               )}
             </div>
           )}
