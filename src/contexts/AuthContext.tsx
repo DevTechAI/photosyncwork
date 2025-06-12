@@ -37,6 +37,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
 
   useEffect(() => {
+    // Check for email verification in URL on initial load
+    const checkEmailVerification = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const error = urlParams.get('error');
+      const errorDescription = urlParams.get('error_description');
+      
+      if (error) {
+        toast({
+          title: "Verification failed",
+          description: errorDescription || "Email verification failed",
+          variant: "destructive"
+        });
+      } else if (urlParams.has('token_hash')) {
+        // Email verification successful
+        toast({
+          title: "Email verified!",
+          description: "Your email has been verified successfully. You can now sign in.",
+        });
+      }
+    };
+
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
@@ -44,8 +65,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setSession(session);
         setUser(session?.user ?? null);
 
-        if (session?.user) {
-          // Fetch user profile using direct table query
+        if (event === 'SIGNED_IN' && session?.user) {
+          toast({
+            title: "Welcome!",
+            description: "You have been signed in successfully",
+          });
+          
+          // Fetch user profile
           try {
             const { data: profileData, error } = await supabase
               .from('profiles')
@@ -62,7 +88,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
           } catch (error) {
             console.error('Error in profile fetch:', error);
-            // Fallback: create a basic profile
+            await createUserProfile(session.user);
+          }
+        } else if (event === 'SIGNED_OUT') {
+          setProfile(null);
+          toast({
+            title: "Signed out",
+            description: "You have been signed out successfully"
+          });
+        } else if (session?.user) {
+          // Fetch profile for existing session
+          try {
+            const { data: profileData, error } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', session.user.id)
+              .single();
+
+            if (error) {
+              console.error('Error fetching profile:', error);
+              await createUserProfile(session.user);
+            } else {
+              setProfile(profileData);
+            }
+          } catch (error) {
+            console.error('Error in profile fetch:', error);
             await createUserProfile(session.user);
           }
         } else {
@@ -105,8 +155,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     });
 
+    // Check for email verification on load
+    checkEmailVerification();
+
     return () => subscription.unsubscribe();
-  }, []);
+  }, [toast]);
 
   const createUserProfile = async (user: User) => {
     try {
@@ -122,7 +175,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         updated_at: new Date().toISOString()
       };
 
-      // Use direct table insert
       const { error } = await supabase
         .from('profiles')
         .insert([profileData]);
@@ -175,7 +227,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           data: {
             full_name: fullName || email.split('@')[0],
           },
-          emailRedirectTo: `${window.location.origin}/`
+          emailRedirectTo: `${window.location.origin}/auth?verified=true`
         }
       });
       
@@ -191,7 +243,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       toast({
         title: "Account created!",
-        description: "Please check your email to verify your account.",
+        description: "Please check your email to verify your account before signing in.",
       });
       
       return { error: null };
@@ -214,11 +266,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           title: "Sign out failed",
           description: error.message,
           variant: "destructive"
-        });
-      } else {
-        toast({
-          title: "Signed out",
-          description: "You have been signed out successfully"
         });
       }
     } catch (error: any) {
