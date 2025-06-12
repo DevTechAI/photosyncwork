@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,6 @@ export default function Auth() {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const redirectAttemptedRef = useRef(false);
   
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
@@ -22,23 +21,6 @@ export default function Auth() {
   const [fullName, setFullName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  const from = location.state?.from?.pathname || "/dashboard";
-
-  useEffect(() => {
-    console.log('Auth page: user state changed', user?.email, 'loading:', loading, 'redirectAttempted:', redirectAttemptedRef.current);
-    
-    // Only redirect if user is authenticated, not loading, and we haven't attempted redirect yet
-    if (user && !loading && !redirectAttemptedRef.current) {
-      console.log('Redirecting authenticated user to:', from);
-      redirectAttemptedRef.current = true;
-      
-      // Use setTimeout to prevent immediate re-render issues
-      setTimeout(() => {
-        navigate(from, { replace: true });
-      }, 0);
-    }
-  }, [user, loading, from, navigate]);
 
   // Show loading state while checking auth
   if (loading) {
@@ -52,26 +34,30 @@ export default function Auth() {
     );
   }
 
-  // Don't render auth form if user is already authenticated
-  if (user && redirectAttemptedRef.current) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-2 text-muted-foreground">Redirecting to dashboard...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // If user exists but redirect hasn't been attempted, don't render the form
+  // If user is already authenticated, show a simple message instead of redirecting
   if (user) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-2 text-muted-foreground">Redirecting...</p>
-        </div>
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <div className="mx-auto mb-4 p-3 bg-primary/10 rounded-full w-fit">
+              <Camera className="h-8 w-8 text-primary" />
+            </div>
+            <CardTitle className="text-2xl font-bold">Welcome Back!</CardTitle>
+            <CardDescription>
+              You are already signed in as {user.email}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button 
+              onClick={() => navigate("/dashboard")}
+              className="w-full"
+              size="lg"
+            >
+              Go to Dashboard
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
