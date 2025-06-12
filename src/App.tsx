@@ -34,6 +34,7 @@ function App() {
               {/* Public routes */}
               <Route path="/" element={<Home />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/login" element={<Navigate to="/auth" replace />} />
               <Route path="/hire" element={<Hire />} />
               <Route path="/photographers" element={<PhotographersPortal />} />
               
