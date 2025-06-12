@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,7 +14,7 @@ export default function Auth() {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const hasRedirectedRef = useRef(false);
+  const redirectAttemptedRef = useRef(false);
   
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
@@ -25,15 +26,19 @@ export default function Auth() {
   const from = location.state?.from?.pathname || "/dashboard";
 
   useEffect(() => {
-    console.log('Auth page: user state changed', user?.email, 'loading:', loading, 'hasRedirected:', hasRedirectedRef.current);
+    console.log('Auth page: user state changed', user?.email, 'loading:', loading, 'redirectAttempted:', redirectAttemptedRef.current);
     
-    // Only redirect if user is authenticated, not loading, and we haven't redirected yet
-    if (user && !loading && !hasRedirectedRef.current) {
+    // Only redirect if user is authenticated, not loading, and we haven't attempted redirect yet
+    if (user && !loading && !redirectAttemptedRef.current) {
       console.log('Redirecting authenticated user to:', from);
-      hasRedirectedRef.current = true;
-      navigate(from, { replace: true });
+      redirectAttemptedRef.current = true;
+      
+      // Use setTimeout to prevent immediate re-render issues
+      setTimeout(() => {
+        navigate(from, { replace: true });
+      }, 0);
     }
-  }, [user, loading]); // Removed navigate and from from dependencies to prevent re-runs
+  }, [user, loading, from, navigate]);
 
   // Show loading state while checking auth
   if (loading) {
@@ -48,12 +53,24 @@ export default function Auth() {
   }
 
   // Don't render auth form if user is already authenticated
-  if (user) {
+  if (user && redirectAttemptedRef.current) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
           <p className="mt-2 text-muted-foreground">Redirecting to dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If user exists but redirect hasn't been attempted, don't render the form
+  if (user) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-2 text-muted-foreground">Redirecting...</p>
         </div>
       </div>
     );
