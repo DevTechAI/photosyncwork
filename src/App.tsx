@@ -23,6 +23,11 @@ import InvoicesPage from "./pages/invoices/InvoicesPage";
 import Hire from "./pages/Hire";
 import NotFound from "./pages/NotFound";
 
+// Import workflow pages
+import PreProductionPage from "./pages/workflow/PreProductionPage";
+import ProductionPage from "./pages/workflow/ProductionPage";
+import PostProductionPage from "./pages/workflow/PostProductionPage";
+
 function App() {
   return (
     <AuthProvider>
@@ -75,6 +80,23 @@ function App() {
               <Route path="/invoices" element={
                 <AuthGuard>
                   <InvoicesPage />
+                </AuthGuard>
+              } />
+              
+              {/* Workflow routes */}
+              <Route path="/workflow/pre-production" element={
+                <AuthGuard>
+                  <PreProductionPage />
+                </AuthGuard>
+              } />
+              <Route path="/workflow/production" element={
+                <AuthGuard>
+                  <ProductionPage />
+                </AuthGuard>
+              } />
+              <Route path="/workflow/post-production" element={
+                <AuthGuard>
+                  <PostProductionPage />
                 </AuthGuard>
               } />
               
