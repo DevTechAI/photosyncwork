@@ -54,7 +54,7 @@ additional_redirect_urls = ["https://127.0.0.1:3000"]
 jwt_expiry = 3600
 enable_signup = true
 enable_email_confirmations = false
-enable_email_autoconfirm = false
+enable_email_autoconfirm = true
 enable_phone_confirmations = false
 enable_phone_autoconfirm = false
 
@@ -62,6 +62,7 @@ enable_phone_autoconfirm = false
 enable_signup = true
 double_confirm_changes = true
 enable_confirmations = false
+enable_email_autoconfirm = true
 
 [auth.sms]
 enable_signup = false
