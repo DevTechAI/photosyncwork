@@ -25,10 +25,12 @@ export default function Auth() {
   const from = location.state?.from?.pathname || "/dashboard";
 
   useEffect(() => {
-    if (user) {
+    console.log('Auth page: user state changed', user?.email);
+    if (user && !loading) {
+      console.log('Redirecting authenticated user to:', from);
       navigate(from, { replace: true });
     }
-  }, [user, navigate, from]);
+  }, [user, loading, navigate, from]);
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,6 +38,7 @@ export default function Auth() {
 
     try {
       if (isSignUp) {
+        console.log('Attempting sign up for:', email);
         const { error } = await signUpWithEmail(email, password, fullName);
         if (error) {
           console.error('Sign up error:', error);
@@ -45,12 +48,14 @@ export default function Auth() {
             variant: "destructive"
           });
         } else {
+          console.log('Sign up successful, user should be redirected automatically');
           toast({
             title: "Account created!",
-            description: "You have been signed in automatically.",
+            description: "Welcome to StudioSync!",
           });
         }
       } else {
+        console.log('Attempting sign in for:', email);
         const { error } = await signInWithEmail(email, password);
         if (error) {
           console.error('Sign in error:', error);
@@ -58,6 +63,12 @@ export default function Auth() {
             title: "Sign in failed",
             description: error.message || "Invalid email or password. Please try again.",
             variant: "destructive"
+          });
+        } else {
+          console.log('Sign in successful, user should be redirected automatically');
+          toast({
+            title: "Welcome back!",
+            description: "You have been signed in successfully.",
           });
         }
       }
@@ -73,7 +84,8 @@ export default function Auth() {
     }
   };
 
-  if (user) {
+  // Show loading state while redirecting authenticated users
+  if (user && !loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">

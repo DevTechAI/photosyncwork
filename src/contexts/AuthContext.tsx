@@ -45,10 +45,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(session?.user ?? null);
 
         if (event === 'SIGNED_IN' && session?.user) {
-          toast({
-            title: "Welcome!",
-            description: "You have been signed in successfully",
-          });
+          console.log('User signed in successfully');
           
           // Fetch user profile after successful sign in
           setTimeout(async () => {
@@ -72,10 +69,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }, 0);
         } else if (event === 'SIGNED_OUT') {
           setProfile(null);
-          toast({
-            title: "Signed out",
-            description: "You have been signed out successfully"
-          });
         } else if (session?.user) {
           // Fetch profile for existing session
           setTimeout(async () => {
@@ -170,7 +163,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signInWithEmail = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      console.log('Attempting sign in for:', email);
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
@@ -180,6 +174,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { error };
       }
       
+      console.log('Sign in successful:', data.user?.email);
       return { error: null };
     } catch (error: any) {
       console.error('Email sign in error:', error);
@@ -189,7 +184,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUpWithEmail = async (email: string, password: string, fullName?: string) => {
     try {
-      const { error } = await supabase.auth.signUp({
+      console.log('Attempting sign up for:', email);
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -204,7 +200,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { error };
       }
       
-      // With auto-confirm enabled, user should be signed in immediately
+      console.log('Sign up successful:', data.user?.email);
       return { error: null };
     } catch (error: any) {
       console.error('Email sign up error:', error);
@@ -220,6 +216,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           title: "Sign out failed",
           description: error.message,
           variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Signed out",
+          description: "You have been signed out successfully"
         });
       }
     } catch (error: any) {
