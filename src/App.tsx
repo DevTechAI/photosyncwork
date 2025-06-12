@@ -7,6 +7,8 @@ import Home from "./pages/Home";
 import Auth from "./pages/Auth";
 import Portfolio from "./pages/Portfolio";
 import PhotographersPortal from "./pages/PhotographersPortal";
+import Profile from "./pages/Profile";
+import Settings from "./pages/Settings";
 import { AuthGuard } from "./components/auth/AuthGuard";
 import { Header } from "./components/layout/Header";
 import { useAuth } from "./contexts/AuthContext";
@@ -26,7 +28,7 @@ function App() {
   return (
     <TooltipProvider>
       <div className="min-h-screen bg-background">
-        {user && <Header />}
+        <Header />
         <Routes>
           {/* Public routes */}
           <Route path="/" element={<Home />} />
@@ -41,6 +43,16 @@ function App() {
           <Route path="/dashboard" element={
             <AuthGuard>
               <Index />
+            </AuthGuard>
+          } />
+          <Route path="/profile" element={
+            <AuthGuard>
+              <Profile />
+            </AuthGuard>
+          } />
+          <Route path="/settings" element={
+            <AuthGuard>
+              <Settings />
             </AuthGuard>
           } />
           <Route path="/estimates" element={
