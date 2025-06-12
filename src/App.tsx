@@ -1,5 +1,5 @@
 
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster as RadixToaster } from "@/components/ui/toaster";
@@ -34,6 +34,7 @@ function App() {
               {/* Public routes */}
               <Route path="/" element={<Home />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/login" element={<Navigate to="/auth" replace />} />
               <Route path="/hire" element={<Hire />} />
               <Route path="/photographers" element={<PhotographersPortal />} />
               
