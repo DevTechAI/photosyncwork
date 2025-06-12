@@ -6,6 +6,7 @@ import { Toaster as RadixToaster } from "@/components/ui/toaster";
 import Home from "./pages/Home";
 import Auth from "./pages/Auth";
 import Portfolio from "./pages/Portfolio";
+import PhotographersPortal from "./pages/PhotographersPortal";
 import { AuthGuard } from "./components/auth/AuthGuard";
 import { Header } from "./components/layout/Header";
 import { useAuth } from "./contexts/AuthContext";
@@ -31,6 +32,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/hire" element={<Hire />} />
+          <Route path="/photographers" element={<PhotographersPortal />} />
           
           {/* Portfolio can be accessed without login for creation */}
           <Route path="/portfolio" element={<Portfolio />} />
