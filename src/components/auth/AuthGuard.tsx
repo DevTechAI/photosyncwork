@@ -10,6 +10,8 @@ export function AuthGuard({ children }: AuthGuardProps) {
   const { user, loading } = useAuth();
   const location = useLocation();
   
+  console.log('AuthGuard: user=', user?.email, 'loading=', loading, 'pathname=', location.pathname);
+  
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -22,8 +24,10 @@ export function AuthGuard({ children }: AuthGuardProps) {
   }
   
   if (!user) {
+    console.log('AuthGuard: No user, redirecting to /auth');
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
   
+  console.log('AuthGuard: User authenticated, rendering children');
   return <>{children}</>;
 }

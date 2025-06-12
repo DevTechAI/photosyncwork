@@ -84,6 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setProfile(null);
         }
         
+        // Always set loading to false after processing auth state change
         setLoading(false);
       }
     );
@@ -99,6 +100,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (session?.user) {
         await fetchUserProfile(session.user.id);
       }
+      
+      // Set loading to false after initial session check
       setLoading(false);
     });
 
@@ -106,7 +109,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isMounted = false;
       subscription.unsubscribe();
     };
-  }, [toast]);
+  }, []);
 
   const createUserProfile = async (user: User) => {
     try {

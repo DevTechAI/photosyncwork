@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,30 +21,38 @@ export default function Auth() {
   const [fullName, setFullName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const hasRedirectedRef = useRef(false);
   
   const from = location.state?.from?.pathname || "/dashboard";
 
   useEffect(() => {
-    console.log('Auth page: user state changed', user?.email, 'loading:', loading, 'hasRedirected:', hasRedirectedRef.current);
+    console.log('Auth page: user state changed', user?.email, 'loading:', loading);
     
-    // Only redirect if user is authenticated, not loading, and we haven't already redirected
-    if (user && !loading && !hasRedirectedRef.current) {
+    // Only redirect if user is authenticated and not loading
+    if (user && !loading) {
       console.log('Redirecting authenticated user to:', from);
-      hasRedirectedRef.current = true;
       navigate(from, { replace: true });
     }
   }, [user, loading, navigate, from]);
 
-  // Show loading state while checking auth or if we're redirecting
-  if (loading || (user && !loading)) {
+  // Show loading state while checking auth
+  if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-2 text-muted-foreground">
-            {loading ? "Loading..." : "Redirecting to dashboard..."}
-          </p>
+          <p className="mt-2 text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render auth form if user is already authenticated
+  if (user) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-2 text-muted-foreground">Redirecting to dashboard...</p>
         </div>
       </div>
     );
