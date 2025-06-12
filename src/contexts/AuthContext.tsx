@@ -48,7 +48,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setTimeout(async () => {
             try {
               const { data: profileData, error } = await supabase
-                .rpc('get_user_profile', { user_id: session.user.id });
+                .rpc('get_user_profile', { user_id: session.user.id }) as { data: Profile[] | null, error: any };
 
               if (error) {
                 console.error('Error fetching profile:', error);
@@ -81,7 +81,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setTimeout(async () => {
           try {
             const { data: profileData, error } = await supabase
-              .rpc('get_user_profile', { user_id: session.user.id });
+              .rpc('get_user_profile', { user_id: session.user.id }) as { data: Profile[] | null, error: any };
 
             if (error) {
               console.error('Error fetching profile:', error);
@@ -120,7 +120,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Use raw SQL to insert profile
       const { error } = await supabase.rpc('create_user_profile', {
         profile_data: profileData
-      });
+      }) as { error: any };
 
       if (error) {
         console.error('Error creating profile:', error);
@@ -192,7 +192,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { error } = await supabase.rpc('update_user_profile', {
         profile_id: user.id,
         updates: updates
-      });
+      }) as { error: any };
 
       if (error) throw error;
       
