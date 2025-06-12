@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster as RadixToaster } from "@/components/ui/toaster";
 import { AuthProvider } from "./contexts/AuthContext";
+import { UserProvider } from "./contexts/UserContext";
 import Home from "./pages/Home";
 import Auth from "./pages/Auth";
 import Portfolio from "./pages/Portfolio";
@@ -25,62 +26,64 @@ import NotFound from "./pages/NotFound";
 function App() {
   return (
     <AuthProvider>
-      <TooltipProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <Routes>
-            {/* Public routes */}
-            <Route path="/" element={<Home />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/hire" element={<Hire />} />
-            <Route path="/photographers" element={<PhotographersPortal />} />
-            
-            {/* Portfolio can be accessed without login for creation */}
-            <Route path="/portfolio" element={<Portfolio />} />
-            
-            {/* Protected routes */}
-            <Route path="/dashboard" element={
-              <AuthGuard>
-                <Index />
-              </AuthGuard>
-            } />
-            <Route path="/profile" element={
-              <AuthGuard>
-                <Profile />
-              </AuthGuard>
-            } />
-            <Route path="/settings" element={
-              <AuthGuard>
-                <Settings />
-              </AuthGuard>
-            } />
-            <Route path="/estimates" element={
-              <AuthGuard>
-                <EstimatesPage />
-              </AuthGuard>
-            } />
-            <Route path="/scheduling/*" element={
-              <AuthGuard>
-                <SchedulingPage />
-              </AuthGuard>
-            } />
-            <Route path="/finances/*" element={
-              <AuthGuard>
-                <FinancesPage />
-              </AuthGuard>
-            } />
-            <Route path="/invoices" element={
-              <AuthGuard>
-                <InvoicesPage />
-              </AuthGuard>
-            } />
-            
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </div>
-        <Toaster />
-        <RadixToaster />
-      </TooltipProvider>
+      <UserProvider>
+        <TooltipProvider>
+          <div className="min-h-screen bg-background">
+            <Header />
+            <Routes>
+              {/* Public routes */}
+              <Route path="/" element={<Home />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/hire" element={<Hire />} />
+              <Route path="/photographers" element={<PhotographersPortal />} />
+              
+              {/* Portfolio can be accessed without login for creation */}
+              <Route path="/portfolio" element={<Portfolio />} />
+              
+              {/* Protected routes */}
+              <Route path="/dashboard" element={
+                <AuthGuard>
+                  <Index />
+                </AuthGuard>
+              } />
+              <Route path="/profile" element={
+                <AuthGuard>
+                  <Profile />
+                </AuthGuard>
+              } />
+              <Route path="/settings" element={
+                <AuthGuard>
+                  <Settings />
+                </AuthGuard>
+              } />
+              <Route path="/estimates" element={
+                <AuthGuard>
+                  <EstimatesPage />
+                </AuthGuard>
+              } />
+              <Route path="/scheduling/*" element={
+                <AuthGuard>
+                  <SchedulingPage />
+                </AuthGuard>
+              } />
+              <Route path="/finances/*" element={
+                <AuthGuard>
+                  <FinancesPage />
+                </AuthGuard>
+              } />
+              <Route path="/invoices" element={
+                <AuthGuard>
+                  <InvoicesPage />
+                </AuthGuard>
+              } />
+              
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </div>
+          <Toaster />
+          <RadixToaster />
+        </TooltipProvider>
+      </UserProvider>
     </AuthProvider>
   );
 }
