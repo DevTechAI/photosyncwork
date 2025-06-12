@@ -21,16 +21,34 @@ export default function Auth() {
   const [fullName, setFullName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasRedirected, setHasRedirected] = useState(false);
   
   const from = location.state?.from?.pathname || "/dashboard";
 
   useEffect(() => {
-    console.log('Auth page: user state changed', user?.email);
-    if (user && !loading) {
+    console.log('Auth page: user state changed', user?.email, 'loading:', loading, 'hasRedirected:', hasRedirected);
+    
+    // Only redirect if user is authenticated, not loading, and we haven't already redirected
+    if (user && !loading && !hasRedirected) {
       console.log('Redirecting authenticated user to:', from);
+      setHasRedirected(true);
       navigate(from, { replace: true });
     }
-  }, [user, loading, navigate, from]);
+  }, [user, loading, navigate, from, hasRedirected]);
+
+  // Show loading state while checking auth or if we're redirecting
+  if (loading || (user && !loading)) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-2 text-muted-foreground">
+            {loading ? "Loading..." : "Redirecting to dashboard..."}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,18 +101,6 @@ export default function Auth() {
       setIsSubmitting(false);
     }
   };
-
-  // Show loading state while redirecting authenticated users
-  if (user && !loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-2 text-muted-foreground">Redirecting to dashboard...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 flex items-center justify-center p-4">
