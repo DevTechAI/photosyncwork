@@ -36,60 +36,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      const { data: profileData, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching profile:', error);
+        await createUserProfile({ id: userId } as User);
+      } else {
+        setProfile(profileData);
+      }
+    } catch (error) {
+      console.error('Error in profile fetch:', error);
+      await createUserProfile({ id: userId } as User);
+    }
+  };
+
   useEffect(() => {
+    let isMounted = true;
+
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        if (!isMounted) return;
+        
         console.log('Auth state changed:', event, session?.user?.email);
         setSession(session);
         setUser(session?.user ?? null);
 
         if (event === 'SIGNED_IN' && session?.user) {
           console.log('User signed in successfully');
-          
-          // Fetch user profile after successful sign in
-          setTimeout(async () => {
-            try {
-              const { data: profileData, error } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', session.user.id)
-                .single();
-
-              if (error) {
-                console.error('Error fetching profile:', error);
-                await createUserProfile(session.user);
-              } else {
-                setProfile(profileData);
-              }
-            } catch (error) {
-              console.error('Error in profile fetch:', error);
-              await createUserProfile(session.user);
-            }
-          }, 0);
+          await fetchUserProfile(session.user.id);
         } else if (event === 'SIGNED_OUT') {
           setProfile(null);
         } else if (session?.user) {
           // Fetch profile for existing session
-          setTimeout(async () => {
-            try {
-              const { data: profileData, error } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', session.user.id)
-                .single();
-
-              if (error) {
-                console.error('Error fetching profile:', error);
-                await createUserProfile(session.user);
-              } else {
-                setProfile(profileData);
-              }
-            } catch (error) {
-              console.error('Error in profile fetch:', error);
-              await createUserProfile(session.user);
-            }
-          }, 0);
+          await fetchUserProfile(session.user.id);
         } else {
           setProfile(null);
         }
@@ -99,38 +85,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     );
 
     // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!isMounted) return;
+      
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        // Fetch profile for existing session
-        setTimeout(async () => {
-          try {
-            const { data: profileData, error } = await supabase
-              .from('profiles')
-              .select('*')
-              .eq('id', session.user.id)
-              .single();
-
-            if (error) {
-              console.error('Error fetching profile:', error);
-              await createUserProfile(session.user);
-            } else {
-              setProfile(profileData);
-            }
-          } catch (error) {
-            console.error('Error in profile fetch:', error);
-            await createUserProfile(session.user);
-          }
-          setLoading(false);
-        }, 0);
-      } else {
-        setLoading(false);
+        await fetchUserProfile(session.user.id);
       }
+      setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, [toast]);
 
   const createUserProfile = async (user: User) => {

@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,20 +21,20 @@ export default function Auth() {
   const [fullName, setFullName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [hasRedirected, setHasRedirected] = useState(false);
+  const hasRedirectedRef = useRef(false);
   
   const from = location.state?.from?.pathname || "/dashboard";
 
   useEffect(() => {
-    console.log('Auth page: user state changed', user?.email, 'loading:', loading, 'hasRedirected:', hasRedirected);
+    console.log('Auth page: user state changed', user?.email, 'loading:', loading, 'hasRedirected:', hasRedirectedRef.current);
     
     // Only redirect if user is authenticated, not loading, and we haven't already redirected
-    if (user && !loading && !hasRedirected) {
+    if (user && !loading && !hasRedirectedRef.current) {
       console.log('Redirecting authenticated user to:', from);
-      setHasRedirected(true);
+      hasRedirectedRef.current = true;
       navigate(from, { replace: true });
     }
-  }, [user, loading, navigate, from, hasRedirected]);
+  }, [user, loading, navigate, from]);
 
   // Show loading state while checking auth or if we're redirecting
   if (loading || (user && !loading)) {
