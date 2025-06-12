@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,21 +21,16 @@ export default function Auth() {
   const [fullName, setFullName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const redirectedRef = useRef(false);
   
   const from = location.state?.from?.pathname || "/dashboard";
 
   useEffect(() => {
-    console.log('Auth page: user state changed', user?.email, 'loading:', loading, 'redirected:', redirectedRef.current);
+    console.log('Auth page: user state changed', user?.email, 'loading:', loading);
     
-    // Only redirect if user is authenticated, not loading, and we haven't redirected yet
-    if (user && !loading && !redirectedRef.current) {
+    // Simple redirect logic - if user is authenticated and not loading, redirect
+    if (user && !loading) {
       console.log('Redirecting authenticated user to:', from);
-      redirectedRef.current = true;
-      // Use a small delay to prevent rapid redirects
-      setTimeout(() => {
-        navigate(from, { replace: true });
-      }, 100);
+      navigate(from, { replace: true });
     }
   }, [user, loading, navigate, from]);
 
@@ -51,8 +46,8 @@ export default function Auth() {
     );
   }
 
-  // Don't render auth form if user is already authenticated and we've initiated redirect
-  if (user && redirectedRef.current) {
+  // Don't render auth form if user is already authenticated
+  if (user) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
@@ -79,7 +74,7 @@ export default function Auth() {
             variant: "destructive"
           });
         } else {
-          console.log('Sign up successful, user should be redirected automatically');
+          console.log('Sign up successful');
           toast({
             title: "Account created!",
             description: "Welcome to StudioSync!",
@@ -96,7 +91,7 @@ export default function Auth() {
             variant: "destructive"
           });
         } else {
-          console.log('Sign in successful, user should be redirected automatically');
+          console.log('Sign in successful');
           toast({
             title: "Welcome back!",
             description: "You have been signed in successfully.",
