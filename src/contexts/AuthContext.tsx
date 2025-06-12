@@ -37,27 +37,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check for email verification in URL on initial load
-    const checkEmailVerification = () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const error = urlParams.get('error');
-      const errorDescription = urlParams.get('error_description');
-      
-      if (error) {
-        toast({
-          title: "Verification failed",
-          description: errorDescription || "Email verification failed",
-          variant: "destructive"
-        });
-      } else if (urlParams.has('token_hash')) {
-        // Email verification successful
-        toast({
-          title: "Email verified!",
-          description: "Your email has been verified successfully. You can now sign in.",
-        });
-      }
-    };
-
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
@@ -71,25 +50,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             description: "You have been signed in successfully",
           });
           
-          // Fetch user profile
-          try {
-            const { data: profileData, error } = await supabase
-              .from('profiles')
-              .select('*')
-              .eq('id', session.user.id)
-              .single();
+          // Fetch user profile after successful sign in
+          setTimeout(async () => {
+            try {
+              const { data: profileData, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', session.user.id)
+                .single();
 
-            if (error) {
-              console.error('Error fetching profile:', error);
-              // If profile doesn't exist, create one
+              if (error) {
+                console.error('Error fetching profile:', error);
+                await createUserProfile(session.user);
+              } else {
+                setProfile(profileData);
+              }
+            } catch (error) {
+              console.error('Error in profile fetch:', error);
               await createUserProfile(session.user);
-            } else {
-              setProfile(profileData);
             }
-          } catch (error) {
-            console.error('Error in profile fetch:', error);
-            await createUserProfile(session.user);
-          }
+          }, 0);
         } else if (event === 'SIGNED_OUT') {
           setProfile(null);
           toast({
@@ -98,23 +78,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           });
         } else if (session?.user) {
           // Fetch profile for existing session
-          try {
-            const { data: profileData, error } = await supabase
-              .from('profiles')
-              .select('*')
-              .eq('id', session.user.id)
-              .single();
+          setTimeout(async () => {
+            try {
+              const { data: profileData, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', session.user.id)
+                .single();
 
-            if (error) {
-              console.error('Error fetching profile:', error);
+              if (error) {
+                console.error('Error fetching profile:', error);
+                await createUserProfile(session.user);
+              } else {
+                setProfile(profileData);
+              }
+            } catch (error) {
+              console.error('Error in profile fetch:', error);
               await createUserProfile(session.user);
-            } else {
-              setProfile(profileData);
             }
-          } catch (error) {
-            console.error('Error in profile fetch:', error);
-            await createUserProfile(session.user);
-          }
+          }, 0);
         } else {
           setProfile(null);
         }
@@ -154,9 +136,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setLoading(false);
       }
     });
-
-    // Check for email verification on load
-    checkEmailVerification();
 
     return () => subscription.unsubscribe();
   }, [toast]);
@@ -198,22 +177,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (error) {
         console.error('Email sign in error:', error);
-        toast({
-          title: "Sign in failed",
-          description: error.message,
-          variant: "destructive"
-        });
         return { error };
       }
       
       return { error: null };
     } catch (error: any) {
       console.error('Email sign in error:', error);
-      toast({
-        title: "Sign in failed",
-        description: "Failed to sign in with email",
-        variant: "destructive"
-      });
       return { error };
     }
   };
@@ -226,34 +195,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         options: {
           data: {
             full_name: fullName || email.split('@')[0],
-          },
-          emailRedirectTo: `${window.location.origin}/auth?verified=true`
+          }
         }
       });
       
       if (error) {
         console.error('Email sign up error:', error);
-        toast({
-          title: "Sign up failed",
-          description: error.message,
-          variant: "destructive"
-        });
         return { error };
       }
       
-      toast({
-        title: "Account created!",
-        description: "Please check your email to verify your account before signing in.",
-      });
-      
+      // With auto-confirm enabled, user should be signed in immediately
       return { error: null };
     } catch (error: any) {
       console.error('Email sign up error:', error);
-      toast({
-        title: "Sign up failed",
-        description: "Failed to create account",
-        variant: "destructive"
-      });
       return { error };
     }
   };

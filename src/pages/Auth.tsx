@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Camera, Eye, EyeOff, CheckCircle } from "lucide-react";
+import { Camera, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
@@ -21,22 +21,8 @@ export default function Auth() {
   const [fullName, setFullName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [emailVerified, setEmailVerified] = useState(false);
   
   const from = location.state?.from?.pathname || "/dashboard";
-
-  useEffect(() => {
-    // Check if user came from email verification
-    const urlParams = new URLSearchParams(location.search);
-    if (urlParams.get('verified') === 'true' || urlParams.has('token_hash')) {
-      setEmailVerified(true);
-      setIsSignUp(false); // Switch to sign in mode
-      toast({
-        title: "Email verified!",
-        description: "Your email has been verified successfully. You can now sign in.",
-      });
-    }
-  }, [location.search, toast]);
 
   useEffect(() => {
     if (user) {
@@ -51,15 +37,35 @@ export default function Auth() {
     try {
       if (isSignUp) {
         const { error } = await signUpWithEmail(email, password, fullName);
-        if (error) throw error;
+        if (error) {
+          console.error('Sign up error:', error);
+          toast({
+            title: "Sign up failed",
+            description: error.message || "Failed to create account. Please try again.",
+            variant: "destructive"
+          });
+        } else {
+          toast({
+            title: "Account created!",
+            description: "You have been signed in automatically.",
+          });
+        }
       } else {
         const { error } = await signInWithEmail(email, password);
-        if (error) throw error;
+        if (error) {
+          console.error('Sign in error:', error);
+          toast({
+            title: "Sign in failed",
+            description: error.message || "Invalid email or password. Please try again.",
+            variant: "destructive"
+          });
+        }
       }
     } catch (error: any) {
+      console.error('Auth error:', error);
       toast({
         title: "Error",
-        description: error.message || "An error occurred during authentication.",
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -83,38 +89,19 @@ export default function Auth() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 p-3 bg-primary/10 rounded-full w-fit">
-            {emailVerified ? (
-              <CheckCircle className="h-8 w-8 text-green-600" />
-            ) : (
-              <Camera className="h-8 w-8 text-primary" />
-            )}
+            <Camera className="h-8 w-8 text-primary" />
           </div>
           <CardTitle className="text-2xl font-bold">
-            {emailVerified ? "Email Verified!" : (isSignUp ? "Create Account" : "Welcome Back")}
+            {isSignUp ? "Create Account" : "Welcome Back"}
           </CardTitle>
           <CardDescription>
-            {emailVerified 
-              ? "Your email has been verified successfully. Please sign in to continue."
-              : (isSignUp 
-                ? "Join StudioSync to manage your photography business" 
-                : "Sign in to your StudioSync account"
-              )
+            {isSignUp 
+              ? "Join StudioSync to manage your photography business" 
+              : "Sign in to your StudioSync account"
             }
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {emailVerified && (
-            <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md">
-              <div className="flex items-center gap-2 text-green-800">
-                <CheckCircle className="h-4 w-4" />
-                <span className="text-sm font-medium">Email verified successfully!</span>
-              </div>
-              <p className="text-xs text-green-700 mt-1">
-                You can now sign in with your credentials.
-              </p>
-            </div>
-          )}
-          
           <form onSubmit={handleEmailAuth} className="space-y-4">
             {isSignUp && (
               <div className="space-y-2">
@@ -197,10 +184,8 @@ export default function Auth() {
                 setEmail("");
                 setPassword("");
                 setFullName("");
-                setEmailVerified(false);
               }}
               className="text-sm"
-              disabled={emailVerified}
             >
               {isSignUp 
                 ? "Already have an account? Sign in" 
