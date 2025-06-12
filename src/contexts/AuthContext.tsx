@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -38,6 +37,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const fetchUserProfile = async (userId: string) => {
     try {
+      console.log('Fetching profile for user:', userId);
       const { data: profileData, error } = await supabase
         .from('profiles')
         .select('*')
@@ -48,6 +48,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.error('Error fetching profile:', error);
         await createUserProfile({ id: userId } as User);
       } else {
+        console.log('Profile fetched successfully:', profileData);
         setProfile(profileData);
       }
     } catch (error) {
@@ -58,6 +59,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let isMounted = true;
+
+    console.log('AuthProvider: Setting up auth state listener');
 
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -72,6 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           console.log('User signed in successfully');
           await fetchUserProfile(session.user.id);
         } else if (event === 'SIGNED_OUT') {
+          console.log('User signed out');
           setProfile(null);
         } else if (session?.user) {
           // Fetch profile for existing session
@@ -88,6 +92,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!isMounted) return;
       
+      console.log('Initial session check:', session?.user?.email || 'No session');
       setSession(session);
       setUser(session?.user ?? null);
       
@@ -105,6 +110,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const createUserProfile = async (user: User) => {
     try {
+      console.log('Creating profile for user:', user.id);
       const profileData = {
         id: user.id,
         email: user.email || '',
@@ -124,6 +130,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) {
         console.error('Error creating profile:', error);
       } else {
+        console.log('Profile created successfully');
         setProfile(profileData);
       }
     } catch (error) {
