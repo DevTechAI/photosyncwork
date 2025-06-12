@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Upload, X, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface FileUploaderProps {
   onUploadComplete: (url: string, fileName: string) => void;
@@ -25,6 +26,7 @@ export function FileUploader({
   const [isUploading, setIsUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const { toast } = useToast();
+  const { user, profile, updateProfile } = useAuth();
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -38,6 +40,20 @@ export function FileUploader({
         variant: "destructive"
       });
       return;
+    }
+
+    // Check storage quota for authenticated users
+    if (user && profile) {
+      const remainingSpace = profile.storage_limit - profile.storage_used;
+      if (file.size > remainingSpace) {
+        const remainingGB = remainingSpace / (1024 * 1024 * 1024);
+        toast({
+          title: "Storage quota exceeded",
+          description: `You have ${remainingGB.toFixed(2)}GB remaining. Please upgrade or free up space.`,
+          variant: "destructive"
+        });
+        return;
+      }
     }
 
     setSelectedFile(file);
@@ -61,15 +77,15 @@ export function FileUploader({
         const base64 = reader.result?.toString().split(',')[1];
         if (!base64) throw new Error('Failed to read file');
 
-        const { data: session } = await supabase.auth.getSession();
-        const token = session?.session?.access_token;
+        // Create user-specific folder structure
+        const userFolder = user ? `user-${user.id}/${folder}` : `public/${folder}`;
 
         const response = await supabase.functions.invoke('upload-to-s3', {
           body: {
             fileName: selectedFile.name,
             contentBase64: base64,
             contentType: selectedFile.type,
-            folder: folder
+            folder: userFolder
           }
         });
 
@@ -80,9 +96,16 @@ export function FileUploader({
         const result = response.data;
 
         if (result.success) {
+          // Update user's storage usage if authenticated
+          if (user && profile) {
+            await updateProfile({
+              storage_used: profile.storage_used + selectedFile.size
+            });
+          }
+
           toast({
             title: "Upload successful",
-            description: "File has been uploaded to S3"
+            description: "File has been uploaded successfully"
           });
           onUploadComplete(result.url, result.fileName);
           clearFile();
@@ -113,6 +136,13 @@ export function FileUploader({
     <Card>
       <CardContent className="p-6">
         <div className="space-y-4">
+          {user && profile && (
+            <div className="text-sm text-muted-foreground">
+              Storage: {((profile.storage_used / (1024 * 1024 * 1024)) * 100 / (profile.storage_limit / (1024 * 1024 * 1024))).toFixed(1)}% used
+              ({(profile.storage_used / (1024 * 1024 * 1024)).toFixed(2)}GB / {(profile.storage_limit / (1024 * 1024 * 1024)).toFixed(0)}GB)
+            </div>
+          )}
+          
           <div>
             <Label htmlFor="file-upload">Select File</Label>
             <Input
@@ -168,7 +198,7 @@ export function FileUploader({
                   ) : (
                     <>
                       <Upload className="h-4 w-4 mr-2" />
-                      Upload to S3
+                      Upload File
                     </>
                   )}
                 </Button>

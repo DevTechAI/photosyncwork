@@ -1,17 +1,20 @@
 
-import { createRoot } from 'react-dom/client'
-import App from './App.tsx'
-import './index.css'
-import { BrowserRouter } from 'react-router-dom'
-import { UserProvider } from './contexts/UserContext'
-import { QueryProvider } from './QueryProvider'
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { BrowserRouter } from "react-router-dom";
+import { QueryProvider } from "./QueryProvider";
+import { AuthProvider } from "./contexts/AuthContext";
+import App from "./App";
+import "./index.css";
 
-createRoot(document.getElementById("root")!).render(
-  <BrowserRouter>
-    <UserProvider>
+ReactDOM.createRoot(document.getElementById("root")!).render(
+  <React.StrictMode>
+    <BrowserRouter>
       <QueryProvider>
-        <App />
+        <AuthProvider>
+          <App />
+        </AuthProvider>
       </QueryProvider>
-    </UserProvider>
-  </BrowserRouter>
+    </BrowserRouter>
+  </React.StrictMode>
 );

@@ -20,13 +20,13 @@ export function GetStartedSection() {
         
         <div className="grid grid-cols-1 gap-4 md:gap-6 max-w-sm md:max-w-3xl mx-auto">
           <Button 
-            onClick={() => navigate('/photographers')}
+            onClick={() => navigate('/auth')}
             size={isMobile ? "default" : "lg"}
             className={`h-12 md:h-16 text-base md:text-lg text-warmWhite flex items-center justify-center w-full font-playfair shadow-lg hover:shadow-xl transition-shadow`}
             style={{ backgroundColor: 'hsl(var(--dusty-blue))' }}
           >
             <Camera className="h-5 w-5 md:h-6 md:w-6 mr-2" />
-            Start as a Photographer
+            Start Your Studio
           </Button>
 
           <Button 
@@ -40,11 +40,11 @@ export function GetStartedSection() {
             }}
           >
             <User className="h-5 w-5 md:h-6 md:w-6 mr-2" />
-            Create Your Portfolio
+            Create Portfolio
           </Button>
           
           <Button 
-            onClick={() => navigate('/client-portal')}
+            onClick={() => navigate('/hire')}
             variant="outline"
             size={isMobile ? "default" : "lg"}
             className={`h-12 md:h-16 text-base md:text-lg border-2 w-full font-playfair shadow-lg hover:shadow-xl transition-shadow bg-dustyBlue-whisper/50 backdrop-blur-sm`}
@@ -54,7 +54,7 @@ export function GetStartedSection() {
             }}
           >
             <Globe className="h-5 w-5 md:h-6 md:w-6 mr-2" />
-            Access Client Portal
+            Hire Professionals
           </Button>
         </div>
       </div>

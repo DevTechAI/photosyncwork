@@ -1,149 +1,72 @@
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
 import { Routes, Route } from "react-router-dom";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
-import Index from "./pages/Index";
+import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster as RadixToaster } from "@/components/ui/toaster";
 import Home from "./pages/Home";
-import Hire from "./pages/Hire";
-import Login from "./pages/Login";
-import PhotographersPortal from "./pages/PhotographersPortal";
-import NotFound from "./pages/NotFound";
-import SchedulingPage from "./pages/scheduling/SchedulingPage";
-import EstimatesPage from "./pages/estimates/EstimatesPage";
-import FinancesPage from "./pages/finances/FinancesPage";
-import CategoriesPage from "./pages/finances/CategoriesPage";
-import InvoicesPage from "./pages/invoices/InvoicesPage";
-import PreProductionPage from "./pages/workflow/PreProductionPage";
-import ProductionPage from "./pages/workflow/ProductionPage";
-import PostProductionPage from "./pages/workflow/PostProductionPage";
-import RealtimeTestPage from "./pages/RealtimeTestPage";
-import ClientPortal from "./pages/ClientPortal";
-import Gallery from "./pages/Gallery";
-import VideoPlayer from "./pages/VideoPlayer";
+import Auth from "./pages/Auth";
 import Portfolio from "./pages/Portfolio";
+import { AuthGuard } from "./components/auth/AuthGuard";
+import { Header } from "./components/layout/Header";
+import { useAuth } from "./contexts/AuthContext";
+
+// Import other pages
+import Index from "./pages/Index";
+import EstimatesPage from "./pages/estimates/EstimatesPage";
+import SchedulingPage from "./pages/scheduling/SchedulingPage";
+import FinancesPage from "./pages/finances/FinancesPage";
+import InvoicesPage from "./pages/invoices/InvoicesPage";
+import Hire from "./pages/Hire";
+import NotFound from "./pages/NotFound";
 
 function App() {
+  const { user } = useAuth();
+
   return (
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <Routes>
-        <Route path="/home" element={<Home />} />
-        <Route path="/hire" element={<Hire />} />
-        <Route path="/photographers" element={<PhotographersPortal />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/client-portal" element={<ClientPortal />} />
-        <Route path="/gallery" element={<Gallery />} />
-        <Route path="/video-player/:videoId" element={<VideoPlayer />} />
-        <Route path="/portfolio" element={<Portfolio />} />
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
+      <div className="min-h-screen bg-background">
+        {user && <Header />}
+        <Routes>
+          {/* Public routes */}
+          <Route path="/" element={<Home />} />
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/hire" element={<Hire />} />
+          
+          {/* Portfolio can be accessed without login for creation */}
+          <Route path="/portfolio" element={<Portfolio />} />
+          
+          {/* Protected routes */}
+          <Route path="/dashboard" element={
+            <AuthGuard>
               <Index />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/scheduling"
-          element={
-            <ProtectedRoute requiredModule="scheduling">
-              <SchedulingPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/estimates"
-          element={
-            <ProtectedRoute requiredModule="estimates">
+            </AuthGuard>
+          } />
+          <Route path="/estimates" element={
+            <AuthGuard>
               <EstimatesPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/finances"
-          element={
-            <ProtectedRoute requiredModule="finances">
+            </AuthGuard>
+          } />
+          <Route path="/scheduling/*" element={
+            <AuthGuard>
+              <SchedulingPage />
+            </AuthGuard>
+          } />
+          <Route path="/finances/*" element={
+            <AuthGuard>
               <FinancesPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/finances/categories"
-          element={
-            <ProtectedRoute requiredModule="finances">
-              <CategoriesPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/invoices"
-          element={
-            <ProtectedRoute requiredModule="invoices">
+            </AuthGuard>
+          } />
+          <Route path="/invoices" element={
+            <AuthGuard>
               <InvoicesPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/workflow/pre-production"
-          element={
-            <ProtectedRoute requiredModule="workflow">
-              <PreProductionPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/workflow/production"
-          element={
-            <ProtectedRoute requiredModule="workflow">
-              <ProductionPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/workflow/post-production"
-          element={
-            <ProtectedRoute requiredModule="workflow">
-              <PostProductionPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/pre-production"
-          element={
-            <ProtectedRoute requiredModule="workflow">
-              <PreProductionPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/production"
-          element={
-            <ProtectedRoute requiredModule="workflow">
-              <ProductionPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/post-production"
-          element={
-            <ProtectedRoute requiredModule="workflow">
-              <PostProductionPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/realtime-test"
-          element={
-            <ProtectedRoute>
-              <RealtimeTestPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+            </AuthGuard>
+          } />
+          
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </div>
+      <Toaster />
+      <RadixToaster />
     </TooltipProvider>
   );
 }
