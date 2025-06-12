@@ -84,7 +84,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setProfile(null);
         }
         
-        // Always set loading to false after processing auth state change
+        // ALWAYS set loading to false after processing auth state change
+        console.log('Setting loading to false after auth state change');
         setLoading(false);
       }
     );
@@ -102,6 +103,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       
       // Set loading to false after initial session check
+      console.log('Setting loading to false after initial session check');
       setLoading(false);
     });
 
