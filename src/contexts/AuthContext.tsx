@@ -61,43 +61,60 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     console.log('AuthProvider: Setting up auth state listener');
+    let isMounted = true;
+
+    // Set up auth state listener first
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Auth state changed:', event, session?.user?.email);
+        
+        if (!isMounted) return;
+
+        setSession(session);
+        setUser(session?.user ?? null);
+
+        if (event === 'SIGNED_IN' && session?.user) {
+          console.log('User signed in successfully');
+          setTimeout(() => {
+            if (isMounted) {
+              fetchUserProfile(session.user.id);
+            }
+          }, 0);
+        } else if (event === 'SIGNED_OUT') {
+          console.log('User signed out');
+          setProfile(null);
+        }
+        
+        // Always set loading to false after processing auth state
+        if (isMounted) {
+          setLoading(false);
+          console.log('Auth state processed, loading set to false');
+        }
+      }
+    );
 
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!isMounted) return;
+      
       console.log('Initial session check:', session?.user?.email || 'No session');
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        fetchUserProfile(session.user.id);
+        setTimeout(() => {
+          if (isMounted) {
+            fetchUserProfile(session.user.id);
+          }
+        }, 0);
       }
       
       setLoading(false);
       console.log('Initial session check complete, setting loading to false');
     });
 
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.email);
-        
-        setSession(session);
-        setUser(session?.user ?? null);
-
-        if (event === 'SIGNED_IN' && session?.user) {
-          console.log('User signed in successfully');
-          await fetchUserProfile(session.user.id);
-        } else if (event === 'SIGNED_OUT') {
-          console.log('User signed out');
-          setProfile(null);
-        }
-        
-        setLoading(false);
-        console.log('Auth state processed, loading set to false');
-      }
-    );
-
     return () => {
+      isMounted = false;
       subscription.unsubscribe();
     };
   }, []);
