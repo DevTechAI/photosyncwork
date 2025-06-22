@@ -23,12 +23,18 @@ export function PostProductionContent({
   handleUpdateEvents,
   handleLogTime
 }: PostProductionContentProps) {
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-32 bg-muted rounded-md">
+        <p className="text-muted-foreground">Loading events...</p>
+      </div>
+    );
+  }
+
   if (!selectedEvent) {
     return (
       <div className="flex items-center justify-center h-32 bg-muted rounded-md">
-        <p className="text-muted-foreground">
-          {isLoading ? "Loading events..." : "Select an event to view details"}
-        </p>
+        <p className="text-muted-foreground">Select an event to view details</p>
       </div>
     );
   }
@@ -53,7 +59,7 @@ export function PostProductionContent({
         <TabsContent value="deliverables" className="pt-4">
           <PostProductionDeliverables
             selectedEvent={selectedEvent}
-            setSelectedEvent={setSelectedEvent => handleUpdateEvents(setSelectedEvent)}
+            setSelectedEvent={handleUpdateEvents}
             updateEvents={handleUpdateEvents}
             teamMembers={teamMembers}
           />
