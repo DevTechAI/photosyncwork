@@ -106,6 +106,23 @@ function App() {
                 </AuthGuard>
               } />
               
+              {/* Direct workflow routes (without /workflow prefix) */}
+              <Route path="/pre-production" element={
+                <AuthGuard>
+                  <PreProductionLayout />
+                </AuthGuard>
+              } />
+              <Route path="/production" element={
+                <AuthGuard>
+                  <ProductionPage />
+                </AuthGuard>
+              } />
+              <Route path="/post-production" element={
+                <AuthGuard>
+                  <PostProductionPage />
+                </AuthGuard>
+              } />
+              
               <Route path="*" element={<NotFound />} />
             </Routes>
           </div>
