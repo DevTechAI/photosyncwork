@@ -1,5 +1,4 @@
-
-export type TeamMemberRole = "photographer" | "videographer" | "editor" | "production" | "album_designer";
+export type TeamMemberRole = "photographer" | "videographer" | "editor" | "production" | "album_designer" | "manager";
 
 export type WorkflowStage = "pre-production" | "production" | "post-production" | "completed";
 

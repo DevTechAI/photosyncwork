@@ -47,6 +47,18 @@ export function TeamPortal({ teamMembers }: TeamPortalProps) {
           { icon: Calendar, label: "Project Overview", href: "/production" },
           { icon: FileImage, label: "Final Review", href: "/post-production" }
         ];
+      case "production":
+        return [
+          { icon: Calendar, label: "Production Schedule", href: "/production" },
+          { icon: Clock, label: "Time Tracking", href: "/production" },
+          { icon: Users, label: "Team Coordination", href: "/pre-production" }
+        ];
+      case "album_designer":
+        return [
+          { icon: FileImage, label: "Album Design", href: "/post-production" },
+          { icon: Calendar, label: "Design Schedule", href: "/pre-production" },
+          { icon: Clock, label: "Design Time", href: "/production" }
+        ];
       default:
         return [
           { icon: Calendar, label: "View Schedule", href: "/scheduling" },
@@ -122,6 +134,20 @@ export function TeamPortal({ teamMembers }: TeamPortalProps) {
               <li>• Assign team members to events</li>
               <li>• Monitor project progress</li>
               <li>• Review and approve deliverables</li>
+            </>
+          ) : currentUser.role === "production" ? (
+            <>
+              <li>• Coordinate production schedules</li>
+              <li>• Manage on-site logistics</li>
+              <li>• Track production progress</li>
+              <li>• Communicate with team members</li>
+            </>
+          ) : currentUser.role === "album_designer" ? (
+            <>
+              <li>• Design and layout photo albums</li>
+              <li>• Manage design timelines</li>
+              <li>• Review client feedback on designs</li>
+              <li>• Coordinate with editors for final assets</li>
             </>
           ) : (
             <>
