@@ -5,6 +5,9 @@ import { ScheduledEvent, TeamMember } from "@/components/scheduling/types";
 import { DeliverablesContainer } from "./deliverables/DeliverablesContainer";
 import { AssignDeliverableModal } from "./deliverables/AssignDeliverableModal";
 import { RevisionRequestModal } from "./deliverables/RevisionRequestModal";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Upload, Plus } from "lucide-react";
 
 interface PostProductionDeliverablesProps {
   selectedEvent: ScheduledEvent;
@@ -24,6 +27,75 @@ export function PostProductionDeliverables({
   const [isAssignDeliverableModalOpen, setIsAssignDeliverableModalOpen] = useState(false);
   const [isRevisionModalOpen, setIsRevisionModalOpen] = useState(false);
   const [selectedDeliverableId, setSelectedDeliverableId] = useState<string | null>(null);
+  const [uploadingFiles, setUploadingFiles] = useState(false);
+  
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploadingFiles(true);
+    
+    try {
+      // Create new deliverables that match the ScheduledEvent deliverable type
+      const newDeliverables = Array.from(files).map((file, index) => ({
+        id: `del_${Date.now()}_${index}`,
+        type: file.type.startsWith('image/') ? "photos" as const : 
+              file.type.startsWith('video/') ? "videos" as const : "album" as const,
+        status: "pending" as const,
+        assignedTo: undefined,
+        deliveryDate: undefined,
+        revisionNotes: undefined,
+        completedDate: undefined
+      }));
+
+      const updatedEvent = {
+        ...selectedEvent,
+        deliverables: [...(selectedEvent.deliverables || []), ...newDeliverables]
+      };
+
+      updateEvents(updatedEvent);
+      setSelectedEvent(updatedEvent);
+      
+      toast({
+        title: "Files uploaded successfully",
+        description: `${files.length} file(s) have been uploaded for client review.`
+      });
+    } catch (error) {
+      console.error("Error uploading files:", error);
+      toast({
+        title: "Upload failed",
+        description: "There was an error uploading the files. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setUploadingFiles(false);
+    }
+  };
+
+  const handleAddDeliverable = () => {
+    const newDeliverable = {
+      id: `del_${Date.now()}`,
+      type: "photos" as const,
+      status: "pending" as const,
+      assignedTo: undefined,
+      deliveryDate: undefined,
+      revisionNotes: undefined,
+      completedDate: undefined
+    };
+
+    const updatedEvent = {
+      ...selectedEvent,
+      deliverables: [...(selectedEvent.deliverables || []), newDeliverable]
+    };
+
+    updateEvents(updatedEvent);
+    setSelectedEvent(updatedEvent);
+    
+    toast({
+      title: "Deliverable Added",
+      description: "A new deliverable has been created."
+    });
+  };
   
   const handleOpenAssignModal = (deliverableId: string) => {
     setSelectedDeliverableId(deliverableId);
@@ -159,7 +231,46 @@ export function PostProductionDeliverables({
   const isReadyForCompletion = selectedEvent?.deliverables?.every(d => d.status === "completed");
   
   return (
-    <>
+    <div className="space-y-6">
+      {/* Upload Section */}
+      <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
+        <div className="text-center">
+          <Upload className="mx-auto h-12 w-12 text-gray-400" />
+          <div className="mt-4">
+            <h3 className="text-lg font-medium">Upload Client Deliverables</h3>
+            <p className="text-sm text-muted-foreground mt-2">
+              Upload photos, videos, or documents that will be delivered to the client
+            </p>
+          </div>
+          <div className="mt-6 flex gap-4 justify-center">
+            <Input
+              type="file"
+              multiple
+              onChange={handleFileUpload}
+              disabled={uploadingFiles}
+              className="hidden"
+              id="deliverable-upload"
+              accept="image/*,video/*,.pdf,.doc,.docx"
+            />
+            <Button
+              onClick={() => document.getElementById('deliverable-upload')?.click()}
+              disabled={uploadingFiles}
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              {uploadingFiles ? "Uploading..." : "Upload Files"}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleAddDeliverable}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Deliverable
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Deliverables Container */}
       <DeliverablesContainer 
         selectedEvent={selectedEvent}
         teamMembers={teamMembers}
@@ -185,6 +296,6 @@ export function PostProductionDeliverables({
         onClose={() => setIsRevisionModalOpen(false)}
         onRequestRevision={handleRequestRevision}
       />
-    </>
+    </div>
   );
 }
