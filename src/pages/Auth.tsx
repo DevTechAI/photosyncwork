@@ -47,6 +47,14 @@ export default function Auth() {
     }
   }, [toast]);
 
+  // Redirect authenticated users to dashboard immediately
+  useEffect(() => {
+    if (!loading && user) {
+      const from = location.state?.from?.pathname || '/dashboard';
+      navigate(from, { replace: true });
+    }
+  }, [user, loading, navigate, location.state]);
+
   // Show loading state while checking auth
   if (loading) {
     return (
@@ -59,30 +67,14 @@ export default function Auth() {
     );
   }
 
-  // If user is already authenticated, show a simple message instead of redirecting
+  // If user is already authenticated, don't show auth form - they should be redirected
   if (user) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <div className="mx-auto mb-4 p-3 bg-primary/10 rounded-full w-fit">
-              <Camera className="h-8 w-8 text-primary" />
-            </div>
-            <CardTitle className="text-2xl font-bold">Welcome Back!</CardTitle>
-            <CardDescription>
-              You are already signed in as {user.email}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button 
-              onClick={() => navigate("/dashboard")}
-              className="w-full"
-              size="lg"
-            >
-              Go to Dashboard
-            </Button>
-          </CardContent>
-        </Card>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-2 text-muted-foreground">Redirecting to dashboard...</p>
+        </div>
       </div>
     );
   }

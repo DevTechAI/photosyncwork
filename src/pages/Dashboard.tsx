@@ -22,8 +22,20 @@ import {
 import { StatCard } from "@/components/stats/StatCard";
 
 export default function Dashboard() {
-  const { user, profile } = useAuth();
+  const { user, profile, loading } = useAuth();
   const navigate = useNavigate();
+
+  // Show loading if still checking auth
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-2 text-muted-foreground">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Quick action modules
   const modules = [
@@ -93,6 +105,11 @@ export default function Dashboard() {
     }
   ];
 
+  const handleModuleClick = (path: string) => {
+    console.log('Navigating to:', path);
+    navigate(path);
+  };
+
   return (
     <Layout>
       <div className="space-y-8 p-6">
@@ -155,7 +172,7 @@ export default function Dashboard() {
                 <Button
                   key={option.title}
                   variant="outline"
-                  className="h-auto p-4 flex flex-col items-center space-y-2"
+                  className="h-auto p-4 flex flex-col items-center space-y-2 hover:bg-accent"
                   onClick={option.action}
                 >
                   <option.icon className="h-8 w-8" />
@@ -176,8 +193,8 @@ export default function Dashboard() {
             {modules.map((module) => (
               <Card 
                 key={module.title} 
-                className="cursor-pointer hover:shadow-lg transition-shadow"
-                onClick={() => navigate(module.path)}
+                className="cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
+                onClick={() => handleModuleClick(module.path)}
               >
                 <CardHeader>
                   <div className="flex items-center space-x-3">
@@ -191,7 +208,14 @@ export default function Dashboard() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <Button className="w-full" variant="outline">
+                  <Button 
+                    className="w-full" 
+                    variant="outline"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleModuleClick(module.path);
+                    }}
+                  >
                     Open {module.title}
                   </Button>
                 </CardContent>
