@@ -8,16 +8,8 @@ import { Upload, Download, Eye, CheckCircle, AlertCircle, Trash2 } from "lucide-
 import { ScheduledEvent } from "@/components/scheduling/types";
 import { useToast } from "@/components/ui/use-toast";
 
-interface Deliverable {
-  id: string;
-  fileName: string;
-  fileType: string;
-  fileSize: number;
-  uploadDate: string;
-  status: "pending" | "approved" | "revision_requested";
-  downloadCount: number;
-  clientNotes?: string;
-}
+// Use the deliverable type from ScheduledEvent instead of creating a separate one
+type Deliverable = NonNullable<ScheduledEvent['deliverables']>[0];
 
 interface ProductionDeliverablesTabProps {
   selectedEvent: ScheduledEvent;
@@ -31,7 +23,7 @@ export function ProductionDeliverablesTab({
   const { toast } = useToast();
   const [uploadingFiles, setUploadingFiles] = useState(false);
   
-  // Get deliverables from event data (mock for now)
+  // Get deliverables from event data, ensuring they match the ScheduledEvent type
   const deliverables: Deliverable[] = selectedEvent.deliverables || [];
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -41,15 +33,16 @@ export function ProductionDeliverablesTab({
     setUploadingFiles(true);
     
     try {
-      // Mock file upload - in real implementation, upload to S3/Supabase Storage
-      const newDeliverables = Array.from(files).map((file, index) => ({
+      // Create new deliverables that match the ScheduledEvent deliverable type
+      const newDeliverables: Deliverable[] = Array.from(files).map((file, index) => ({
         id: `del_${Date.now()}_${index}`,
-        fileName: file.name,
-        fileType: file.type,
-        fileSize: file.size,
-        uploadDate: new Date().toISOString(),
+        type: file.type.startsWith('image/') ? "photos" as const : 
+              file.type.startsWith('video/') ? "videos" as const : "album" as const,
         status: "pending" as const,
-        downloadCount: 0
+        assignedTo: undefined,
+        deliveryDate: undefined,
+        revisionNotes: undefined,
+        completedDate: undefined
       }));
 
       const updatedEvent = {
@@ -92,9 +85,10 @@ export function ProductionDeliverablesTab({
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case "approved":
+      case "completed":
+      case "delivered":
         return <CheckCircle className="h-4 w-4 text-green-600" />;
-      case "revision_requested":
+      case "revision-requested":
         return <AlertCircle className="h-4 w-4 text-amber-600" />;
       default:
         return <Eye className="h-4 w-4 text-blue-600" />;
@@ -103,21 +97,14 @@ export function ProductionDeliverablesTab({
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "approved":
+      case "completed":
+      case "delivered":
         return "bg-green-100 text-green-800";
-      case "revision_requested":
+      case "revision-requested":
         return "bg-amber-100 text-amber-800";
       default:
         return "bg-blue-100 text-blue-800";
     }
-  };
-
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
   return (
@@ -163,26 +150,20 @@ export function ProductionDeliverablesTab({
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="text-sm font-medium truncate">
-                      {deliverable.fileName}
+                      {deliverable.type === "photos" ? "Photo Collection" :
+                       deliverable.type === "videos" ? "Video Collection" : "Album"}
                     </h3>
                     <p className="text-xs text-muted-foreground">
-                      {formatFileSize(deliverable.fileSize)} • 
-                      Uploaded {new Date(deliverable.uploadDate).toLocaleDateString()}
+                      {deliverable.assignedTo && `Assigned to: ${deliverable.assignedTo}`}
+                      {deliverable.deliveryDate && ` • Due: ${deliverable.deliveryDate}`}
                     </p>
                   </div>
                 </div>
                 
                 <div className="flex items-center space-x-2">
                   <Badge className={getStatusColor(deliverable.status)}>
-                    {deliverable.status.replace('_', ' ')}
+                    {deliverable.status.replace('-', ' ')}
                   </Badge>
-                  
-                  {deliverable.downloadCount > 0 && (
-                    <Badge variant="outline">
-                      <Download className="h-3 w-3 mr-1" />
-                      {deliverable.downloadCount}
-                    </Badge>
-                  )}
                   
                   <Button
                     variant="ghost"
@@ -194,9 +175,9 @@ export function ProductionDeliverablesTab({
                 </div>
               </div>
               
-              {deliverable.clientNotes && (
+              {deliverable.revisionNotes && (
                 <div className="mt-3 p-2 bg-muted rounded text-sm">
-                  <strong>Client feedback:</strong> {deliverable.clientNotes}
+                  <strong>Revision Notes:</strong> {deliverable.revisionNotes}
                 </div>
               )}
             </Card>
