@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,6 +35,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [initialized, setInitialized] = useState(false);
   const { toast } = useToast();
 
   const fetchUserProfile = async (userId: string) => {
@@ -59,62 +61,66 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    let isMounted = true;
-
     console.log('AuthProvider: Setting up auth state listener');
 
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (!isMounted) return;
-        
         console.log('Auth state changed:', event, session?.user?.email);
-        console.log('Full auth event details:', { event, session });
         
         setSession(session);
         setUser(session?.user ?? null);
 
         if (event === 'SIGNED_IN' && session?.user) {
           console.log('User signed in successfully');
-          await fetchUserProfile(session.user.id);
+          setTimeout(() => {
+            fetchUserProfile(session.user.id);
+          }, 0);
         } else if (event === 'SIGNED_OUT') {
           console.log('User signed out');
           setProfile(null);
-        } else if (session?.user) {
+        } else if (session?.user && !profile) {
           // Fetch profile for existing session
-          await fetchUserProfile(session.user.id);
-        } else {
+          setTimeout(() => {
+            fetchUserProfile(session.user.id);
+          }, 0);
+        } else if (!session) {
           setProfile(null);
         }
         
-        // ALWAYS set loading to false after processing auth state change
-        console.log('Setting loading to false after auth state change');
-        setLoading(false);
+        // Set initialized after first auth event
+        if (!initialized) {
+          setInitialized(true);
+          setLoading(false);
+          console.log('Auth initialized, setting loading to false');
+        }
       }
     );
 
     // Check for existing session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (!isMounted) return;
-      
+    supabase.auth.getSession().then(({ data: { session } }) => {
       console.log('Initial session check:', session?.user?.email || 'No session');
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        await fetchUserProfile(session.user.id);
+        setTimeout(() => {
+          fetchUserProfile(session.user.id);
+        }, 0);
       }
       
-      // Set loading to false after initial session check
-      console.log('Setting loading to false after initial session check');
-      setLoading(false);
+      // Ensure loading is set to false after initial check
+      if (!initialized) {
+        setInitialized(true);
+        setLoading(false);
+        console.log('Initial session check complete, setting loading to false');
+      }
     });
 
     return () => {
-      isMounted = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [initialized, profile]);
 
   const createUserProfile = async (user: User) => {
     try {
@@ -197,8 +203,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signInWithGoogle = async () => {
     try {
       console.log('Attempting Google sign in');
-      console.log('Current window location:', window.location.origin);
-      console.log('Redirect URL will be:', `${window.location.origin}/auth`);
       
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -212,10 +216,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (error) {
         console.error('Google sign in error:', error);
-        console.error('Error details:', {
-          message: error.message,
-          status: error.status
-        });
         return { error };
       }
       
@@ -223,11 +223,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { error: null };
     } catch (error: any) {
       console.error('Google sign in error:', error);
-      console.error('Caught error details:', {
-        message: error.message,
-        stack: error.stack,
-        name: error.name
-      });
       return { error };
     }
   };
