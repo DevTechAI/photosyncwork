@@ -19,60 +19,63 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     console.log('AuthProvider: Setting up auth state listener');
-    let isMounted = true;
+    let mounted = true;
 
-    // Set up auth state listener first
+    // Get initial session
+    const initializeAuth = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (!mounted) return;
+        
+        console.log('Initial session check:', session?.user?.email || 'No session');
+        
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          fetchUserProfile(session.user.id);
+        }
+      } catch (error) {
+        console.error('Error getting initial session:', error);
+      } finally {
+        if (mounted) {
+          setLoading(false);
+          console.log('Initial auth check complete, loading set to false');
+        }
+      }
+    };
+
+    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.email);
+        if (!mounted) return;
         
-        if (!isMounted) return;
-
+        console.log('Auth state changed:', event, session?.user?.email || 'No session');
+        
         setSession(session);
         setUser(session?.user ?? null);
 
         if (event === 'SIGNED_IN' && session?.user) {
           console.log('User signed in successfully');
-          setTimeout(() => {
-            if (isMounted) {
-              fetchUserProfile(session.user.id);
-            }
-          }, 0);
+          fetchUserProfile(session.user.id);
         } else if (event === 'SIGNED_OUT') {
           console.log('User signed out');
           clearProfile();
         }
         
-        // Always set loading to false after processing auth state
-        if (isMounted) {
+        if (mounted) {
           setLoading(false);
           console.log('Auth state processed, loading set to false');
         }
       }
     );
 
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!isMounted) return;
-      
-      console.log('Initial session check:', session?.user?.email || 'No session');
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        setTimeout(() => {
-          if (isMounted) {
-            fetchUserProfile(session.user.id);
-          }
-        }, 0);
-      }
-      
-      setLoading(false);
-      console.log('Initial session check complete, setting loading to false');
-    });
+    // Initialize auth
+    initializeAuth();
 
     return () => {
-      isMounted = false;
+      mounted = false;
       subscription.unsubscribe();
     };
   }, [fetchUserProfile, clearProfile]);

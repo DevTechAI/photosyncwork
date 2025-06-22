@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { Profile } from "./types";
@@ -9,7 +9,7 @@ export const useProfileManager = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const { toast } = useToast();
 
-  const fetchUserProfile = async (userId: string) => {
+  const fetchUserProfile = useCallback(async (userId: string) => {
     try {
       console.log('Fetching profile for user:', userId);
       const { data: profileData, error } = await supabase
@@ -29,9 +29,9 @@ export const useProfileManager = () => {
       console.error('Error in profile fetch:', error);
       await createUserProfile({ id: userId } as User);
     }
-  };
+  }, []);
 
-  const createUserProfile = async (user: User) => {
+  const createUserProfile = useCallback(async (user: User) => {
     try {
       console.log('Creating profile for user:', user.id);
       const profileData = {
@@ -59,9 +59,9 @@ export const useProfileManager = () => {
     } catch (error) {
       console.error('Error in createUserProfile:', error);
     }
-  };
+  }, []);
 
-  const updateProfile = async (user: User | null, updates: Partial<Profile>) => {
+  const updateProfile = useCallback(async (user: User | null, updates: Partial<Profile>) => {
     if (!user || !profile) return;
 
     try {
@@ -86,11 +86,11 @@ export const useProfileManager = () => {
         variant: "destructive"
       });
     }
-  };
+  }, [profile, toast]);
 
-  const clearProfile = () => {
+  const clearProfile = useCallback(() => {
     setProfile(null);
-  };
+  }, []);
 
   return {
     profile,
