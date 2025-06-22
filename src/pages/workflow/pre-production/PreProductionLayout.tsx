@@ -6,7 +6,7 @@ import { EventDetailsTabs } from "@/components/workflow/pre-production/EventDeta
 import { ScheduledEvent, TeamMember } from "@/components/scheduling/types";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import { dbToScheduledEvent } from "@/utils/supabaseConverters";
+import { dbToScheduledEvent, scheduledEventToDb } from "@/utils/supabaseConverters";
 import { getAvailableTeamMembers, getAssignedTeamMembers } from "@/utils/teamMemberFilterUtils";
 
 export default function PreProductionLayout() {
@@ -40,7 +40,7 @@ export default function PreProductionLayout() {
           setEvents(convertedEvents);
         }
 
-        // Load team members
+        // Load team members with proper type conversion
         const { data: teamData, error: teamError } = await supabase
           .from('team_members')
           .select('*');
@@ -53,7 +53,18 @@ export default function PreProductionLayout() {
             variant: "destructive"
           });
         } else {
-          setTeamMembers(teamData || []);
+          // Convert database team members to frontend type
+          const convertedTeamMembers: TeamMember[] = (teamData || []).map(member => ({
+            id: member.id,
+            name: member.name,
+            role: member.role as TeamMember['role'], // Type assertion for role
+            email: member.email || '',
+            phone: member.phone || '',
+            whatsapp: member.whatsapp,
+            availability: member.availability as TeamMember['availability'] || {},
+            isFreelancer: member.is_freelancer || false
+          }));
+          setTeamMembers(convertedTeamMembers);
         }
       } catch (error) {
         console.error('Error loading data:', error);
@@ -126,9 +137,12 @@ export default function PreProductionLayout() {
 
       const updatedAssignments = [...selectedEvent.assignments, newAssignment];
       
+      // Convert to database format using the converter
+      const dbEvent = scheduledEventToDb({ ...selectedEvent, assignments: updatedAssignments });
+      
       const { error } = await supabase
         .from('scheduled_events')
-        .update({ assignments: updatedAssignments })
+        .update({ assignments: dbEvent.assignments })
         .eq('id', selectedEvent.id);
 
       if (error) {
@@ -198,9 +212,12 @@ export default function PreProductionLayout() {
           : assignment
       );
 
+      // Convert to database format using the converter
+      const dbEvent = scheduledEventToDb({ ...event, assignments: updatedAssignments });
+
       const { error } = await supabase
         .from('scheduled_events')
-        .update({ assignments: updatedAssignments })
+        .update({ assignments: dbEvent.assignments })
         .eq('id', eventId);
 
       if (error) {
