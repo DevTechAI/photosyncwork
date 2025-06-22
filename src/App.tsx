@@ -24,8 +24,8 @@ import InvoicesPage from "./pages/invoices/InvoicesPage";
 import Hire from "./pages/Hire";
 import NotFound from "./pages/NotFound";
 
-// Import workflow pages
-import PreProductionPage from "./pages/workflow/PreProductionPage";
+// Import workflow pages - fix the imports to match actual file structure
+import PreProductionLayout from "./pages/workflow/pre-production/PreProductionLayout";
 import ProductionPage from "./pages/workflow/ProductionPage";
 import PostProductionPage from "./pages/workflow/PostProductionPage";
 
@@ -89,10 +89,10 @@ function App() {
                 </AuthGuard>
               } />
               
-              {/* Workflow routes */}
+              {/* Workflow routes - updated to use correct component imports */}
               <Route path="/workflow/pre-production" element={
                 <AuthGuard>
-                  <PreProductionPage />
+                  <PreProductionLayout />
                 </AuthGuard>
               } />
               <Route path="/workflow/production" element={
