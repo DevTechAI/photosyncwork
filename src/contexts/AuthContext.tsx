@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -70,6 +69,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (!isMounted) return;
         
         console.log('Auth state changed:', event, session?.user?.email);
+        console.log('Full auth event details:', { event, session, error: session?.error });
+        
         setSession(session);
         setUser(session?.user ?? null);
 
@@ -196,22 +197,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signInWithGoogle = async () => {
     try {
       console.log('Attempting Google sign in');
+      console.log('Current window location:', window.location.origin);
+      console.log('Redirect URL will be:', `${window.location.origin}/auth`);
+      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth`
+          redirectTo: `${window.location.origin}/auth`,
+          queryParams: {
+            prompt: 'select_account'
+          }
         }
       });
       
       if (error) {
         console.error('Google sign in error:', error);
+        console.error('Error details:', {
+          message: error.message,
+          status: error.status,
+          statusText: error.statusText
+        });
         return { error };
       }
       
-      console.log('Google sign in initiated successfully');
+      console.log('Google sign in initiated successfully:', data);
       return { error: null };
     } catch (error: any) {
       console.error('Google sign in error:', error);
+      console.error('Caught error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
       return { error };
     }
   };

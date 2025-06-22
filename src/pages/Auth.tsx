@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,30 @@ export default function Auth() {
   const [fullName, setFullName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Check for auth callback errors in URL
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const error = urlParams.get('error');
+    const errorDescription = urlParams.get('error_description');
+    
+    console.log('Auth page URL params:', {
+      error,
+      errorDescription,
+      fullURL: window.location.href,
+      search: window.location.search,
+      hash: window.location.hash
+    });
+
+    if (error) {
+      console.error('OAuth callback error:', { error, errorDescription });
+      toast({
+        title: "Authentication Error",
+        description: errorDescription || error,
+        variant: "destructive"
+      });
+    }
+  }, [toast]);
 
   // Show loading state while checking auth
   if (loading) {
@@ -117,6 +141,9 @@ export default function Auth() {
 
   const handleGoogleAuth = async () => {
     setIsSubmitting(true);
+    console.log('Google auth button clicked');
+    console.log('Current page URL:', window.location.href);
+    
     try {
       console.log('Attempting Google sign in');
       const { error } = await signInWithGoogle();
@@ -124,9 +151,11 @@ export default function Auth() {
         console.error('Google sign in error:', error);
         toast({
           title: "Google sign in failed",
-          description: error.message || "Failed to sign in with Google. Please try again.",
+          description: error.message || "Failed to sign in with Google. Please check the console for details.",
           variant: "destructive"
         });
+      } else {
+        console.log('Google auth request initiated successfully');
       }
     } catch (error: any) {
       console.error('Google auth error:', error);
@@ -187,6 +216,13 @@ export default function Auth() {
             </svg>
             Continue with Google
           </Button>
+
+          {/* Debug info section */}
+          <div className="text-xs text-muted-foreground p-2 bg-muted rounded">
+            <p>Debug Info:</p>
+            <p>Current URL: {window.location.href}</p>
+            <p>Origin: {window.location.origin}</p>
+          </div>
 
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
