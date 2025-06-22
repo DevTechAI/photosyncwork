@@ -23,6 +23,7 @@ import FinancesPage from "./pages/finances/FinancesPage";
 import InvoicesPage from "./pages/invoices/InvoicesPage";
 import Hire from "./pages/Hire";
 import NotFound from "./pages/NotFound";
+import ClientPortal from "./pages/ClientPortal";
 
 // Import workflow pages - fix the imports to match actual file structure
 import PreProductionLayout from "./pages/workflow/pre-production/PreProductionLayout";
@@ -43,6 +44,9 @@ function App() {
               <Route path="/login" element={<Navigate to="/auth" replace />} />
               <Route path="/hire" element={<Hire />} />
               <Route path="/photographers" element={<PhotographersPortal />} />
+              
+              {/* Client Portal - Public access */}
+              <Route path="/client-portal" element={<ClientPortal />} />
               
               {/* Portfolio can be accessed without login for creation */}
               <Route path="/portfolio" element={<Portfolio />} />
