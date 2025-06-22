@@ -11,17 +11,29 @@ import { Button } from "@/components/ui/button";
 import { Camera, Briefcase, Users } from "lucide-react";
 
 export default function Home() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    // If user is logged in, redirect to dashboard
-    if (user) {
+    // Only redirect if not loading and user exists
+    if (!loading && user) {
       navigate('/dashboard');
     }
-  }, [user, navigate]);
+  }, [user, loading, navigate]);
 
-  // Show loading while checking auth state
+  // Show loading only while auth state is being determined
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-2 text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If user is authenticated, show redirecting message briefly
   if (user) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -33,6 +45,7 @@ export default function Home() {
     );
   }
 
+  // Show the home page for non-authenticated users
   return (
     <div className="min-h-screen bg-warmWhite">
       {/* Quick access navigation for non-authenticated users */}
