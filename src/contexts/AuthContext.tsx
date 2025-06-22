@@ -69,7 +69,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (!isMounted) return;
         
         console.log('Auth state changed:', event, session?.user?.email);
-        console.log('Full auth event details:', { event, session, error: session?.error });
+        console.log('Full auth event details:', { event, session });
         
         setSession(session);
         setUser(session?.user ?? null);
@@ -214,8 +214,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.error('Google sign in error:', error);
         console.error('Error details:', {
           message: error.message,
-          status: error.status,
-          statusText: error.statusText
+          status: error.status
         });
         return { error };
       }
