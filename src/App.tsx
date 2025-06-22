@@ -11,6 +11,7 @@ import Portfolio from "./pages/Portfolio";
 import PhotographersPortal from "./pages/PhotographersPortal";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
+import Dashboard from "./pages/Dashboard";
 import { AuthGuard } from "./components/auth/AuthGuard";
 import { Header } from "./components/layout/Header";
 
@@ -48,6 +49,11 @@ function App() {
               
               {/* Protected routes */}
               <Route path="/dashboard" element={
+                <AuthGuard>
+                  <Dashboard />
+                </AuthGuard>
+              } />
+              <Route path="/index" element={
                 <AuthGuard>
                   <Index />
                 </AuthGuard>
