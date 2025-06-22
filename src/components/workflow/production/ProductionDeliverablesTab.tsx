@@ -1,26 +1,22 @@
+
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { UserCircle, Calendar, Clock, CheckCircle, Upload } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { Badge } from "@/components/ui/badge";
+import { Upload, Download, Eye, CheckCircle, AlertCircle, Trash2 } from "lucide-react";
 import { ScheduledEvent } from "@/components/scheduling/types";
-import { supabase } from "@/integrations/supabase/client";
-import { CreateClientAccess } from "@/components/clientPortal/CreateClientAccess";
+import { useToast } from "@/components/ui/use-toast";
 
 interface Deliverable {
   id: string;
-  type: "photos" | "videos" | "album";
-  status: "pending" | "in-progress" | "delivered" | "revision-requested" | "completed";
-  assignedTo?: string;
-  deliveryDate?: string;
-  revisionNotes?: string;
-  completedDate?: string;
+  fileName: string;
+  fileType: string;
+  fileSize: number;
+  uploadDate: string;
+  status: "pending" | "approved" | "revision_requested";
+  downloadCount: number;
+  clientNotes?: string;
 }
 
 interface ProductionDeliverablesTabProps {
@@ -29,383 +25,190 @@ interface ProductionDeliverablesTabProps {
 }
 
 export function ProductionDeliverablesTab({ 
-  selectedEvent,
-  onUpdateEvent
+  selectedEvent, 
+  onUpdateEvent 
 }: ProductionDeliverablesTabProps) {
   const { toast } = useToast();
-  const [editingDeliverable, setEditingDeliverable] = useState<Deliverable | null>(null);
-  const [showEditDialog, setShowEditDialog] = useState(false);
-  const [showUploadDialog, setShowUploadDialog] = useState(false);
-  const [uploadFile, setUploadFile] = useState<File | null>(null);
-  const [uploading, setUploading] = useState(false);
+  const [uploadingFiles, setUploadingFiles] = useState(false);
   
-  const deliverables = selectedEvent.deliverables || [];
-  
-  const handleStatusChange = (deliverable: Deliverable, newStatus: Deliverable['status']) => {
-    const updatedDeliverable = {
-      ...deliverable,
-      status: newStatus,
-      completedDate: newStatus === 'completed' ? new Date().toISOString().split('T')[0] : deliverable.completedDate
-    };
-    
-    const updatedDeliverables = deliverables.map(d => 
-      d.id === deliverable.id ? updatedDeliverable : d
-    );
-    
-    onUpdateEvent({
-      ...selectedEvent,
-      deliverables: updatedDeliverables
-    });
-    
-    toast({
-      title: `Status Updated`,
-      description: `Deliverable has been marked as ${newStatus.replace('-', ' ')}.`
-    });
-  };
-  
-  const handleSaveDeliverable = () => {
-    if (!editingDeliverable) return;
-    
-    const updatedDeliverables = deliverables.map(d => 
-      d.id === editingDeliverable.id ? editingDeliverable : d
-    );
-    
-    onUpdateEvent({
-      ...selectedEvent,
-      deliverables: updatedDeliverables
-    });
-    
-    toast({
-      title: "Deliverable Updated",
-      description: "The deliverable has been successfully updated."
-    });
-    setShowEditDialog(false);
-  };
+  // Get deliverables from event data (mock for now)
+  const deliverables: Deliverable[] = selectedEvent.deliverables || [];
 
-  const handleFileUpload = async () => {
-    if (!uploadFile) return;
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
 
-    setUploading(true);
+    setUploadingFiles(true);
+    
     try {
-      // Here you would typically upload to Supabase Storage
-      // For now, we'll create a placeholder URL
-      const fileUrl = `https://placeholder-cdn.com/${uploadFile.name}`;
+      // Mock file upload - in real implementation, upload to S3/Supabase Storage
+      const newDeliverables = Array.from(files).map((file, index) => ({
+        id: `del_${Date.now()}_${index}`,
+        fileName: file.name,
+        fileType: file.type,
+        fileSize: file.size,
+        uploadDate: new Date().toISOString(),
+        status: "pending" as const,
+        downloadCount: 0
+      }));
+
+      const updatedEvent = {
+        ...selectedEvent,
+        deliverables: [...deliverables, ...newDeliverables]
+      };
+
+      onUpdateEvent(updatedEvent);
       
-      const { error } = await supabase
-        .from('client_deliverables')
-        .insert({
-          event_id: selectedEvent.id,
-          file_name: uploadFile.name,
-          file_url: fileUrl,
-          file_type: uploadFile.type,
-          file_size: uploadFile.size,
-          is_approved: true, // Auto-approve for demo
-          is_watermarked: false
-        });
-
-      if (error) throw error;
-
       toast({
-        title: "File uploaded",
-        description: "Deliverable has been added to client portal."
+        title: "Files uploaded successfully",
+        description: `${files.length} file(s) have been uploaded for client review.`
       });
-
-      setShowUploadDialog(false);
-      setUploadFile(null);
-
-    } catch (error: any) {
-      console.error('Error uploading file:', error);
+    } catch (error) {
+      console.error("Error uploading files:", error);
       toast({
         title: "Upload failed",
-        description: "Failed to upload file. Please try again.",
+        description: "There was an error uploading the files. Please try again.",
         variant: "destructive"
       });
     } finally {
-      setUploading(false);
+      setUploadingFiles(false);
     }
   };
-  
-  const getStatusBadgeVariant = (status: Deliverable['status']) => {
+
+  const handleDeleteDeliverable = (deliverableId: string) => {
+    const updatedDeliverables = deliverables.filter(d => d.id !== deliverableId);
+    const updatedEvent = {
+      ...selectedEvent,
+      deliverables: updatedDeliverables
+    };
+    
+    onUpdateEvent(updatedEvent);
+    
+    toast({
+      title: "Deliverable deleted",
+      description: "The file has been removed from client deliverables."
+    });
+  };
+
+  const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'pending':
-        return 'outline';
-      case 'in-progress':
-        return 'secondary';
-      case 'delivered':
-        return 'default';
-      case 'revision-requested':
-        return 'destructive';
-      case 'completed':
-        return 'outline'; 
+      case "approved":
+        return <CheckCircle className="h-4 w-4 text-green-600" />;
+      case "revision_requested":
+        return <AlertCircle className="h-4 w-4 text-amber-600" />;
       default:
-        return 'outline';
+        return <Eye className="h-4 w-4 text-blue-600" />;
     }
   };
-  
-  const getDeliverableTypeLabel = (type: Deliverable['type']) => {
-    switch (type) {
-      case 'photos':
-        return 'Photography';
-      case 'videos':
-        return 'Videography';
-      case 'album':
-        return 'Album Design';
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "approved":
+        return "bg-green-100 text-green-800";
+      case "revision_requested":
+        return "bg-amber-100 text-amber-800";
       default:
-        return type;
+        return "bg-blue-100 text-blue-800";
     }
   };
-  
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-medium">Project Deliverables</h3>
+        <h2 className="text-lg font-medium">Client Deliverables</h2>
         <div className="flex gap-2">
-          <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
-            <DialogTrigger asChild>
-              <Button size="sm" className="gap-2">
-                <Upload className="h-4 w-4" />
-                Upload Deliverable
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Upload Client Deliverable</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="file-upload">Select File</Label>
-                  <Input
-                    id="file-upload"
-                    type="file"
-                    accept="image/*,video/*"
-                    onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
-                  />
+          <Input
+            type="file"
+            multiple
+            onChange={handleFileUpload}
+            disabled={uploadingFiles}
+            className="hidden"
+            id="deliverable-upload"
+            accept="image/*,video/*,.pdf,.doc,.docx"
+          />
+          <Button
+            onClick={() => document.getElementById('deliverable-upload')?.click()}
+            disabled={uploadingFiles}
+          >
+            <Upload className="h-4 w-4 mr-2" />
+            {uploadingFiles ? "Uploading..." : "Upload Files"}
+          </Button>
+        </div>
+      </div>
+
+      {deliverables.length === 0 ? (
+        <Card className="p-8 text-center">
+          <div className="text-muted-foreground">
+            <Upload className="h-8 w-8 mx-auto mb-2 opacity-50" />
+            <p>No deliverables uploaded yet</p>
+            <p className="text-sm">Upload photos, videos, or documents for client review</p>
+          </div>
+        </Card>
+      ) : (
+        <div className="grid gap-4">
+          {deliverables.map((deliverable) => (
+            <Card key={deliverable.id} className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="flex-shrink-0">
+                    {getStatusIcon(deliverable.status)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-sm font-medium truncate">
+                      {deliverable.fileName}
+                    </h3>
+                    <p className="text-xs text-muted-foreground">
+                      {formatFileSize(deliverable.fileSize)} • 
+                      Uploaded {new Date(deliverable.uploadDate).toLocaleDateString()}
+                    </p>
+                  </div>
                 </div>
-                <div className="flex gap-2">
-                  <Button 
-                    variant="outline" 
-                    onClick={() => setShowUploadDialog(false)}
-                    className="flex-1"
+                
+                <div className="flex items-center space-x-2">
+                  <Badge className={getStatusColor(deliverable.status)}>
+                    {deliverable.status.replace('_', ' ')}
+                  </Badge>
+                  
+                  {deliverable.downloadCount > 0 && (
+                    <Badge variant="outline">
+                      <Download className="h-3 w-3 mr-1" />
+                      {deliverable.downloadCount}
+                    </Badge>
+                  )}
+                  
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDeleteDeliverable(deliverable.id)}
                   >
-                    Cancel
-                  </Button>
-                  <Button 
-                    onClick={handleFileUpload}
-                    disabled={!uploadFile || uploading}
-                    className="flex-1"
-                  >
-                    {uploading ? "Uploading..." : "Upload"}
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
-            </DialogContent>
-          </Dialog>
-          <CreateClientAccess 
-            selectedEvent={selectedEvent}
-            onAccessCreated={() => {
-              toast({
-                title: "Client access created",
-                description: "Your client can now access their portal."
-              });
-            }}
-          />
-        </div>
-      </div>
-      
-      {deliverables.length === 0 ? (
-        <Card className="p-4">
-          <p className="text-center text-muted-foreground">No deliverables found for this event. Deliverables should be auto-populated from the approved estimate.</p>
-        </Card>
-      ) : (
-        <div className="grid gap-4 md:grid-cols-2">
-          {deliverables.map((deliverable) => (
-            <Card key={deliverable.id} className="overflow-hidden">
-              <CardHeader className="pb-2">
-                <div className="flex justify-between items-start">
-                  <CardTitle className="text-base">
-                    {getDeliverableTypeLabel(deliverable.type)}
-                  </CardTitle>
-                  <Badge variant={getStatusBadgeVariant(deliverable.status)}>
-                    {deliverable.status.replace('-', ' ')}
-                  </Badge>
+              
+              {deliverable.clientNotes && (
+                <div className="mt-3 p-2 bg-muted rounded text-sm">
+                  <strong>Client feedback:</strong> {deliverable.clientNotes}
                 </div>
-              </CardHeader>
-              <CardContent className="pb-4 pt-2">
-                <div className="space-y-2 text-sm">
-                  {deliverable.assignedTo && (
-                    <div className="flex items-center">
-                      <UserCircle className="h-4 w-4 mr-2 opacity-70" />
-                      <span>{deliverable.assignedTo}</span>
-                    </div>
-                  )}
-                  
-                  {deliverable.deliveryDate && (
-                    <div className="flex items-center">
-                      <Calendar className="h-4 w-4 mr-2 opacity-70" />
-                      <span>Due: {deliverable.deliveryDate}</span>
-                    </div>
-                  )}
-                  
-                  {deliverable.completedDate && (
-                    <div className="flex items-center">
-                      <CheckCircle className="h-4 w-4 mr-2 opacity-70" />
-                      <span>Completed: {deliverable.completedDate}</span>
-                    </div>
-                  )}
-                </div>
-                
-                <div className="mt-4 space-y-2">
-                  {/* Status update buttons based on current status */}
-                  {deliverable.status === 'pending' && (
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="w-full"
-                      onClick={() => handleStatusChange(deliverable, 'in-progress')}
-                    >
-                      Start Working
-                    </Button>
-                  )}
-                  
-                  {deliverable.status === 'in-progress' && (
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="w-full"
-                      onClick={() => handleStatusChange(deliverable, 'delivered')}
-                    >
-                      Mark as Delivered
-                    </Button>
-                  )}
-                  
-                  {deliverable.status === 'delivered' && (
-                    <div className="flex gap-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="flex-1"
-                        onClick={() => handleStatusChange(deliverable, 'revision-requested')}
-                      >
-                        Request Revision
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="flex-1 bg-green-50 border-green-200 hover:bg-green-100"
-                        onClick={() => handleStatusChange(deliverable, 'completed')}
-                      >
-                        Approve
-                      </Button>
-                    </div>
-                  )}
-                  
-                  {deliverable.status === 'revision-requested' && (
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="w-full"
-                      onClick={() => handleStatusChange(deliverable, 'in-progress')}
-                    >
-                      Resume Work
-                    </Button>
-                  )}
-                  
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="w-full"
-                    onClick={() => {
-                      setEditingDeliverable(deliverable);
-                      setShowEditDialog(true);
-                    }}
-                  >
-                    Edit Details
-                  </Button>
-                </div>
-              </CardContent>
+              )}
             </Card>
           ))}
         </div>
       )}
       
-      {/* Edit Deliverable Dialog */}
-      {editingDeliverable && (
-        <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Update Deliverable</DialogTitle>
-            </DialogHeader>
-            
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="deliverable-status">Status</Label>
-                <Select 
-                  value={editingDeliverable.status}
-                  onValueChange={(value) => setEditingDeliverable({
-                    ...editingDeliverable, 
-                    status: value as Deliverable['status']
-                  })}
-                >
-                  <SelectTrigger id="deliverable-status">
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="in-progress">In Progress</SelectItem>
-                    <SelectItem value="delivered">Delivered</SelectItem>
-                    <SelectItem value="revision-requested">Revision Requested</SelectItem>
-                    <SelectItem value="completed">Completed</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="assigned-to">Assigned To</Label>
-                <Input 
-                  id="assigned-to"
-                  placeholder="Team member name"
-                  value={editingDeliverable.assignedTo || ""}
-                  onChange={(e) => setEditingDeliverable({
-                    ...editingDeliverable,
-                    assignedTo: e.target.value
-                  })}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="delivery-date">Delivery Date</Label>
-                <Input 
-                  id="delivery-date"
-                  type="date"
-                  value={editingDeliverable.deliveryDate || ""}
-                  onChange={(e) => setEditingDeliverable({
-                    ...editingDeliverable,
-                    deliveryDate: e.target.value
-                  })}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="revision-notes">Notes</Label>
-                <Textarea 
-                  id="revision-notes"
-                  placeholder="Add any notes or revision requests here"
-                  value={editingDeliverable.revisionNotes || ""}
-                  onChange={(e) => setEditingDeliverable({
-                    ...editingDeliverable,
-                    revisionNotes: e.target.value
-                  })}
-                />
-              </div>
-            </div>
-            
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setShowEditDialog(false)}>Cancel</Button>
-              <Button onClick={handleSaveDeliverable}>Save Changes</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
+      <div className="text-xs text-muted-foreground">
+        <p>• Files uploaded here will be available for client download in their portal</p>
+        <p>• Clients can provide feedback and request revisions</p>
+        <p>• Supported formats: Images, Videos, PDF, Word documents</p>
+      </div>
     </div>
   );
 }
