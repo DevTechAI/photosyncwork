@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -215,13 +216,6 @@ export default function Auth() {
             </svg>
             Continue with Google
           </Button>
-
-          {/* Debug info section */}
-          <div className="text-xs text-muted-foreground p-2 bg-muted rounded">
-            <p>Debug Info:</p>
-            <p>Current URL: {window.location.href}</p>
-            <p>Origin: {window.location.origin}</p>
-          </div>
 
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
