@@ -35,7 +35,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [initialized, setInitialized] = useState(false);
   const { toast } = useToast();
 
   const fetchUserProfile = async (userId: string) => {
@@ -63,6 +62,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     console.log('AuthProvider: Setting up auth state listener');
 
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Initial session check:', session?.user?.email || 'No session');
+      setSession(session);
+      setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        fetchUserProfile(session.user.id);
+      }
+      
+      setLoading(false);
+      console.log('Initial session check complete, setting loading to false');
+    });
+
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
@@ -73,54 +86,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (event === 'SIGNED_IN' && session?.user) {
           console.log('User signed in successfully');
-          setTimeout(() => {
-            fetchUserProfile(session.user.id);
-          }, 0);
+          await fetchUserProfile(session.user.id);
         } else if (event === 'SIGNED_OUT') {
           console.log('User signed out');
           setProfile(null);
-        } else if (session?.user && !profile) {
-          // Fetch profile for existing session
-          setTimeout(() => {
-            fetchUserProfile(session.user.id);
-          }, 0);
-        } else if (!session) {
-          setProfile(null);
         }
         
-        // Set initialized after first auth event
-        if (!initialized) {
-          setInitialized(true);
-          setLoading(false);
-          console.log('Auth initialized, setting loading to false');
-        }
+        setLoading(false);
+        console.log('Auth state processed, loading set to false');
       }
     );
-
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('Initial session check:', session?.user?.email || 'No session');
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        setTimeout(() => {
-          fetchUserProfile(session.user.id);
-        }, 0);
-      }
-      
-      // Ensure loading is set to false after initial check
-      if (!initialized) {
-        setInitialized(true);
-        setLoading(false);
-        console.log('Initial session check complete, setting loading to false');
-      }
-    });
 
     return () => {
       subscription.unsubscribe();
     };
-  }, [initialized, profile]);
+  }, []);
 
   const createUserProfile = async (user: User) => {
     try {
