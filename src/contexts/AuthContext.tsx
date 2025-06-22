@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,6 +23,7 @@ interface AuthContextType {
   loading: boolean;
   signInWithEmail: (email: string, password: string) => Promise<{ error: any }>;
   signUpWithEmail: (email: string, password: string, fullName?: string) => Promise<{ error: any }>;
+  signInWithGoogle: () => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<void>;
 }
@@ -171,6 +173,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email,
         password,
         options: {
+          emailRedirectTo: `${window.location.origin}/auth`,
           data: {
             full_name: fullName || email.split('@')[0],
           }
@@ -186,6 +189,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { error: null };
     } catch (error: any) {
       console.error('Email sign up error:', error);
+      return { error };
+    }
+  };
+
+  const signInWithGoogle = async () => {
+    try {
+      console.log('Attempting Google sign in');
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth`
+        }
+      });
+      
+      if (error) {
+        console.error('Google sign in error:', error);
+        return { error };
+      }
+      
+      console.log('Google sign in initiated successfully');
+      return { error: null };
+    } catch (error: any) {
+      console.error('Google sign in error:', error);
       return { error };
     }
   };
@@ -248,6 +274,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loading,
     signInWithEmail,
     signUpWithEmail,
+    signInWithGoogle,
     signOut,
     updateProfile
   };
