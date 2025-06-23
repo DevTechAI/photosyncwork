@@ -21,35 +21,63 @@ export function CreateClientAccess({ selectedEvent, onAccessCreated }: CreateCli
   const [createdAccessCode, setCreatedAccessCode] = useState<string>("");
   const { toast } = useToast();
 
-  const generateAccessCode = () => {
-    return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+  const generateAccessCode = (clientName: string, eventId: string) => {
+    // Create a simple hash based on client name and event ID
+    let hash = 0;
+    const input = `${clientName}${eventId}`.toLowerCase();
+    
+    for (let i = 0; i < input.length; i++) {
+      const char = input.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    
+    // Convert to positive 4-digit number
+    const code = Math.abs(hash % 9000) + 1000;
+    return code.toString();
   };
 
   const handleCreateAccess = async () => {
     setLoading(true);
     try {
-      const accessCode = generateAccessCode();
+      const accessCode = generateAccessCode(selectedEvent.clientName, selectedEvent.id);
       
-      const { error } = await supabase
+      // Check if access code already exists for this event
+      const { data: existingAccess } = await supabase
         .from('client_portal_access')
-        .insert({
-          event_id: selectedEvent.id,
-          access_code: accessCode,
-          client_name: selectedEvent.clientName,
-          client_email: selectedEvent.clientEmail,
-          expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
-          is_active: true
+        .select('access_code')
+        .eq('event_id', selectedEvent.id)
+        .eq('is_active', true)
+        .single();
+
+      if (existingAccess) {
+        setCreatedAccessCode(existingAccess.access_code);
+        toast({
+          title: "Access code already exists",
+          description: "Using existing access code for this client."
         });
+      } else {
+        const { error } = await supabase
+          .from('client_portal_access')
+          .insert({
+            event_id: selectedEvent.id,
+            access_code: accessCode,
+            client_name: selectedEvent.clientName,
+            client_email: selectedEvent.clientEmail,
+            expires_at: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(), // 90 days
+            is_active: true
+          });
 
-      if (error) throw error;
+        if (error) throw error;
 
-      setCreatedAccessCode(accessCode);
+        setCreatedAccessCode(accessCode);
+        toast({
+          title: "Client access created",
+          description: "4-digit access code has been generated successfully."
+        });
+      }
+
       onAccessCreated();
-      
-      toast({
-        title: "Client access created",
-        description: "Access code has been generated successfully."
-      });
 
     } catch (error: any) {
       console.error('Error creating client access:', error);
@@ -109,9 +137,9 @@ export function CreateClientAccess({ selectedEvent, onAccessCreated }: CreateCli
             <div className="space-y-2">
               <Label>Access Details</Label>
               <Textarea 
-                value="• Access expires in 30 days&#10;• Client can view approved deliverables&#10;• Client can provide feedback&#10;• Download tracking enabled"
+                value="• 4-digit static access code&#10;• Access expires in 90 days&#10;• Client can view and download images&#10;• Client can provide feedback&#10;• Download tracking enabled"
                 disabled
-                rows={4}
+                rows={5}
               />
             </div>
             
@@ -129,7 +157,7 @@ export function CreateClientAccess({ selectedEvent, onAccessCreated }: CreateCli
             <div className="text-center p-4 bg-green-50 rounded-lg border border-green-200">
               <h3 className="font-medium text-green-900 mb-2">Access Code Created!</h3>
               <div className="space-y-2">
-                <div className="font-mono text-lg bg-white p-3 rounded border">
+                <div className="font-mono text-3xl font-bold bg-white p-4 rounded border">
                   {createdAccessCode}
                 </div>
                 <Button 
@@ -145,9 +173,10 @@ export function CreateClientAccess({ selectedEvent, onAccessCreated }: CreateCli
             </div>
             
             <div className="text-sm text-muted-foreground space-y-1">
-              <p>• Share this code with your client</p>
+              <p>• Share this 4-digit code with your client</p>
               <p>• Client can access at: /client-portal</p>
-              <p>• Access expires in 30 days</p>
+              <p>• Access expires in 90 days</p>
+              <p>• This code is unique to this client and event</p>
               <p>• You can manage deliverables in the Production tab</p>
             </div>
             

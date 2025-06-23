@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,9 +8,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { ClientPortalData, ClientDeliverable } from "@/types/clientPortal";
-import { Download, MessageSquare, Calendar, MapPin, FileText, Image, Video, ThumbsUp, ThumbsDown, GalleryHorizontal } from "lucide-react";
+import { Download, Share, Calendar, MapPin, Heart, ThumbsUp, ThumbsDown, MessageSquare } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { useNavigate } from "react-router-dom";
 
 interface ClientDashboardProps {
   portalData: ClientPortalData;
@@ -19,10 +19,10 @@ interface ClientDashboardProps {
 }
 
 export function ClientDashboard({ portalData, onSubmitFeedback, onDownloadFile, onLogout }: ClientDashboardProps) {
-  const navigate = useNavigate();
   const [feedbackText, setFeedbackText] = useState("");
   const [selectedDeliverable, setSelectedDeliverable] = useState<string | undefined>();
   const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
+  const [favorites, setFavorites] = useState<Set<string>>(new Set());
 
   const handleFeedbackSubmit = (status: 'approved' | 'revision_requested') => {
     onSubmitFeedback(selectedDeliverable, feedbackText, status);
@@ -31,44 +31,40 @@ export function ClientDashboard({ portalData, onSubmitFeedback, onDownloadFile, 
     setSelectedDeliverable(undefined);
   };
 
-  const getFileIcon = (fileType: string) => {
-    if (fileType.startsWith('image/')) return <Image className="h-4 w-4" />;
-    if (fileType.startsWith('video/')) return <Video className="h-4 w-4" />;
-    return <FileText className="h-4 w-4" />;
+  const toggleFavorite = (deliverableId: string) => {
+    const newFavorites = new Set(favorites);
+    if (newFavorites.has(deliverableId)) {
+      newFavorites.delete(deliverableId);
+    } else {
+      newFavorites.add(deliverableId);
+    }
+    setFavorites(newFavorites);
   };
 
-  const formatFileSize = (bytes?: number) => {
-    if (!bytes) return 'Unknown size';
-    const mb = bytes / (1024 * 1024);
-    return `${mb.toFixed(1)} MB`;
+  const handleShare = (deliverable: ClientDeliverable) => {
+    if (navigator.share) {
+      navigator.share({
+        title: deliverable.fileName,
+        url: deliverable.fileUrl,
+      });
+    } else {
+      navigator.clipboard.writeText(deliverable.fileUrl);
+    }
   };
+
+  const isImage = (fileType: string) => fileType.startsWith('image/');
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white border-b">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Welcome, {portalData.access.clientName}</h1>
-            {portalData.eventDetails && (
-              <p className="text-muted-foreground">
-                {portalData.eventDetails.name} • {portalData.eventDetails.date}
-              </p>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            <Button 
-              variant="outline" 
-              onClick={() => navigate('/gallery')}
-              className="flex items-center gap-2"
-            >
-              <GalleryHorizontal className="h-4 w-4" />
-              Gallery
-            </Button>
-            <Button variant="outline" onClick={onLogout}>
-              Logout
-            </Button>
-          </div>
+        <div className="max-w-6xl mx-auto px-4 py-4">
+          <h1 className="text-2xl font-bold text-gray-900">Welcome, {portalData.access.clientName}</h1>
+          {portalData.eventDetails && (
+            <p className="text-muted-foreground">
+              {portalData.eventDetails.name} • {portalData.eventDetails.date}
+            </p>
+          )}
         </div>
       </div>
 
@@ -104,107 +100,128 @@ export function ClientDashboard({ portalData, onSubmitFeedback, onDownloadFile, 
           </Card>
         )}
 
-        <Tabs defaultValue="deliverables" className="space-y-4">
+        <Tabs defaultValue="gallery" className="space-y-4">
           <TabsList>
-            <TabsTrigger value="deliverables">
-              Deliverables ({portalData.deliverables.length})
+            <TabsTrigger value="gallery">
+              Gallery ({portalData.deliverables.length})
             </TabsTrigger>
             <TabsTrigger value="feedback">
               Feedback ({portalData.feedback.length})
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="deliverables" className="space-y-4">
+          <TabsContent value="gallery" className="space-y-4">
             {portalData.deliverables.length === 0 ? (
               <Card>
                 <CardContent className="text-center py-8">
-                  <p className="text-muted-foreground">No deliverables available yet.</p>
+                  <p className="text-muted-foreground">No images available yet.</p>
                   <p className="text-sm text-muted-foreground mt-2">
                     Your photographer will upload files here when they're ready.
                   </p>
                 </CardContent>
               </Card>
             ) : (
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {portalData.deliverables.map((deliverable) => (
-                  <Card key={deliverable.id} className="overflow-hidden">
-                    <CardHeader className="pb-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          {getFileIcon(deliverable.fileType)}
-                          <span className="font-medium text-sm">{deliverable.fileName}</span>
+              <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                {portalData.deliverables.filter(d => isImage(d.fileType)).map((deliverable) => (
+                  <div key={deliverable.id} className="relative group">
+                    <div className="aspect-square overflow-hidden rounded-lg bg-gray-100">
+                      <img
+                        src={deliverable.fileUrl}
+                        alt={deliverable.fileName}
+                        className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                      />
+                      
+                      {/* Overlay with actions */}
+                      <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            className="h-8 w-8 p-0"
+                            onClick={() => toggleFavorite(deliverable.id)}
+                          >
+                            <Heart 
+                              className={`h-4 w-4 ${favorites.has(deliverable.id) ? 'fill-red-500 text-red-500' : ''}`} 
+                            />
+                          </Button>
+                          
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            className="h-8 w-8 p-0"
+                            onClick={() => onDownloadFile(deliverable)}
+                          >
+                            <Download className="h-4 w-4" />
+                          </Button>
+                          
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            className="h-8 w-8 p-0"
+                            onClick={() => handleShare(deliverable)}
+                          >
+                            <Share className="h-4 w-4" />
+                          </Button>
                         </div>
-                        {deliverable.isWatermarked && (
-                          <Badge variant="secondary" className="text-xs">Preview</Badge>
-                        )}
-                      </div>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <div className="text-xs text-muted-foreground space-y-1">
-                        <p>Size: {formatFileSize(deliverable.fileSize)}</p>
-                        <p>Downloads: {deliverable.downloadCount}</p>
-                        <p>Added: {formatDistanceToNow(new Date(deliverable.createdAt), { addSuffix: true })}</p>
                       </div>
                       
+                      {/* Watermark indicator */}
+                      {deliverable.isWatermarked && (
+                        <div className="absolute top-2 right-2">
+                          <Badge variant="secondary" className="text-xs bg-white/90">Preview</Badge>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {/* Feedback button at bottom */}
+            {portalData.deliverables.length > 0 && (
+              <div className="flex justify-center mt-8">
+                <Dialog open={showFeedbackDialog} onOpenChange={setShowFeedbackDialog}>
+                  <DialogTrigger asChild>
+                    <Button size="lg" className="gap-2">
+                      <MessageSquare className="h-4 w-4" />
+                      Provide Overall Feedback
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Provide Feedback</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="feedback">Your feedback (optional)</Label>
+                        <Textarea
+                          id="feedback"
+                          placeholder="Share your thoughts about the photos..."
+                          value={feedbackText}
+                          onChange={(e) => setFeedbackText(e.target.value)}
+                          className="mt-1"
+                        />
+                      </div>
                       <div className="flex gap-2">
                         <Button 
-                          size="sm" 
-                          onClick={() => onDownloadFile(deliverable)}
+                          onClick={() => handleFeedbackSubmit('approved')}
+                          className="flex-1 bg-green-600 hover:bg-green-700"
+                        >
+                          <ThumbsUp className="h-4 w-4 mr-2" />
+                          Approve All
+                        </Button>
+                        <Button 
+                          onClick={() => handleFeedbackSubmit('revision_requested')}
+                          variant="destructive"
                           className="flex-1"
                         >
-                          <Download className="h-4 w-4 mr-1" />
-                          Download
+                          <ThumbsDown className="h-4 w-4 mr-2" />
+                          Request Changes
                         </Button>
-                        
-                        <Dialog open={showFeedbackDialog} onOpenChange={setShowFeedbackDialog}>
-                          <DialogTrigger asChild>
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              onClick={() => setSelectedDeliverable(deliverable.id)}
-                            >
-                              <MessageSquare className="h-4 w-4" />
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>Provide Feedback</DialogTitle>
-                            </DialogHeader>
-                            <div className="space-y-4">
-                              <div>
-                                <Label htmlFor="feedback">Your feedback (optional)</Label>
-                                <Textarea
-                                  id="feedback"
-                                  placeholder="Share your thoughts about this deliverable..."
-                                  value={feedbackText}
-                                  onChange={(e) => setFeedbackText(e.target.value)}
-                                  className="mt-1"
-                                />
-                              </div>
-                              <div className="flex gap-2">
-                                <Button 
-                                  onClick={() => handleFeedbackSubmit('approved')}
-                                  className="flex-1 bg-green-600 hover:bg-green-700"
-                                >
-                                  <ThumbsUp className="h-4 w-4 mr-2" />
-                                  Approve
-                                </Button>
-                                <Button 
-                                  onClick={() => handleFeedbackSubmit('revision_requested')}
-                                  variant="destructive"
-                                  className="flex-1"
-                                >
-                                  <ThumbsDown className="h-4 w-4 mr-2" />
-                                  Request Changes
-                                </Button>
-                              </div>
-                            </div>
-                          </DialogContent>
-                        </Dialog>
                       </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                    </div>
+                  </DialogContent>
+                </Dialog>
               </div>
             )}
           </TabsContent>
