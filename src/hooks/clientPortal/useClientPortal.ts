@@ -1,26 +1,26 @@
 
 import { useState, useEffect } from "react";
+import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { ClientPortalData, ClientDeliverable, ClientFeedback, ClientPortalAccess } from "@/types/clientPortal";
-import { useToast } from "@/hooks/use-toast";
+import { ClientPortalData, ClientDeliverable, ClientFeedback } from "@/types/clientPortal";
 
 export function useClientPortal(accessCode: string) {
   const [portalData, setPortalData] = useState<ClientPortalData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
     if (accessCode) {
-      loadPortalData();
+      fetchPortalData();
     }
   }, [accessCode]);
 
-  const loadPortalData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
+  const fetchPortalData = async () => {
+    setLoading(true);
+    setError(null);
 
+    try {
       // Verify access code
       const { data: accessData, error: accessError } = await supabase
         .from('client_portal_access')
@@ -30,7 +30,7 @@ export function useClientPortal(accessCode: string) {
         .single();
 
       if (accessError || !accessData) {
-        throw new Error('Invalid or expired access code');
+        throw new Error('Invalid access code');
       }
 
       // Check if access has expired
@@ -38,19 +38,29 @@ export function useClientPortal(accessCode: string) {
         throw new Error('Access code has expired');
       }
 
-      // Load deliverables
+      // Fetch event details
+      const { data: eventData, error: eventError } = await supabase
+        .from('scheduled_events')
+        .select('*')
+        .eq('id', accessData.event_id)
+        .single();
+
+      if (eventError || !eventData) {
+        throw new Error('Event not found');
+      }
+
+      // Fetch deliverables
       const { data: deliverables, error: deliverablesError } = await supabase
         .from('client_deliverables')
         .select('*')
         .eq('event_id', accessData.event_id)
-        .eq('is_approved', true)
         .order('created_at', { ascending: false });
 
       if (deliverablesError) {
-        throw deliverablesError;
+        console.error('Error fetching deliverables:', deliverablesError);
       }
 
-      // Load feedback
+      // Fetch feedback
       const { data: feedback, error: feedbackError } = await supabase
         .from('client_feedback')
         .select('*')
@@ -58,70 +68,60 @@ export function useClientPortal(accessCode: string) {
         .order('created_at', { ascending: false });
 
       if (feedbackError) {
-        throw feedbackError;
+        console.error('Error fetching feedback:', feedbackError);
       }
 
-      // Load event details
-      const { data: eventData } = await supabase
-        .from('scheduled_events')
-        .select('name, date, location')
-        .eq('id', accessData.event_id)
-        .single();
-
-      // Transform database objects to match TypeScript interfaces
-      const transformedAccess: ClientPortalAccess = {
-        id: accessData.id,
-        eventId: accessData.event_id,
-        accessCode: accessData.access_code,
-        clientName: accessData.client_name,
-        clientEmail: accessData.client_email,
-        passwordHash: accessData.password_hash,
-        expiresAt: accessData.expires_at,
-        isActive: accessData.is_active,
-        createdAt: accessData.created_at,
-        updatedAt: accessData.updated_at
-      };
-
-      const transformedDeliverables: ClientDeliverable[] = (deliverables || []).map(d => ({
+      // Format the data
+      const formattedDeliverables: ClientDeliverable[] = (deliverables || []).map(d => ({
         id: d.id,
-        eventId: d.event_id,
         fileName: d.file_name,
-        fileUrl: d.file_url,
         fileType: d.file_type,
         fileSize: d.file_size,
-        isApproved: d.is_approved,
+        fileUrl: d.file_url,
         isWatermarked: d.is_watermarked,
+        isApproved: d.is_approved,
         downloadCount: d.download_count,
-        createdAt: d.created_at,
-        updatedAt: d.updated_at
+        createdAt: d.created_at
       }));
 
-      const transformedFeedback: ClientFeedback[] = (feedback || []).map(f => ({
+      const formattedFeedback: ClientFeedback[] = (feedback || []).map(f => ({
         id: f.id,
-        eventId: f.event_id,
         deliverableId: f.deliverable_id,
+        status: f.status as 'approved' | 'revision_requested' | 'pending',
         feedbackText: f.feedback_text,
-        status: f.status as 'pending' | 'approved' | 'revision_requested',
-        createdAt: f.created_at,
-        updatedAt: f.updated_at
+        createdAt: f.created_at
       }));
 
-      setPortalData({
-        access: transformedAccess,
-        deliverables: transformedDeliverables,
-        feedback: transformedFeedback,
-        eventDetails: eventData || undefined
-      });
+      const portalData: ClientPortalData = {
+        access: {
+          clientName: accessData.client_name,
+          clientEmail: accessData.client_email,
+          eventId: accessData.event_id
+        },
+        eventDetails: {
+          name: eventData.name,
+          date: eventData.date,
+          location: eventData.location,
+          clientName: eventData.clientname
+        },
+        deliverables: formattedDeliverables,
+        feedback: formattedFeedback
+      };
 
-    } catch (err: any) {
-      console.error('Error loading portal data:', err);
-      setError(err.message || 'Failed to load portal data');
+      setPortalData(portalData);
+    } catch (err) {
+      console.error('Error fetching portal data:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load portal data');
     } finally {
       setLoading(false);
     }
   };
 
-  const submitFeedback = async (deliverableId: string | undefined, feedbackText: string, status: 'approved' | 'revision_requested') => {
+  const submitFeedback = async (
+    deliverableId: string | undefined,
+    feedbackText: string,
+    status: 'approved' | 'revision_requested'
+  ) => {
     if (!portalData) return;
 
     try {
@@ -129,23 +129,30 @@ export function useClientPortal(accessCode: string) {
         .from('client_feedback')
         .insert({
           event_id: portalData.access.eventId,
-          deliverable_id: deliverableId,
+          deliverable_id: deliverableId || null,
           feedback_text: feedbackText,
-          status: status
+          status
         });
 
       if (error) throw error;
 
+      // Update deliverable status if applicable
+      if (deliverableId && status === 'approved') {
+        await supabase
+          .from('client_deliverables')
+          .update({ is_approved: true })
+          .eq('id', deliverableId);
+      }
+
       toast({
         title: "Feedback submitted",
-        description: "Your feedback has been sent to the team."
+        description: `Your feedback has been ${status === 'approved' ? 'approved' : 'submitted for revision'}.`
       });
 
-      // Reload data to show new feedback
-      await loadPortalData();
-
-    } catch (err: any) {
-      console.error('Error submitting feedback:', err);
+      // Refresh data
+      await fetchPortalData();
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
       toast({
         title: "Error",
         description: "Failed to submit feedback. Please try again.",
@@ -156,20 +163,30 @@ export function useClientPortal(accessCode: string) {
 
   const downloadFile = async (deliverable: ClientDeliverable) => {
     try {
-      // Update download count
+      // Increment download count
       await supabase
         .from('client_deliverables')
         .update({ download_count: deliverable.downloadCount + 1 })
         .eq('id', deliverable.id);
 
-      // Open file in new tab for download
-      window.open(deliverable.fileUrl, '_blank');
+      // Create download link
+      const link = document.createElement('a');
+      link.href = deliverable.fileUrl;
+      link.download = deliverable.fileName;
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
 
-      // Reload data to update download count
-      await loadPortalData();
+      toast({
+        title: "Download started",
+        description: `Downloading ${deliverable.fileName}`
+      });
 
-    } catch (err: any) {
-      console.error('Error downloading file:', err);
+      // Refresh data to update download count
+      await fetchPortalData();
+    } catch (error) {
+      console.error('Error downloading file:', error);
       toast({
         title: "Download failed",
         description: "Failed to download file. Please try again.",
@@ -183,7 +200,6 @@ export function useClientPortal(accessCode: string) {
     loading,
     error,
     submitFeedback,
-    downloadFile,
-    reload: loadPortalData
+    downloadFile
   };
 }

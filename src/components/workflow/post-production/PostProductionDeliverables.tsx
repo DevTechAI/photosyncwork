@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { ScheduledEvent, TeamMember } from "@/components/scheduling/types";
@@ -8,6 +7,7 @@ import { RevisionRequestModal } from "./deliverables/RevisionRequestModal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Upload, Plus } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface PostProductionDeliverablesProps {
   selectedEvent: ScheduledEvent;
@@ -29,6 +29,56 @@ export function PostProductionDeliverables({
   const [selectedDeliverableId, setSelectedDeliverableId] = useState<string | null>(null);
   const [uploadingFiles, setUploadingFiles] = useState(false);
   
+  const uploadFileToS3 = async (file: File): Promise<string> => {
+    // Convert file to base64
+    const arrayBuffer = await file.arrayBuffer();
+    const base64String = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+    
+    const { data, error } = await supabase.functions.invoke('upload-to-s3', {
+      body: {
+        fileName: file.name,
+        contentBase64: base64String,
+        contentType: file.type,
+        folder: 'deliverables'
+      }
+    });
+
+    if (error) {
+      console.error('S3 upload error:', error);
+      throw new Error('Failed to upload file to S3');
+    }
+
+    if (!data.success) {
+      throw new Error(data.error || 'S3 upload failed');
+    }
+
+    return data.url;
+  };
+
+  const saveToClientDeliverables = async (file: File, fileUrl: string, eventId: string) => {
+    const { data, error } = await supabase
+      .from('client_deliverables')
+      .insert({
+        event_id: eventId,
+        file_name: file.name,
+        file_type: file.type,
+        file_size: file.size,
+        file_url: fileUrl,
+        is_watermarked: true,
+        is_approved: false,
+        download_count: 0
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Database save error:', error);
+      throw new Error('Failed to save file metadata to database');
+    }
+
+    return data;
+  };
+  
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files || files.length === 0) return;
@@ -36,17 +86,31 @@ export function PostProductionDeliverables({
     setUploadingFiles(true);
     
     try {
-      // Create new deliverables that match the ScheduledEvent deliverable type
-      const newDeliverables = Array.from(files).map((file, index) => ({
-        id: `del_${Date.now()}_${index}`,
-        type: file.type.startsWith('image/') ? "photos" as const : 
-              file.type.startsWith('video/') ? "videos" as const : "album" as const,
-        status: "pending" as const,
-        assignedTo: undefined,
-        deliveryDate: undefined,
-        revisionNotes: undefined,
-        completedDate: undefined
-      }));
+      const uploadPromises = Array.from(files).map(async (file, index) => {
+        // Upload to S3
+        const fileUrl = await uploadFileToS3(file);
+        
+        // Save to client_deliverables table
+        const deliverableRecord = await saveToClientDeliverables(file, fileUrl, selectedEvent.id);
+        
+        // Create deliverable entry for the event
+        return {
+          id: `del_${Date.now()}_${index}`,
+          type: file.type.startsWith('image/') ? "photos" as const : 
+                file.type.startsWith('video/') ? "videos" as const : "album" as const,
+          status: "pending" as const,
+          assignedTo: undefined,
+          deliveryDate: undefined,
+          revisionNotes: undefined,
+          completedDate: undefined,
+          fileUrl: fileUrl,
+          fileName: file.name,
+          fileSize: file.size,
+          clientDeliverableId: deliverableRecord.id
+        };
+      });
+
+      const newDeliverables = await Promise.all(uploadPromises);
 
       const updatedEvent = {
         ...selectedEvent,
@@ -58,17 +122,19 @@ export function PostProductionDeliverables({
       
       toast({
         title: "Files uploaded successfully",
-        description: `${files.length} file(s) have been uploaded for client review.`
+        description: `${files.length} file(s) have been uploaded and are now available in the client gallery.`
       });
     } catch (error) {
       console.error("Error uploading files:", error);
       toast({
         title: "Upload failed",
-        description: "There was an error uploading the files. Please try again.",
+        description: error instanceof Error ? error.message : "There was an error uploading the files. Please try again.",
         variant: "destructive"
       });
     } finally {
       setUploadingFiles(false);
+      // Reset the input
+      event.target.value = '';
     }
   };
 

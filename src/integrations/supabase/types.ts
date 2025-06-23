@@ -769,11 +769,11 @@ export type Database = {
     }
     Functions: {
       create_user_profile: {
-        Args: { profile_data: Json }
+        Args: Record<PropertyKey, never> | { profile_data: Json }
         Returns: undefined
       }
       get_user_profile: {
-        Args: { user_id: string }
+        Args: Record<PropertyKey, never> | { user_id: string }
         Returns: {
           id: string
           email: string

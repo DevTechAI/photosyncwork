@@ -1,3 +1,4 @@
+
 export type TeamMemberRole = "photographer" | "videographer" | "editor" | "production" | "album_designer" | "manager";
 
 export type WorkflowStage = "pre-production" | "production" | "post-production" | "completed";
@@ -58,6 +59,10 @@ export interface ScheduledEvent {
     deliveryDate?: string;
     revisionNotes?: string;
     completedDate?: string;
+    fileUrl?: string;
+    fileName?: string;
+    fileSize?: number;
+    clientDeliverableId?: string;
   }[];
   dataCopied?: boolean;
   estimatePackage?: string;
