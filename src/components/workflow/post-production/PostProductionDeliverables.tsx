@@ -30,86 +30,134 @@ export function PostProductionDeliverables({
   const [uploadingFiles, setUploadingFiles] = useState(false);
   
   const uploadFileToS3 = async (file: File): Promise<string> => {
-    // Convert file to base64
-    const arrayBuffer = await file.arrayBuffer();
-    const base64String = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
-    
-    const { data, error } = await supabase.functions.invoke('upload-to-s3', {
-      body: {
-        fileName: file.name,
-        contentBase64: base64String,
-        contentType: file.type,
-        folder: 'deliverables'
+    try {
+      // Convert file to base64
+      const arrayBuffer = await file.arrayBuffer();
+      const uint8Array = new Uint8Array(arrayBuffer);
+      const base64String = btoa(String.fromCharCode.apply(null, Array.from(uint8Array)));
+      
+      console.log('Uploading file to S3:', file.name, 'Size:', file.size);
+      
+      const { data, error } = await supabase.functions.invoke('upload-to-s3', {
+        body: {
+          fileName: file.name,
+          contentBase64: base64String,
+          contentType: file.type,
+          folder: 'deliverables'
+        }
+      });
+
+      if (error) {
+        console.error('S3 upload error:', error);
+        throw new Error('Failed to upload file to S3');
       }
-    });
 
-    if (error) {
-      console.error('S3 upload error:', error);
-      throw new Error('Failed to upload file to S3');
+      if (!data || !data.success) {
+        throw new Error(data?.error || 'S3 upload failed');
+      }
+
+      console.log('File uploaded successfully:', data.url);
+      return data.url;
+    } catch (error) {
+      console.error('Error in uploadFileToS3:', error);
+      throw error;
     }
-
-    if (!data.success) {
-      throw new Error(data.error || 'S3 upload failed');
-    }
-
-    return data.url;
   };
 
   const saveToClientDeliverables = async (file: File, fileUrl: string, eventId: string) => {
-    const { data, error } = await supabase
-      .from('client_deliverables')
-      .insert({
-        event_id: eventId,
-        file_name: file.name,
-        file_type: file.type,
-        file_size: file.size,
-        file_url: fileUrl,
-        is_watermarked: true,
-        is_approved: false,
-        download_count: 0
-      })
-      .select()
-      .single();
+    try {
+      console.log('Saving file metadata to database:', file.name);
+      
+      const { data, error } = await supabase
+        .from('client_deliverables')
+        .insert({
+          event_id: eventId,
+          file_name: file.name,
+          file_type: file.type,
+          file_size: file.size,
+          file_url: fileUrl,
+          is_watermarked: true,
+          is_approved: false,
+          download_count: 0
+        })
+        .select()
+        .single();
 
-    if (error) {
-      console.error('Database save error:', error);
-      throw new Error('Failed to save file metadata to database');
+      if (error) {
+        console.error('Database save error:', error);
+        throw new Error('Failed to save file metadata to database');
+      }
+
+      console.log('File metadata saved successfully:', data.id);
+      return data;
+    } catch (error) {
+      console.error('Error in saveToClientDeliverables:', error);
+      throw error;
     }
-
-    return data;
   };
   
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('File upload started');
+    
     const files = event.target.files;
-    if (!files || files.length === 0) return;
+    if (!files || files.length === 0) {
+      console.log('No files selected');
+      return;
+    }
 
+    // Prevent form submission or page reload
+    event.preventDefault();
+    
     setUploadingFiles(true);
     
     try {
+      console.log(`Processing ${files.length} files`);
+      
       const uploadPromises = Array.from(files).map(async (file, index) => {
-        // Upload to S3
-        const fileUrl = await uploadFileToS3(file);
-        
-        // Save to client_deliverables table
-        const deliverableRecord = await saveToClientDeliverables(file, fileUrl, selectedEvent.id);
-        
-        // Create deliverable entry for the event
-        return {
-          id: `del_${Date.now()}_${index}`,
-          type: file.type.startsWith('image/') ? "photos" as const : 
-                file.type.startsWith('video/') ? "videos" as const : "album" as const,
-          status: "pending" as const,
-          assignedTo: undefined,
-          deliveryDate: undefined,
-          revisionNotes: undefined,
-          completedDate: undefined,
-          fileUrl: fileUrl,
-          fileName: file.name,
-          fileSize: file.size,
-          clientDeliverableId: deliverableRecord.id
-        };
+        try {
+          console.log(`Processing file ${index + 1}:`, file.name);
+          
+          // Validate file
+          if (!file.type) {
+            throw new Error(`File ${file.name} has no type`);
+          }
+          
+          if (file.size === 0) {
+            throw new Error(`File ${file.name} is empty`);
+          }
+          
+          if (file.size > 100 * 1024 * 1024) { // 100MB limit
+            throw new Error(`File ${file.name} is too large (max 100MB)`);
+          }
+          
+          // Upload to S3
+          const fileUrl = await uploadFileToS3(file);
+          
+          // Save to client_deliverables table
+          const deliverableRecord = await saveToClientDeliverables(file, fileUrl, selectedEvent.id);
+          
+          // Create deliverable entry for the event
+          return {
+            id: `del_${Date.now()}_${index}`,
+            type: file.type.startsWith('image/') ? "photos" as const : 
+                  file.type.startsWith('video/') ? "videos" as const : "album" as const,
+            status: "pending" as const,
+            assignedTo: undefined,
+            deliveryDate: undefined,
+            revisionNotes: undefined,
+            completedDate: undefined,
+            fileUrl: fileUrl,
+            fileName: file.name,
+            fileSize: file.size,
+            clientDeliverableId: deliverableRecord.id
+          };
+        } catch (fileError) {
+          console.error(`Error processing file ${file.name}:`, fileError);
+          throw new Error(`Failed to upload ${file.name}: ${fileError instanceof Error ? fileError.message : 'Unknown error'}`);
+        }
       });
 
+      console.log('Waiting for all uploads to complete...');
       const newDeliverables = await Promise.all(uploadPromises);
 
       const updatedEvent = {
@@ -120,6 +168,7 @@ export function PostProductionDeliverables({
       updateEvents(updatedEvent);
       setSelectedEvent(updatedEvent);
       
+      console.log('Upload completed successfully');
       toast({
         title: "Files uploaded successfully",
         description: `${files.length} file(s) have been uploaded and are now available in the client gallery.`
@@ -134,7 +183,9 @@ export function PostProductionDeliverables({
     } finally {
       setUploadingFiles(false);
       // Reset the input
-      event.target.value = '';
+      if (event.target) {
+        event.target.value = '';
+      }
     }
   };
 
@@ -319,6 +370,7 @@ export function PostProductionDeliverables({
               accept="image/*,video/*,.pdf,.doc,.docx"
             />
             <Button
+              type="button"
               onClick={() => document.getElementById('deliverable-upload')?.click()}
               disabled={uploadingFiles}
             >
