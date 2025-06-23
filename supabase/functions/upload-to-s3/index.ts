@@ -71,6 +71,14 @@ const handler = async (req: Request): Promise<Response> => {
     const s3Url = `https://${cleanBucketName}.s3.${cleanRegion}.amazonaws.com/${uniqueFileName}`;
     console.log('Generated S3 URL:', s3Url);
 
+    // Create date and time for AWS signature
+    const now = new Date();
+    const amzDate = now.toISOString().replace(/[:\-]|\.\d{3}/g, '');
+    const dateStamp = amzDate.substring(0, 8);
+
+    // Calculate content hash
+    const payloadHash = await sha256(binaryData);
+
     // Create the request to S3
     const response = await fetch(s3Url, {
       method: 'PUT',
@@ -80,14 +88,15 @@ const handler = async (req: Request): Promise<Response> => {
           'PUT',
           uniqueFileName,
           contentType,
-          new Date().toISOString().slice(0, 19).replace(/[-:]/g, '') + 'Z',
+          amzDate,
           accessKeyId,
           secretAccessKey,
           cleanRegion,
-          cleanBucketName
+          cleanBucketName,
+          payloadHash
         ),
-        'x-amz-date': new Date().toISOString().slice(0, 19).replace(/[-:]/g, '') + 'Z',
-        'x-amz-content-sha256': await sha256(binaryData),
+        'x-amz-date': amzDate,
+        'x-amz-content-sha256': payloadHash,
       },
       body: binaryData,
     });
@@ -154,22 +163,31 @@ async function createAwsSignature(
   accessKeyId: string,
   secretAccessKey: string,
   region: string,
-  bucketName: string
+  bucketName: string,
+  payloadHash: string
 ): Promise<string> {
   const date = dateTime.slice(0, 8);
   const credentialScope = `${date}/${region}/s3/aws4_request`;
   
+  // Create canonical headers (must be sorted)
+  const canonicalHeaders = [
+    `host:${bucketName}.s3.${region}.amazonaws.com`,
+    `x-amz-content-sha256:${payloadHash}`,
+    `x-amz-date:${dateTime}`
+  ].join('\n') + '\n';
+  
+  const signedHeaders = 'host;x-amz-content-sha256;x-amz-date';
+  
   const canonicalRequest = [
     method,
     `/${objectKey}`,
-    '',
-    `host:${bucketName}.s3.${region}.amazonaws.com`,
-    `x-amz-content-sha256:UNSIGNED-PAYLOAD`,
-    `x-amz-date:${dateTime}`,
-    '',
-    'host;x-amz-content-sha256;x-amz-date',
-    'UNSIGNED-PAYLOAD'
+    '', // query string
+    canonicalHeaders,
+    signedHeaders,
+    payloadHash
   ].join('\n');
+
+  console.log('Canonical Request:', canonicalRequest);
 
   const stringToSign = [
     'AWS4-HMAC-SHA256',
@@ -178,10 +196,12 @@ async function createAwsSignature(
     await sha256(new TextEncoder().encode(canonicalRequest))
   ].join('\n');
 
+  console.log('String to Sign:', stringToSign);
+
   const signingKey = await getSignatureKey(secretAccessKey, date, region, 's3');
   const signature = await hmacSha256(signingKey, stringToSign);
 
-  return `AWS4-HMAC-SHA256 Credential=${accessKeyId}/${credentialScope}, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=${signature}`;
+  return `AWS4-HMAC-SHA256 Credential=${accessKeyId}/${credentialScope}, SignedHeaders=${signedHeaders}, Signature=${signature}`;
 }
 
 async function hmacSha256(key: Uint8Array, data: string): Promise<string> {
