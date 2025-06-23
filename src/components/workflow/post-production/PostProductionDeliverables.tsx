@@ -30,18 +30,44 @@ export function PostProductionDeliverables({
   const [uploadingFiles, setUploadingFiles] = useState(false);
   
   const uploadFileToS3 = async (file: File): Promise<string> => {
+    console.log('Starting S3 upload for:', file.name, 'Size:', file.size);
+    
+    // Validate file first
+    if (!file.type) {
+      throw new Error(`File ${file.name} has no type`);
+    }
+    
+    if (file.size === 0) {
+      throw new Error(`File ${file.name} is empty`);
+    }
+    
+    if (file.size > 100 * 1024 * 1024) { // 100MB limit
+      throw new Error(`File ${file.name} is too large (max 100MB)`);
+    }
+    
     try {
-      // Convert file to base64
+      // Convert file to base64 safely
       const arrayBuffer = await file.arrayBuffer();
       const uint8Array = new Uint8Array(arrayBuffer);
-      const base64String = btoa(String.fromCharCode.apply(null, Array.from(uint8Array)));
       
-      console.log('Uploading file to S3:', file.name, 'Size:', file.size);
+      // Use btoa with proper chunking to avoid stack overflow
+      let base64String = '';
+      const chunkSize = 8192;
+      
+      for (let i = 0; i < uint8Array.length; i += chunkSize) {
+        const chunk = uint8Array.slice(i, i + chunkSize);
+        const chunkString = String.fromCharCode.apply(null, Array.from(chunk));
+        base64String += chunkString;
+      }
+      
+      const finalBase64 = btoa(base64String);
+      
+      console.log('File converted to base64, uploading to S3...');
       
       const { data, error } = await supabase.functions.invoke('upload-to-s3', {
         body: {
           fileName: file.name,
-          contentBase64: base64String,
+          contentBase64: finalBase64,
           contentType: file.type,
           folder: 'deliverables'
         }
@@ -49,11 +75,11 @@ export function PostProductionDeliverables({
 
       if (error) {
         console.error('S3 upload error:', error);
-        throw new Error('Failed to upload file to S3');
+        throw new Error(`Failed to upload ${file.name}: ${error.message || 'Unknown error'}`);
       }
 
       if (!data || !data.success) {
-        throw new Error(data?.error || 'S3 upload failed');
+        throw new Error(`S3 upload failed for ${file.name}: ${data?.error || 'Unknown error'}`);
       }
 
       console.log('File uploaded successfully:', data.url);
@@ -85,7 +111,7 @@ export function PostProductionDeliverables({
 
       if (error) {
         console.error('Database save error:', error);
-        throw new Error('Failed to save file metadata to database');
+        throw new Error(`Failed to save ${file.name} metadata: ${error.message}`);
       }
 
       console.log('File metadata saved successfully:', data.id);
@@ -105,31 +131,23 @@ export function PostProductionDeliverables({
       return;
     }
 
-    // Prevent form submission or page reload
+    // Prevent any form submission behavior
     event.preventDefault();
+    event.stopPropagation();
     
     setUploadingFiles(true);
     
     try {
       console.log(`Processing ${files.length} files`);
       
-      const uploadPromises = Array.from(files).map(async (file, index) => {
+      const results = [];
+      
+      // Process files sequentially to avoid overwhelming the system
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        console.log(`Processing file ${i + 1}/${files.length}:`, file.name);
+        
         try {
-          console.log(`Processing file ${index + 1}:`, file.name);
-          
-          // Validate file
-          if (!file.type) {
-            throw new Error(`File ${file.name} has no type`);
-          }
-          
-          if (file.size === 0) {
-            throw new Error(`File ${file.name} is empty`);
-          }
-          
-          if (file.size > 100 * 1024 * 1024) { // 100MB limit
-            throw new Error(`File ${file.name} is too large (max 100MB)`);
-          }
-          
           // Upload to S3
           const fileUrl = await uploadFileToS3(file);
           
@@ -137,8 +155,8 @@ export function PostProductionDeliverables({
           const deliverableRecord = await saveToClientDeliverables(file, fileUrl, selectedEvent.id);
           
           // Create deliverable entry for the event
-          return {
-            id: `del_${Date.now()}_${index}`,
+          const newDeliverable = {
+            id: `del_${Date.now()}_${i}`,
             type: file.type.startsWith('image/') ? "photos" as const : 
                   file.type.startsWith('video/') ? "videos" as const : "album" as const,
             status: "pending" as const,
@@ -151,24 +169,24 @@ export function PostProductionDeliverables({
             fileSize: file.size,
             clientDeliverableId: deliverableRecord.id
           };
+          
+          results.push(newDeliverable);
+          console.log(`Successfully processed file ${i + 1}/${files.length}`);
         } catch (fileError) {
           console.error(`Error processing file ${file.name}:`, fileError);
           throw new Error(`Failed to upload ${file.name}: ${fileError instanceof Error ? fileError.message : 'Unknown error'}`);
         }
-      });
-
-      console.log('Waiting for all uploads to complete...');
-      const newDeliverables = await Promise.all(uploadPromises);
+      }
 
       const updatedEvent = {
         ...selectedEvent,
-        deliverables: [...(selectedEvent.deliverables || []), ...newDeliverables]
+        deliverables: [...(selectedEvent.deliverables || []), ...results]
       };
 
       updateEvents(updatedEvent);
       setSelectedEvent(updatedEvent);
       
-      console.log('Upload completed successfully');
+      console.log('All uploads completed successfully');
       toast({
         title: "Files uploaded successfully",
         description: `${files.length} file(s) have been uploaded and are now available in the client gallery.`
