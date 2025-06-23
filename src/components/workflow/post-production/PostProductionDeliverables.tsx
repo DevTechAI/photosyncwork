@@ -4,6 +4,7 @@ import { ScheduledEvent, TeamMember } from "@/components/scheduling/types";
 import { DeliverablesContainer } from "./deliverables/DeliverablesContainer";
 import { AssignDeliverableModal } from "./deliverables/AssignDeliverableModal";
 import { RevisionRequestModal } from "./deliverables/RevisionRequestModal";
+import { CreateClientAccess } from "@/components/clientPortal/CreateClientAccess";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Upload, Plus } from "lucide-react";
@@ -365,8 +366,24 @@ export function PostProductionDeliverables({
   // Check if the event is ready for completion
   const isReadyForCompletion = selectedEvent?.deliverables?.every(d => d.status === "completed");
   
+  const handleClientAccessCreated = () => {
+    toast({
+      title: "Client Access Created",
+      description: "Client can now access their deliverables using the provided access code."
+    });
+  };
+  
   return (
     <div className="space-y-6">
+      {/* Client Access Section */}
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-medium">Client Portal Access</h3>
+        <CreateClientAccess 
+          selectedEvent={selectedEvent}
+          onAccessCreated={handleClientAccessCreated}
+        />
+      </div>
+
       {/* Upload Section */}
       <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
         <div className="text-center">
@@ -418,6 +435,7 @@ export function PostProductionDeliverables({
         isReadyForCompletion={isReadyForCompletion}
       />
 
+      {/* ... keep existing code (modals) */}
       <AssignDeliverableModal 
         isOpen={isAssignDeliverableModalOpen}
         onClose={() => setIsAssignDeliverableModalOpen(false)}
