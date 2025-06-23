@@ -39,13 +39,18 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error('Missing AWS configuration. Please check your environment variables.');
     }
 
-    // Validate bucket name and region format
-    if (!bucketName.match(/^[a-z0-9][a-z0-9\-]*[a-z0-9]$/)) {
-      throw new Error(`Invalid bucket name format: ${bucketName}`);
+    // Clean and validate bucket name
+    const cleanBucketName = bucketName.toLowerCase().replace(/[^a-z0-9\-]/g, '-').replace(/--+/g, '-');
+    
+    // Validate bucket name format (AWS S3 naming rules)
+    if (!cleanBucketName.match(/^[a-z0-9][a-z0-9\-]*[a-z0-9]$/) || cleanBucketName.length < 3 || cleanBucketName.length > 63) {
+      throw new Error(`Invalid bucket name: "${bucketName}". AWS S3 bucket names must be 3-63 characters, lowercase, and contain only letters, numbers, and hyphens. No spaces allowed. Suggested name: "${cleanBucketName}"`);
     }
 
-    if (!region.match(/^[a-z0-9\-]+$/)) {
-      throw new Error(`Invalid region format: ${region}`);
+    // Clean region name
+    const cleanRegion = region.toLowerCase().replace(/[^a-z0-9\-]/g, '');
+    if (!cleanRegion.match(/^[a-z0-9\-]+$/)) {
+      throw new Error(`Invalid region format: ${region}. Should be something like "us-east-1" or "eu-west-1"`);
     }
 
     // Convert base64 to binary
@@ -62,8 +67,8 @@ const handler = async (req: Request): Promise<Response> => {
     const fileExtension = fileName.split('.').pop();
     const uniqueFileName = `${folder}/${timestamp}-${randomString}.${fileExtension}`;
 
-    // Create properly formatted S3 URL
-    const s3Url = `https://${bucketName}.s3.${region}.amazonaws.com/${uniqueFileName}`;
+    // Create properly formatted S3 URL using the clean bucket name
+    const s3Url = `https://${cleanBucketName}.s3.${cleanRegion}.amazonaws.com/${uniqueFileName}`;
     console.log('Generated S3 URL:', s3Url);
 
     // Create the request to S3
@@ -78,8 +83,8 @@ const handler = async (req: Request): Promise<Response> => {
           new Date().toISOString().slice(0, 19).replace(/[-:]/g, '') + 'Z',
           accessKeyId,
           secretAccessKey,
-          region,
-          bucketName
+          cleanRegion,
+          cleanBucketName
         ),
         'x-amz-date': new Date().toISOString().slice(0, 19).replace(/[-:]/g, '') + 'Z',
         'x-amz-content-sha256': await sha256(binaryData),
@@ -92,7 +97,9 @@ const handler = async (req: Request): Promise<Response> => {
       console.error('S3 upload failed:', {
         status: response.status,
         statusText: response.statusText,
-        errorText: errorText
+        errorText: errorText,
+        bucketName: cleanBucketName,
+        region: cleanRegion
       });
       throw new Error(`S3 upload failed: ${response.status} ${response.statusText} - ${errorText}`);
     }
