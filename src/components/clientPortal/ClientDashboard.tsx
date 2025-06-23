@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { ClientPortalData, ClientDeliverable } from "@/types/clientPortal";
-import { Download, Share, Calendar, MapPin, Heart, ThumbsUp, ThumbsDown, MessageSquare } from "lucide-react";
+import { Download, Share, Calendar, MapPin, Heart, ThumbsUp, ThumbsDown, MessageSquare, LogOut } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 interface ClientDashboardProps {
@@ -56,15 +56,28 @@ export function ClientDashboard({ portalData, onSubmitFeedback, onDownloadFile, 
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
+      {/* Header - Client Portal Only */}
       <div className="bg-white border-b">
         <div className="max-w-6xl mx-auto px-4 py-4">
-          <h1 className="text-2xl font-bold text-gray-900">Welcome, {portalData.access.clientName}</h1>
-          {portalData.eventDetails && (
-            <p className="text-muted-foreground">
-              {portalData.eventDetails.name} • {portalData.eventDetails.date}
-            </p>
-          )}
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Client Portal</h1>
+              <p className="text-muted-foreground">Welcome, {portalData.access.clientName}</p>
+              {portalData.eventDetails && (
+                <p className="text-sm text-muted-foreground">
+                  {portalData.eventDetails.name} • {portalData.eventDetails.date}
+                </p>
+              )}
+            </div>
+            <Button 
+              onClick={onLogout}
+              variant="outline"
+              className="gap-2"
+            >
+              <LogOut className="h-4 w-4" />
+              Exit Portal
+            </Button>
+          </div>
         </div>
       </div>
 

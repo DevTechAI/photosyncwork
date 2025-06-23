@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,6 +6,17 @@ import { Badge } from "@/components/ui/badge";
 import { Upload, Download, Eye, CheckCircle, AlertCircle, Trash2 } from "lucide-react";
 import { ScheduledEvent } from "@/components/scheduling/types";
 import { useToast } from "@/components/ui/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 // Use the deliverable type from ScheduledEvent instead of creating a separate one
 type Deliverable = NonNullable<ScheduledEvent['deliverables']>[0];
@@ -22,6 +32,7 @@ export function ProductionDeliverablesTab({
 }: ProductionDeliverablesTabProps) {
   const { toast } = useToast();
   const [uploadingFiles, setUploadingFiles] = useState(false);
+  const [deletingFile, setDeletingFile] = useState<string | null>(null);
   
   // Get deliverables from event data, ensuring they match the ScheduledEvent type
   const deliverables: Deliverable[] = selectedEvent.deliverables || [];
@@ -68,19 +79,33 @@ export function ProductionDeliverablesTab({
     }
   };
 
-  const handleDeleteDeliverable = (deliverableId: string) => {
-    const updatedDeliverables = deliverables.filter(d => d.id !== deliverableId);
-    const updatedEvent = {
-      ...selectedEvent,
-      deliverables: updatedDeliverables
-    };
+  const handleDeleteDeliverable = async (deliverableId: string) => {
+    setDeletingFile(deliverableId);
     
-    onUpdateEvent(updatedEvent);
-    
-    toast({
-      title: "Deliverable deleted",
-      description: "The file has been removed from client deliverables."
-    });
+    try {
+      // Remove the deliverable from the array
+      const updatedDeliverables = deliverables.filter(d => d.id !== deliverableId);
+      const updatedEvent = {
+        ...selectedEvent,
+        deliverables: updatedDeliverables
+      };
+      
+      onUpdateEvent(updatedEvent);
+      
+      toast({
+        title: "File deleted successfully",
+        description: "The file has been removed from client deliverables."
+      });
+    } catch (error) {
+      console.error("Error deleting file:", error);
+      toast({
+        title: "Delete failed",
+        description: "There was an error deleting the file. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setDeletingFile(null);
+    }
   };
 
   const getStatusIcon = (status: string) => {
@@ -165,13 +190,34 @@ export function ProductionDeliverablesTab({
                     {deliverable.status.replace('-', ' ')}
                   </Badge>
                   
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleDeleteDeliverable(deliverable.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        disabled={deletingFile === deliverable.id}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete File</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to delete this file? This action cannot be undone and will remove the file from client access.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => handleDeleteDeliverable(deliverable.id)}
+                          className="bg-red-600 hover:bg-red-700"
+                        >
+                          Delete File
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </div>
               
