@@ -74,6 +74,7 @@ export function useClientPortal(accessCode: string) {
       // Format the data
       const formattedDeliverables: ClientDeliverable[] = (deliverables || []).map(d => ({
         id: d.id,
+        eventId: d.event_id,
         fileName: d.file_name,
         fileType: d.file_type,
         fileSize: d.file_size,
@@ -81,28 +82,35 @@ export function useClientPortal(accessCode: string) {
         isWatermarked: d.is_watermarked,
         isApproved: d.is_approved,
         downloadCount: d.download_count,
-        createdAt: d.created_at
+        createdAt: d.created_at,
+        updatedAt: d.updated_at
       }));
 
       const formattedFeedback: ClientFeedback[] = (feedback || []).map(f => ({
         id: f.id,
+        eventId: f.event_id,
         deliverableId: f.deliverable_id,
         status: f.status as 'approved' | 'revision_requested' | 'pending',
         feedbackText: f.feedback_text,
-        createdAt: f.created_at
+        createdAt: f.created_at,
+        updatedAt: f.updated_at
       }));
 
       const portalData: ClientPortalData = {
         access: {
+          id: accessData.id,
+          eventId: accessData.event_id,
+          accessCode: accessData.access_code,
           clientName: accessData.client_name,
           clientEmail: accessData.client_email,
-          eventId: accessData.event_id
+          isActive: accessData.is_active,
+          createdAt: accessData.created_at,
+          updatedAt: accessData.updated_at
         },
         eventDetails: {
           name: eventData.name,
           date: eventData.date,
-          location: eventData.location,
-          clientName: eventData.clientname
+          location: eventData.location
         },
         deliverables: formattedDeliverables,
         feedback: formattedFeedback
