@@ -1,6 +1,5 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -29,12 +28,33 @@ const handler = async (req: Request): Promise<Response> => {
     const region = Deno.env.get('AWS_REGION');
     const bucketName = Deno.env.get('AWS_BUCKET_NAME');
 
+    console.log('AWS Config check:', {
+      hasAccessKey: !!accessKeyId,
+      hasSecretKey: !!secretAccessKey,
+      region: region,
+      bucketName: bucketName
+    });
+
     if (!accessKeyId || !secretAccessKey || !region || !bucketName) {
-      throw new Error('Missing AWS configuration');
+      throw new Error('Missing AWS configuration. Please check your environment variables.');
+    }
+
+    // Validate bucket name and region format
+    if (!bucketName.match(/^[a-z0-9][a-z0-9\-]*[a-z0-9]$/)) {
+      throw new Error(`Invalid bucket name format: ${bucketName}`);
+    }
+
+    if (!region.match(/^[a-z0-9\-]+$/)) {
+      throw new Error(`Invalid region format: ${region}`);
     }
 
     // Convert base64 to binary
-    const binaryData = Uint8Array.from(atob(contentBase64), c => c.charCodeAt(0));
+    let binaryData;
+    try {
+      binaryData = Uint8Array.from(atob(contentBase64), c => c.charCodeAt(0));
+    } catch (error) {
+      throw new Error('Invalid base64 content provided');
+    }
 
     // Generate unique filename
     const timestamp = Date.now();
@@ -42,14 +62,12 @@ const handler = async (req: Request): Promise<Response> => {
     const fileExtension = fileName.split('.').pop();
     const uniqueFileName = `${folder}/${timestamp}-${randomString}.${fileExtension}`;
 
-    // Create AWS signature
-    const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    const dateTime = new Date().toISOString().slice(0, 19).replace(/[-:]/g, '') + 'Z';
-    
-    const url = `https://${bucketName}.s3.${region}.amazonaws.com/${uniqueFileName}`;
+    // Create properly formatted S3 URL
+    const s3Url = `https://${bucketName}.s3.${region}.amazonaws.com/${uniqueFileName}`;
+    console.log('Generated S3 URL:', s3Url);
 
     // Create the request to S3
-    const response = await fetch(url, {
+    const response = await fetch(s3Url, {
       method: 'PUT',
       headers: {
         'Content-Type': contentType,
@@ -57,13 +75,13 @@ const handler = async (req: Request): Promise<Response> => {
           'PUT',
           uniqueFileName,
           contentType,
-          dateTime,
+          new Date().toISOString().slice(0, 19).replace(/[-:]/g, '') + 'Z',
           accessKeyId,
           secretAccessKey,
           region,
           bucketName
         ),
-        'x-amz-date': dateTime,
+        'x-amz-date': new Date().toISOString().slice(0, 19).replace(/[-:]/g, '') + 'Z',
         'x-amz-content-sha256': await sha256(binaryData),
       },
       body: binaryData,
@@ -71,12 +89,15 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('S3 upload failed:', errorText);
-      throw new Error(`S3 upload failed: ${response.status} ${response.statusText}`);
+      console.error('S3 upload failed:', {
+        status: response.status,
+        statusText: response.statusText,
+        errorText: errorText
+      });
+      throw new Error(`S3 upload failed: ${response.status} ${response.statusText} - ${errorText}`);
     }
 
-    const fileUrl = `https://${bucketName}.s3.${region}.amazonaws.com/${uniqueFileName}`;
-
+    const fileUrl = s3Url;
     console.log('File uploaded successfully:', fileUrl);
 
     return new Response(
