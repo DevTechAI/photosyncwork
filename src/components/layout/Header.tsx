@@ -1,98 +1,120 @@
 
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useAuth } from "@/contexts/AuthContext";
+import { UserCircle, LogOut } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Camera, User, Settings, LogOut } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate, Link } from "react-router-dom";
 
 export function Header() {
-  const { user, profile, signOut } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
-
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(word => word[0])
-      .join('')
-      .toUpperCase()
-      .substring(0, 2);
+  const location = useLocation();
+  
+  // Check if we're on the client portal
+  const isClientPortal = location.pathname === '/client-portal';
+  
+  const handleLogout = async () => {
+    await logout();
+    navigate('/auth');
   };
 
-  const formatStorageUsed = (bytes: number) => {
-    const gb = bytes / (1024 * 1024 * 1024);
-    return `${gb.toFixed(2)} GB`;
+  const handleLogoClick = () => {
+    if (isClientPortal) {
+      // For client portal, go to home page
+      navigate('/');
+    } else if (user) {
+      // For authenticated users, go to dashboard
+      navigate('/dashboard');
+    } else {
+      // For non-authenticated users, go to home
+      navigate('/');
+    }
   };
 
   return (
-    <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 items-center justify-between">
-        <div className="flex items-center gap-6">
-          <Link to={user ? "/dashboard" : "/"} className="flex items-center gap-2">
-            <Camera className="h-6 w-6" />
-            <span className="font-semibold">StudioSync</span>
-          </Link>
-        </div>
-
-        {user ? (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src={profile?.avatar_url} alt={profile?.full_name || user.email || ''} />
-                  <AvatarFallback>
-                    {profile?.full_name 
-                      ? getInitials(profile.full_name)
-                      : user.email?.charAt(0).toUpperCase() || 'U'
-                    }
-                  </AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="end" forceMount>
-              <div className="flex items-center justify-start gap-2 p-2">
-                <div className="flex flex-col space-y-1 leading-none">
-                  <p className="font-medium">{profile?.full_name || user.email}</p>
-                  <p className="text-xs text-muted-foreground">{user.email}</p>
-                  {profile && (
-                    <p className="text-xs text-muted-foreground">
-                      Storage: {formatStorageUsed(profile.storage_used)} / {formatStorageUsed(profile.storage_limit)}
-                    </p>
-                  )}
-                </div>
-              </div>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => navigate('/profile')}>
-                <User className="mr-2 h-4 w-4" />
-                Profile
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate('/settings')}>
-                <Settings className="mr-2 h-4 w-4" />
-                Settings
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={signOut}>
-                <LogOut className="mr-2 h-4 w-4" />
-                Sign out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        ) : (
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" onClick={() => navigate('/auth')}>
-              Sign In
-            </Button>
-            <Button onClick={() => navigate('/auth')}>
-              Get Started
-            </Button>
+    <header className="bg-white border-b shadow-sm sticky top-0 z-50">
+      <div className="container mx-auto px-4 py-3">
+        <div className="flex items-center justify-between">
+          <button 
+            onClick={handleLogoClick}
+            className="text-2xl font-bold text-dustyBlue-dark hover:text-dustyBlue transition-colors"
+          >
+            StudioSync
+          </button>
+          
+          <nav className="hidden md:flex space-x-6">
+            {!isClientPortal && (
+              <>
+                <Link to="/" className="text-gray-600 hover:text-dustyBlue-dark transition-colors">
+                  Home
+                </Link>
+                <Link to="/portfolio" className="text-gray-600 hover:text-dustyBlue-dark transition-colors">
+                  Portfolio
+                </Link>
+                <Link to="/hire" className="text-gray-600 hover:text-dustyBlue-dark transition-colors">
+                  Browse Talent
+                </Link>
+                <Link to="/photographers" className="text-gray-600 hover:text-dustyBlue-dark transition-colors">
+                  For Photographers
+                </Link>
+              </>
+            )}
+          </nav>
+          
+          <div className="flex items-center space-x-4">
+            {!isClientPortal && (
+              <>
+                {user ? (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm" className="flex items-center space-x-2">
+                        <UserCircle className="h-5 w-5" />
+                        <span className="hidden sm:inline">Account</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => navigate('/dashboard')}>
+                        Dashboard
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/profile')}>
+                        Profile
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/settings')}>
+                        Settings
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={handleLogout}>
+                        <LogOut className="h-4 w-4 mr-2" />
+                        Logout
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : (
+                  <>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => navigate('/auth')}
+                    >
+                      Login
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      onClick={() => navigate('/auth')}
+                      className="bg-dustyBlue hover:bg-dustyBlue-dark text-white"
+                    >
+                      Get Started
+                    </Button>
+                  </>
+                )}
+              </>
+            )}
           </div>
-        )}
+        </div>
       </div>
     </header>
   );
