@@ -92,4 +92,26 @@
       transform: translateY(0);
     }
   }
+
+  /* Override any default yellow button styling */
+  button:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px hsl(var(--ring));
+  }
+
+  button:hover {
+    transition: all 0.2s ease-in-out;
+  }
+
+  /* Ensure no yellow colors appear on buttons */
+  .btn-no-yellow {
+    background-color: white !important;
+    border-color: #d1d5db !important;
+    color: #374151 !important;
+  }
+
+  .btn-no-yellow:hover {
+    background-color: #f9fafb !important;
+    color: #111827 !important;
+  }
 }
