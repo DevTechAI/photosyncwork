@@ -47,25 +47,6 @@ export function Header() {
             StudioSync
           </button>
           
-          <nav className="hidden md:flex space-x-6">
-            {!isClientPortal && (
-              <>
-                <Link to="/" className="text-gray-600 hover:text-dustyBlue-dark transition-colors">
-                  Home
-                </Link>
-                <Link to="/portfolio" className="text-gray-600 hover:text-dustyBlue-dark transition-colors">
-                  Portfolio
-                </Link>
-                <Link to="/hire" className="text-gray-600 hover:text-dustyBlue-dark transition-colors">
-                  Browse Talent
-                </Link>
-                <Link to="/photographers" className="text-gray-600 hover:text-dustyBlue-dark transition-colors">
-                  For Photographers
-                </Link>
-              </>
-            )}
-          </nav>
-          
           <div className="flex items-center space-x-4">
             {!isClientPortal && (
               <>
