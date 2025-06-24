@@ -7,8 +7,6 @@ import { AboutSection } from "@/components/home/AboutSection";
 import { WhyChooseUsSection } from "@/components/home/WhyChooseUsSection";
 import { GetStartedSection } from "@/components/home/GetStartedSection";
 import { Footer } from "@/components/home/Footer";
-import { Button } from "@/components/ui/button";
-import { Camera, Briefcase, Users } from "lucide-react";
 
 export default function Home() {
   const { user, loading } = useAuth();
@@ -48,41 +46,6 @@ export default function Home() {
   // Show the home page for non-authenticated users
   return (
     <div className="min-h-screen bg-warmWhite">
-      {/* Quick access navigation for non-authenticated users */}
-      <div className="bg-dustyBlue-whisper border-b">
-        <div className="container mx-auto px-4 py-3">
-          <div className="flex justify-center gap-4">
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={() => navigate('/portfolio')}
-              className="flex items-center gap-2"
-            >
-              <Briefcase className="h-4 w-4" />
-              Create Portfolio
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={() => navigate('/hire')}
-              className="flex items-center gap-2"
-            >
-              <Users className="h-4 w-4" />
-              Browse Talent
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={() => navigate('/photographers')}
-              className="flex items-center gap-2"
-            >
-              <Camera className="h-4 w-4" />
-              For Photographers
-            </Button>
-          </div>
-        </div>
-      </div>
-
       <HeroSection />
       <AboutSection />
       <WhyChooseUsSection />
