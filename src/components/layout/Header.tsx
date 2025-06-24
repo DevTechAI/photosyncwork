@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export function Header() {
-  const { user, logout } = useAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -19,7 +19,7 @@ export function Header() {
   const isClientPortal = location.pathname === '/client-portal';
   
   const handleLogout = async () => {
-    await logout();
+    await signOut();
     navigate('/auth');
   };
 
