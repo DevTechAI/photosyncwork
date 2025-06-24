@@ -47,9 +47,10 @@ export default function Auth() {
     }
   }, [toast]);
 
-  // Redirect authenticated users to dashboard immediately
+  // Redirect authenticated users immediately
   useEffect(() => {
     if (!loading && user) {
+      console.log('Auth: User authenticated, redirecting to dashboard');
       const from = location.state?.from?.pathname || '/dashboard';
       navigate(from, { replace: true });
     }
@@ -67,7 +68,7 @@ export default function Auth() {
     );
   }
 
-  // If user is already authenticated, don't show auth form - they should be redirected
+  // If user is already authenticated, show redirecting message
   if (user) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -134,7 +135,6 @@ export default function Auth() {
   const handleGoogleAuth = async () => {
     setIsSubmitting(true);
     console.log('Google auth button clicked');
-    console.log('Current page URL:', window.location.href);
     
     try {
       console.log('Attempting Google sign in');
@@ -143,7 +143,7 @@ export default function Auth() {
         console.error('Google sign in error:', error);
         toast({
           title: "Google sign in failed",
-          description: error.message || "Failed to sign in with Google. Please check the console for details.",
+          description: error.message || "Failed to sign in with Google. Please try again.",
           variant: "destructive"
         });
       } else {

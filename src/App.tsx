@@ -38,20 +38,20 @@ function App() {
           <div className="min-h-screen bg-background">
             <Header />
             <Routes>
-              {/* Public routes */}
+              {/* Public routes - these should be accessible without authentication */}
               <Route path="/" element={<Home />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/login" element={<Navigate to="/auth" replace />} />
               <Route path="/hire" element={<Hire />} />
               <Route path="/photographers" element={<PhotographersPortal />} />
               
-              {/* Client Portal - Public access */}
+              {/* Client Portal - Public access with its own authentication */}
               <Route path="/client-portal" element={<ClientPortal />} />
               
               {/* Portfolio can be accessed without login for creation */}
               <Route path="/portfolio" element={<Portfolio />} />
               
-              {/* Protected routes */}
+              {/* Protected routes - require authentication */}
               <Route path="/dashboard" element={
                 <AuthGuard>
                   <Dashboard />
@@ -93,7 +93,7 @@ function App() {
                 </AuthGuard>
               } />
               
-              {/* Workflow routes - updated to use correct component imports */}
+              {/* Workflow routes */}
               <Route path="/workflow/pre-production" element={
                 <AuthGuard>
                   <PreProductionLayout />
@@ -127,6 +127,7 @@ function App() {
                 </AuthGuard>
               } />
               
+              {/* 404 catch-all */}
               <Route path="*" element={<NotFound />} />
             </Routes>
           </div>

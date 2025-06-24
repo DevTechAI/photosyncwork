@@ -14,14 +14,15 @@ export default function Home() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
 
+  // Redirect authenticated users to dashboard
   useEffect(() => {
-    // Only redirect if not loading and user exists
     if (!loading && user) {
-      navigate('/dashboard');
+      console.log('User authenticated, redirecting to dashboard:', user.email);
+      navigate('/dashboard', { replace: true });
     }
   }, [user, loading, navigate]);
 
-  // Show loading only while auth state is being determined
+  // Show loading while auth state is being determined
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -33,7 +34,7 @@ export default function Home() {
     );
   }
 
-  // If user is authenticated, show redirecting message briefly
+  // If user is authenticated, show redirecting message
   if (user) {
     return (
       <div className="flex min-h-screen items-center justify-center">
