@@ -1,4 +1,3 @@
-
 import { Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -18,17 +17,14 @@ import { Header } from "./components/layout/Header";
 // Import other pages
 import Index from "./pages/Index";
 import EstimatesPage from "./pages/estimates/EstimatesPage";
-import SchedulingPage from "./pages/scheduling/SchedulingPage";
 import FinancesPage from "./pages/finances/FinancesPage";
 import InvoicesPage from "./pages/invoices/InvoicesPage";
 import Hire from "./pages/Hire";
 import NotFound from "./pages/NotFound";
 import ClientPortal from "./pages/ClientPortal";
 
-// Import workflow pages - fix the imports to match actual file structure
-import PreProductionLayout from "./pages/workflow/pre-production/PreProductionLayout";
-import ProductionPage from "./pages/workflow/ProductionPage";
-import PostProductionPage from "./pages/workflow/PostProductionPage";
+// Import unified workflow page
+import UnifiedWorkflowPage from "./pages/UnifiedWorkflowPage";
 
 function App() {
   return (
@@ -77,11 +73,51 @@ function App() {
                   <EstimatesPage />
                 </AuthGuard>
               } />
-              <Route path="/scheduling/*" element={
+              
+              {/* Unified Workflow Management - replaces old scheduling and workflow routes */}
+              <Route path="/workflow" element={
                 <AuthGuard>
-                  <SchedulingPage />
+                  <UnifiedWorkflowPage />
                 </AuthGuard>
               } />
+              
+              {/* Legacy routes - redirect to unified workflow */}
+              <Route path="/scheduling/*" element={
+                <AuthGuard>
+                  <Navigate to="/workflow" replace />
+                </AuthGuard>
+              } />
+              <Route path="/workflow/pre-production" element={
+                <AuthGuard>
+                  <Navigate to="/workflow" replace />
+                </AuthGuard>
+              } />
+              <Route path="/workflow/production" element={
+                <AuthGuard>
+                  <Navigate to="/workflow" replace />
+                </AuthGuard>
+              } />
+              <Route path="/workflow/post-production" element={
+                <AuthGuard>
+                  <Navigate to="/workflow" replace />
+                </AuthGuard>
+              } />
+              <Route path="/pre-production" element={
+                <AuthGuard>
+                  <Navigate to="/workflow" replace />
+                </AuthGuard>
+              } />
+              <Route path="/production" element={
+                <AuthGuard>
+                  <Navigate to="/workflow" replace />
+                </AuthGuard>
+              } />
+              <Route path="/post-production" element={
+                <AuthGuard>
+                  <Navigate to="/workflow" replace />
+                </AuthGuard>
+              } />
+              
               <Route path="/finances/*" element={
                 <AuthGuard>
                   <FinancesPage />
@@ -90,40 +126,6 @@ function App() {
               <Route path="/invoices" element={
                 <AuthGuard>
                   <InvoicesPage />
-                </AuthGuard>
-              } />
-              
-              {/* Workflow routes */}
-              <Route path="/workflow/pre-production" element={
-                <AuthGuard>
-                  <PreProductionLayout />
-                </AuthGuard>
-              } />
-              <Route path="/workflow/production" element={
-                <AuthGuard>
-                  <ProductionPage />
-                </AuthGuard>
-              } />
-              <Route path="/workflow/post-production" element={
-                <AuthGuard>
-                  <PostProductionPage />
-                </AuthGuard>
-              } />
-              
-              {/* Direct workflow routes (without /workflow prefix) */}
-              <Route path="/pre-production" element={
-                <AuthGuard>
-                  <PreProductionLayout />
-                </AuthGuard>
-              } />
-              <Route path="/production" element={
-                <AuthGuard>
-                  <ProductionPage />
-                </AuthGuard>
-              } />
-              <Route path="/post-production" element={
-                <AuthGuard>
-                  <PostProductionPage />
                 </AuthGuard>
               } />
               
