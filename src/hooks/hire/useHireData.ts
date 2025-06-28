@@ -125,8 +125,8 @@ export function useHireData() {
     return matchesSearch && matchesCategory;
   });
 
-  // Handle posting a new job
-  const handlePostJob = (jobData: JobFormData) => {
+  // Handle adding a new job
+  const handleAddJob = (jobData: JobFormData) => {
     addJobMutation.mutate(jobData);
   };
 
@@ -170,7 +170,7 @@ export function useHireData() {
     isDeleteJobConfirmOpen,
     setIsEditJobModalOpen,
     setIsDeleteJobConfirmOpen,
-    handlePostJob,
+    handleAddJob,
     handleUpdateJob,
     handleDeleteJob,
     handleEditJob,

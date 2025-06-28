@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { User } from "@supabase/supabase-js";
-import { Profile } from "./auth/types";
+import { User } from "firebase/auth";
+import { Profile } from "./AuthContext";
 import { v4 as uuidv4 } from "uuid";
 
 // Define the context type
@@ -21,24 +21,41 @@ const BypassAuthContext = createContext<BypassAuthContextType | undefined>(undef
 const createMockUser = (role: string): User => {
   const userId = uuidv4();
   return {
-    id: userId,
-    app_metadata: {},
-    user_metadata: { role },
-    aud: "authenticated",
-    created_at: new Date().toISOString(),
+    uid: userId,
     email: `${role}@example.com`,
-    phone: "",
-    role: "",
-    updated_at: new Date().toISOString(),
-  } as User;
+    displayName: `${role.charAt(0).toUpperCase() + role.slice(1)} User`,
+    photoURL: null,
+    emailVerified: true,
+    isAnonymous: false,
+    metadata: {
+      creationTime: new Date().toISOString(),
+      lastSignInTime: new Date().toISOString()
+    },
+    providerData: [],
+    refreshToken: "",
+    tenantId: null,
+    delete: () => Promise.resolve(),
+    getIdToken: () => Promise.resolve(""),
+    getIdTokenResult: () => Promise.resolve({
+      token: "",
+      signInProvider: "google.com",
+      expirationTime: "",
+      issuedAtTime: "",
+      claims: { role }
+    }),
+    reload: () => Promise.resolve(),
+    toJSON: () => ({}),
+    providerId: "google.com",
+    user_metadata: { role }
+  } as unknown as User;
 };
 
 const createMockProfile = (user: User): Profile => {
   return {
-    id: user.id,
+    id: user.uid,
     email: user.email || "",
-    full_name: user.email?.split('@')[0] || "Mock User",
-    avatar_url: null,
+    full_name: user.displayName || "Mock User",
+    avatar_url: user.photoURL || undefined,
     storage_used: 0,
     storage_limit: 5368709120, // 5GB
     plan_type: "pilot",

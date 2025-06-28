@@ -10,7 +10,7 @@ const s3Client = new S3Client({
 });
 
 // S3 bucket name
-const bucketName = import.meta.env.VITE_AWS_BUCKET_NAME || "";
+const bucketName = import.meta.env.VITE_AWS_BUCKET_NAME || "studiosync-demo";
 
 /**
  * Upload a file to AWS S3

@@ -25,8 +25,8 @@ export function usePortfolioData() {
     isLoading: isLoadingPortfolio,
     refetch: refetchPortfolio
   } = useQuery({
-    queryKey: ['portfolio', user?.id],
-    queryFn: () => user ? fetchPortfolio(user.id) : null,
+    queryKey: ['portfolio', user?.uid],
+    queryFn: () => user ? fetchPortfolio(user.uid) : null,
     enabled: !!user,
     onError: (error: any) => {
       console.error("Error fetching portfolio:", error);
@@ -60,7 +60,7 @@ export function usePortfolioData() {
   // Create portfolio mutation
   const createPortfolioMutation = useMutation({
     mutationFn: (portfolioData: PortfolioFormData) => 
-      user ? createPortfolio(user.id, portfolioData) : Promise.reject("No user"),
+      user ? createPortfolio(user.uid, portfolioData) : Promise.reject("No user"),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['portfolio'] });
       toast({
