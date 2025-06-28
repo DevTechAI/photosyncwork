@@ -15,7 +15,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [mockProfile, setMockProfile] = useState<Profile | null>(null);
   const { toast } = useToast();
-  const { bypassEnabled, mockUser, mockProfile: bypassMockProfile } = useBypassAuth();
+  const { bypassEnabled, mockUser, mockProfile: bypassMockProfile, toggleBypass, setMockRole } = useBypassAuth();
   
   const { profile, fetchUserProfile, updateProfile, clearProfile } = useProfileManager();
 
@@ -98,7 +98,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       // If using bypass, just clear the bypass
       if (bypassEnabled) {
-        // This will be handled by the BypassAuthContext
+        toggleBypass();
         toast({
           title: "Signed out",
           description: "You have been signed out of bypass mode"
@@ -143,10 +143,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await updateProfile(user, updates);
   };
   
-  // Add function to toggle bypass auth - this will be handled by BypassAuthContext
+  // Add function to toggle bypass auth
   const toggleBypassAuth = (role: string = 'manager') => {
-    // This is now handled by BypassAuthContext
-    console.log("toggleBypassAuth called with role:", role);
+    setMockRole(role);
+    toggleBypass();
   };
 
   const value = {

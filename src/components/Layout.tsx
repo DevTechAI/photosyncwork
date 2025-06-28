@@ -82,25 +82,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-background flex">
-      {/* Mobile Menu Button - Moved to left side */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className="fixed top-4 left-4 z-50 lg:hidden"
-        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
-      >
-        {isMobileMenuOpen ? (
-          <X className="h-6 w-6" />
-        ) : (
-          <Menu className="h-6 w-6" />
-        )}
-      </Button>
-
-      {/* Sidebar Navigation */}
+      {/* Sidebar Navigation - Always on the left */}
       <aside
         className={cn(
-          "fixed top-0 left-0 h-full w-64 bg-card/80 backdrop-blur-xl border-r transition-transform duration-300 ease-in-out z-40",
+          "fixed top-0 left-0 h-full w-64 bg-card border-r transition-transform duration-300 ease-in-out z-40",
           isMobileMenuOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}
       >
@@ -148,6 +133,21 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </nav>
       </aside>
 
+      {/* Mobile Menu Button - Positioned on the left */}
+      <Button
+        variant="ghost"
+        size="icon"
+        className="fixed top-4 left-4 z-50 lg:hidden"
+        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
+      >
+        {isMobileMenuOpen ? (
+          <X className="h-6 w-6" />
+        ) : (
+          <Menu className="h-6 w-6" />
+        )}
+      </Button>
+
       {/* Overlay for mobile menu */}
       {isMobileMenuOpen && (
         <div 
@@ -163,12 +163,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <Button 
               variant="outline" 
               size="sm" 
-              className="mr-2 border-2 bg-dustyBlue-whisper/70 backdrop-blur-md hover:bg-dustyBlue-soft hover:shadow-xl transition-all duration-300" 
+              className="mr-2 border-2 bg-gray-50 hover:bg-gray-100 hover:shadow-sm transition-all duration-300" 
               onClick={() => navigate("/dashboard")}
-              style={{ 
-                borderColor: 'hsl(var(--dusty-blue))', 
-                color: 'hsl(var(--dusty-blue-dark))'
-              }}
             >
               <ArrowLeft className="h-4 w-4 mr-1" />
               Dashboard
