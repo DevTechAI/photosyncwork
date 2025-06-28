@@ -1,4 +1,3 @@
-
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
@@ -19,6 +18,7 @@ import {
 import { Button } from "./ui/button";
 import { useEffect, useState } from "react";
 import { useUser } from "@/contexts/UserContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
 
 // Define navigation items with access control
@@ -27,46 +27,32 @@ const navItems = [
   { path: "/estimates", label: "Estimates", icon: FileText, access: ["manager", "crm"] },
   { path: "/invoices", label: "Invoices", icon: Receipt, access: ["manager", "accounts"] },
   { path: "/finances", label: "Finances", icon: LineChart, access: ["manager", "accounts"] },
-  { path: "/scheduling", label: "Scheduling", icon: Calendar, access: ["manager", "crm"] },
-  { path: "/pre-production", label: "Pre-Production", icon: Calendar, access: ["manager", "crm"] },
-  { path: "/production", label: "Production", icon: Camera, access: ["manager", "crm", "photographer", "videographer"] },
-  { path: "/post-production", label: "Post-Production", icon: Film, access: ["manager", "crm", "editor"] },
+  { path: "/workflow", label: "Workflow", icon: Calendar, access: ["manager", "crm", "photographer", "videographer", "editor"] },
 ];
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { currentUser, logout, hasAccess } = useUser();
-  
-  // Redirect to login if not authenticated
-  useEffect(() => {
-    if (!currentUser && location.pathname !== "/login") {
-      navigate("/login");
-    }
-  }, [currentUser, location.pathname, navigate]);
+  const { currentUser } = useUser();
+  const { signOut } = useAuth();
   
   // Close mobile menu when route changes
   useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [location]);
   
-  // If user not authenticated, don't render the layout
-  if (!currentUser) {
-    return null;
-  }
-  
   // Handle logout
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
+  const handleLogout = async () => {
+    await signOut();
+    navigate("/auth");
   };
   
   // Filter navigation items based on user role
   const filteredNavItems = navItems.filter(item => {
     if (item.access.includes("all")) return true;
-    if (currentUser.role === "manager") return true;
-    return item.access.includes(currentUser.role);
+    if (currentUser?.role === "manager") return true;
+    return item.access.includes(currentUser?.role || "");
   });
 
   // Determine if we're on a page that should have a back to dashboard button
@@ -125,8 +111,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           
           <div className="mt-auto border-t pt-4">
             <div className="px-2 py-2 mb-2">
-              <div className="font-medium truncate">{currentUser.name}</div>
-              <div className="text-xs text-muted-foreground capitalize">{currentUser.role}</div>
+              <div className="font-medium truncate">{currentUser?.name}</div>
+              <div className="text-xs text-muted-foreground capitalize">{currentUser?.role}</div>
             </div>
             <Button 
               variant="ghost" 
