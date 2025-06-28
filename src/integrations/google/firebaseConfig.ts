@@ -4,7 +4,7 @@ import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
 // Firebase configuration
-c{
+const firebaseConfig = {
   apiKey: "AIzaSyBrupAKp2MikmLpfQl2LZKhsh63OrdwpE4",
   authDomain: "studiosync-e59aa.firebaseapp.com",
   projectId: "studiosync-e59aa",
