@@ -23,7 +23,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 // Define navigation items with access control
 const navItems = [
-  { path: "/", label: "Dashboard", icon: Home, access: ["all"] },
+  { path: "/dashboard", label: "Dashboard", icon: Home, access: ["all"] },
   { path: "/estimates", label: "Estimates", icon: FileText, access: ["manager", "crm"] },
   { path: "/invoices", label: "Invoices", icon: Receipt, access: ["manager", "accounts"] },
   { path: "/finances", label: "Finances", icon: LineChart, access: ["manager", "accounts"] },
@@ -54,7 +54,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   };
   
   // Determine if we're on a page that should have a back to dashboard button
-  const showBackToDashboard = location.pathname !== "/" && !location.pathname.startsWith("/auth");
+  const showBackToDashboard = location.pathname !== "/dashboard" && !location.pathname.startsWith("/auth");
   
   // Get user role from email (for bypass mode)
   const getUserRole = () => {
@@ -164,7 +164,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               variant="outline" 
               size="sm" 
               className="mr-2 border-2 bg-dustyBlue-whisper/70 backdrop-blur-md hover:bg-dustyBlue-soft hover:shadow-xl transition-all duration-300" 
-              onClick={() => navigate("/")}
+              onClick={() => navigate("/dashboard")}
               style={{ 
                 borderColor: 'hsl(var(--dusty-blue))', 
                 color: 'hsl(var(--dusty-blue-dark))'

@@ -1,6 +1,5 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { useBypassAuth } from "@/contexts/BypassAuthContext";
 import { Loader2 } from "lucide-react";
 
 interface AuthGuardProps {
@@ -8,14 +7,13 @@ interface AuthGuardProps {
 }
 
 export function AuthGuard({ children }: AuthGuardProps) {
-  const { user, loading } = useAuth();
-  const { bypassEnabled } = useBypassAuth();
+  const { user, loading, bypassAuth } = useAuth();
   const location = useLocation();
   
-  console.log('AuthGuard: user=', user?.email, 'loading=', loading, 'pathname=', location.pathname, 'bypassEnabled=', bypassEnabled);
+  console.log('AuthGuard: user=', user?.email, 'loading=', loading, 'pathname=', location.pathname, 'bypassAuth=', bypassAuth);
   
   // If bypass is enabled, allow access
-  if (bypassEnabled) {
+  if (bypassAuth) {
     console.log('AuthGuard: Bypass enabled, allowing access');
     return <>{children}</>;
   }

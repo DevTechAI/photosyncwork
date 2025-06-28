@@ -2,9 +2,10 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { AuthContextType } from "./auth/types";
+import { AuthContextType, Profile } from "./auth/types";
 import { authService } from "./auth/authService";
 import { useProfileManager } from "./auth/useProfileManager";
+import { useBypassAuth } from "./BypassAuthContext";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -12,52 +13,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [bypassAuth, setBypassAuth] = useState(false);
-  const [mockProfile, setMockProfile] = useState<any>(null);
+  const [mockProfile, setMockProfile] = useState<Profile | null>(null);
   const { toast } = useToast();
+  const { bypassEnabled, mockUser, mockProfile: bypassMockProfile } = useBypassAuth();
   
   const { profile, fetchUserProfile, updateProfile, clearProfile } = useProfileManager();
 
-  // Check for bypass in localStorage
+  // Use bypass auth if enabled
   useEffect(() => {
-    const savedBypass = localStorage.getItem('bypassAuth');
-    if (savedBypass === 'true') {
-      console.log('Auth bypass enabled from localStorage');
-      setBypassAuth(true);
-      
-      // Create a mock user for bypass mode
-      const mockUser = {
-        id: 'bypass-user-id',
-        email: 'bypass@example.com',
-        user_metadata: {
-          full_name: 'Bypass User'
-        }
-      } as User;
-      
+    if (bypassEnabled) {
       setUser(mockUser);
-      
-      // Create a mock profile
-      const mockProfileData = {
-        id: 'bypass-user-id',
-        email: 'bypass@example.com',
-        full_name: 'Bypass User',
-        avatar_url: null,
-        storage_used: 0,
-        storage_limit: 5368709120, // 5GB
-        plan_type: 'pilot',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-      
-      setMockProfile(mockProfileData);
+      setMockProfile(bypassMockProfile);
+      setLoading(false);
     }
-    
-    setLoading(false);
-  }, []);
+  }, [bypassEnabled, mockUser, bypassMockProfile]);
 
   useEffect(() => {
     // Skip Supabase auth if bypass is enabled
-    if (bypassAuth) return;
+    if (bypassEnabled) return;
     
     console.log('AuthProvider: Setting up auth state listener');
     let mounted = true;
@@ -119,16 +92,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [fetchUserProfile, clearProfile, bypassAuth]);
+  }, [fetchUserProfile, clearProfile, bypassEnabled]);
 
   const signOut = async () => {
     try {
       // If using bypass, just clear the bypass
-      if (bypassAuth) {
-        setBypassAuth(false);
-        setUser(null);
-        setMockProfile(null);
-        localStorage.removeItem('bypassAuth');
+      if (bypassEnabled) {
+        // This will be handled by the BypassAuthContext
         toast({
           title: "Signed out",
           description: "You have been signed out of bypass mode"
@@ -159,68 +129,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const handleUpdateProfile = async (updates: Partial<typeof profile>) => {
+  const handleUpdateProfile = async (updates: Partial<Profile>) => {
+    if (bypassEnabled) {
+      // Update mock profile for bypass mode
+      setMockProfile(prev => prev ? { ...prev, ...updates } : null);
+      toast({
+        title: "Profile updated",
+        description: "Your profile has been updated in bypass mode"
+      });
+      return;
+    }
+    
     await updateProfile(user, updates);
   };
   
-  // Add function to toggle bypass auth
+  // Add function to toggle bypass auth - this will be handled by BypassAuthContext
   const toggleBypassAuth = (role: string = 'manager') => {
-    const newBypassState = !bypassAuth;
-    setBypassAuth(newBypassState);
-    localStorage.setItem('bypassAuth', newBypassState.toString());
-    
-    if (newBypassState) {
-      // Create a mock user for bypass mode
-      const mockUser = {
-        id: 'bypass-user-id',
-        email: `${role}@example.com`,
-        user_metadata: {
-          full_name: `${role.charAt(0).toUpperCase() + role.slice(1)} User`
-        }
-      } as User;
-      
-      setUser(mockUser);
-      
-      // Create a mock profile
-      const mockProfileData = {
-        id: 'bypass-user-id',
-        email: `${role}@example.com`,
-        full_name: `${role.charAt(0).toUpperCase() + role.slice(1)} User`,
-        avatar_url: null,
-        storage_used: 0,
-        storage_limit: 5368709120, // 5GB
-        plan_type: 'pilot',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-      
-      setMockProfile(mockProfileData);
-      
-      toast({
-        title: "Bypass Mode Enabled",
-        description: `You are now in bypass mode as ${role}`
-      });
-    } else {
-      setUser(null);
-      setMockProfile(null);
-      toast({
-        title: "Bypass Mode Disabled",
-        description: "Authentication bypass has been turned off"
-      });
-    }
+    // This is now handled by BypassAuthContext
+    console.log("toggleBypassAuth called with role:", role);
   };
 
   const value = {
-    user,
-    profile: bypassAuth ? mockProfile : profile,
+    user: bypassEnabled ? mockUser : user,
+    profile: bypassEnabled ? bypassMockProfile || mockProfile : profile,
     session,
-    loading,
+    loading: bypassEnabled ? false : loading,
     signInWithEmail: authService.signInWithEmail,
     signUpWithEmail: authService.signUpWithEmail,
     signInWithGoogle: authService.signInWithGoogle,
     signOut,
     updateProfile: handleUpdateProfile,
-    bypassAuth,
+    bypassAuth: bypassEnabled,
     toggleBypassAuth
   };
 
