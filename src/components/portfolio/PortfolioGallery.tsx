@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,6 +13,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface GalleryImage {
   id: string;
@@ -26,22 +26,34 @@ interface PortfolioGalleryProps {
   images: GalleryImage[];
   isEditing?: boolean;
   onImagesChange?: (images: GalleryImage[]) => void;
+  onUploadComplete?: (url: string, fileName: string) => void;
+  onRemoveImage?: (id: string) => void;
 }
 
-export function PortfolioGallery({ images, isEditing = false, onImagesChange }: PortfolioGalleryProps) {
+export function PortfolioGallery({ 
+  images, 
+  isEditing = false, 
+  onImagesChange,
+  onUploadComplete,
+  onRemoveImage
+}: PortfolioGalleryProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [showUploader, setShowUploader] = useState(false);
   const [newImageTitle, setNewImageTitle] = useState("");
   const [newImageCategory, setNewImageCategory] = useState("Portfolio");
   const { toast } = useToast();
 
+  // Extract unique categories from images
   const categories = ["all", ...Array.from(new Set(images.map(img => img.category)))];
   
+  // Filter images by selected category
   const filteredImages = selectedCategory === "all" 
     ? images 
     : images.filter(img => img.category === selectedCategory);
 
   const handleAddImage = () => {
+    if (!onImagesChange) return;
+    
     const newImage: GalleryImage = {
       id: Date.now().toString(),
       url: "https://images.unsplash.com/photo-1500673922987-e212871fec22?w=800",
@@ -49,9 +61,7 @@ export function PortfolioGallery({ images, isEditing = false, onImagesChange }: 
       category: "Portfolio"
     };
     
-    if (onImagesChange) {
-      onImagesChange([...images, newImage]);
-    }
+    onImagesChange([...images, newImage]);
     
     toast({
       title: "Image added",
@@ -60,22 +70,10 @@ export function PortfolioGallery({ images, isEditing = false, onImagesChange }: 
   };
 
   const handleUploadComplete = (url: string, fileName: string) => {
-    const newImage: GalleryImage = {
-      id: Date.now().toString(),
-      url: url,
-      title: newImageTitle || fileName,
-      category: newImageCategory
-    };
-    
-    if (onImagesChange) {
-      onImagesChange([...images, newImage]);
+    if (onUploadComplete) {
+      onUploadComplete(url, fileName);
     }
     
-    toast({
-      title: "Image uploaded",
-      description: "Your image has been uploaded to S3 and added to the gallery."
-    });
-
     // Reset form
     setNewImageTitle("");
     setNewImageCategory("Portfolio");
@@ -83,14 +81,11 @@ export function PortfolioGallery({ images, isEditing = false, onImagesChange }: 
   };
 
   const handleRemoveImage = (imageId: string) => {
-    if (onImagesChange) {
+    if (onRemoveImage) {
+      onRemoveImage(imageId);
+    } else if (onImagesChange) {
       onImagesChange(images.filter(img => img.id !== imageId));
     }
-    
-    toast({
-      title: "Image removed",
-      description: "Image has been removed from your gallery."
-    });
   };
 
   return (
@@ -107,12 +102,12 @@ export function PortfolioGallery({ images, isEditing = false, onImagesChange }: 
                 <DialogTrigger asChild>
                   <Button size="sm">
                     <Upload className="h-4 w-4 mr-2" />
-                    Upload to S3
+                    Upload Image
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-md">
                   <DialogHeader>
-                    <DialogTitle>Upload Image to S3</DialogTitle>
+                    <DialogTitle>Upload Image to Gallery</DialogTitle>
                   </DialogHeader>
                   <div className="space-y-4">
                     <div>
@@ -125,11 +120,23 @@ export function PortfolioGallery({ images, isEditing = false, onImagesChange }: 
                     </div>
                     <div>
                       <label className="text-sm font-medium">Category</label>
-                      <Input
+                      <Select
                         value={newImageCategory}
-                        onChange={(e) => setNewImageCategory(e.target.value)}
-                        placeholder="Enter category"
-                      />
+                        onValueChange={setNewImageCategory}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Portfolio">Portfolio</SelectItem>
+                          <SelectItem value="Wedding">Wedding</SelectItem>
+                          <SelectItem value="Portrait">Portrait</SelectItem>
+                          <SelectItem value="Event">Event</SelectItem>
+                          <SelectItem value="Commercial">Commercial</SelectItem>
+                          <SelectItem value="Nature">Nature</SelectItem>
+                          <SelectItem value="Travel">Travel</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                     <FileUploader
                       onUploadComplete={handleUploadComplete}

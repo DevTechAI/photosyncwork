@@ -1,19 +1,7 @@
+// This file is kept for backward compatibility but no longer contains mock data
+// All client data is now fetched from the Supabase database
 
-export interface Client {
-  name: string;
-  contact: {
-    phone: string;
-    email: string;
-  };
-  projects: {
-    name: string;
-    status: "Completed" | "In Progress" | "Planning";
-    progress: number;
-  }[];
-  estimates: number;
-  invoices: number;
-  activeProject: boolean;
-}
+import { Client } from "@/types/client";
 
-// Empty array instead of mock data
+// Empty array - data will be fetched from Supabase
 export const clients: Client[] = [];

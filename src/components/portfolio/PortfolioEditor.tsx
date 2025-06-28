@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -8,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, X } from "lucide-react";
 import { useState } from "react";
 import { PortfolioGallery } from "./PortfolioGallery";
+import { FileUploader } from "./FileUploader";
 
 interface PortfolioData {
   name: string;
@@ -37,9 +37,16 @@ interface PortfolioEditorProps {
   onChange: (data: PortfolioData) => void;
   onSave: () => void;
   onCancel: () => void;
+  onUploadComplete?: (url: string, fileName: string) => void;
 }
 
-export function PortfolioEditor({ data, onChange, onSave, onCancel }: PortfolioEditorProps) {
+export function PortfolioEditor({ 
+  data, 
+  onChange, 
+  onSave, 
+  onCancel,
+  onUploadComplete
+}: PortfolioEditorProps) {
   const [newService, setNewService] = useState("");
 
   const updateField = (field: string, value: any) => {
@@ -73,6 +80,12 @@ export function PortfolioEditor({ data, onChange, onSave, onCancel }: PortfolioE
 
   const updateGallery = (gallery: any[]) => {
     updateField("gallery", gallery);
+  };
+
+  const handleUploadComplete = (url: string, fileName: string) => {
+    if (onUploadComplete) {
+      onUploadComplete(url, fileName);
+    }
   };
 
   return (
@@ -220,11 +233,28 @@ export function PortfolioEditor({ data, onChange, onSave, onCancel }: PortfolioE
         </Card>
       </div>
 
-      <PortfolioGallery 
-        images={data.gallery}
-        isEditing={true}
-        onImagesChange={updateGallery}
-      />
+      <Card>
+        <CardHeader>
+          <CardTitle>Gallery</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <FileUploader 
+            onUploadComplete={handleUploadComplete}
+            acceptedFileTypes="image/*"
+            maxFileSize={10}
+            folder="portfolio"
+          />
+          
+          <div className="mt-6">
+            <PortfolioGallery 
+              images={data.gallery}
+              isEditing={true}
+              onImagesChange={updateGallery}
+              onUploadComplete={handleUploadComplete}
+            />
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="flex justify-end gap-2 pt-4 border-t">
         <Button variant="outline" onClick={onCancel}>

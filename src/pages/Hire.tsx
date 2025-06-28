@@ -1,95 +1,31 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, Plus, Search, MapPin, Camera, Video, Edit, Briefcase, User } from "lucide-react";
+import { Users, Plus, Search, MapPin, Calendar, DollarSign, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { PostJobForm } from "@/components/hire/PostJobForm";
 import { FreelancerCard } from "@/components/hire/FreelancerCard";
 import { JobCard } from "@/components/hire/JobCard";
-
-// Mock data for freelancers
-const mockFreelancers = [
-  {
-    id: "1",
-    name: "Sarah Johnson",
-    role: "Wedding Photographer",
-    location: "New York, NY",
-    rating: 4.9,
-    reviewCount: 127,
-    hourlyRate: "$75-150",
-    avatar: "https://images.unsplash.com/photo-1494790108755-2616b72944c0?w=150&h=150&fit=crop&crop=face",
-    specialties: ["Wedding", "Portrait", "Event"],
-    isAvailable: true
-  },
-  {
-    id: "2",
-    name: "Michael Chen",
-    role: "Videographer & Editor",
-    location: "Los Angeles, CA",
-    rating: 4.8,
-    reviewCount: 89,
-    hourlyRate: "$80-200",
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
-    specialties: ["Wedding Films", "Corporate", "Music Videos"],
-    isAvailable: true
-  },
-  {
-    id: "3",
-    name: "Emily Rodriguez",
-    role: "Photo Editor",
-    location: "Austin, TX",
-    rating: 4.9,
-    reviewCount: 203,
-    hourlyRate: "$40-80",
-    avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face",
-    specialties: ["Retouching", "Color Grading", "Batch Processing"],
-    isAvailable: false
-  }
-];
-
-// Mock data for job postings
-const mockJobs = [
-  {
-    id: "1",
-    title: "Second Shooter for Wedding",
-    company: "Elegant Moments Photography",
-    location: "Miami, FL",
-    type: "Contract",
-    budget: "$500-800",
-    date: "March 15, 2024",
-    description: "Looking for an experienced second shooter for a luxury wedding at The Ritz-Carlton.",
-    requirements: ["5+ years experience", "Own equipment", "Portfolio required"],
-    postedDate: "2 days ago"
-  },
-  {
-    id: "2", 
-    title: "Video Editor for Wedding Films",
-    company: "Love Story Productions",
-    location: "Remote",
-    type: "Freelance",
-    budget: "$1,200-2,000",
-    date: "Ongoing",
-    description: "Seeking a skilled video editor to create cinematic wedding films. Must be proficient in DaVinci Resolve or Premiere Pro.",
-    requirements: ["Advanced editing skills", "Color grading experience", "Quick turnaround"],
-    postedDate: "1 week ago"
-  }
-];
+import { useHireData } from "@/hooks/hire/useHireData";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function Hire() {
   const navigate = useNavigate();
-  const [showPostJob, setShowPostJob] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("all");
-
-  const filteredFreelancers = mockFreelancers.filter(freelancer => {
-    const matchesSearch = freelancer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         freelancer.role.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === "all" || 
-                           freelancer.specialties.some(s => s.toLowerCase().includes(selectedCategory));
-    return matchesSearch && matchesCategory;
-  });
+  const { 
+    freelancers, 
+    jobs, 
+    isLoadingFreelancers, 
+    isLoadingJobs,
+    searchTerm,
+    setSearchTerm,
+    selectedCategory,
+    setSelectedCategory,
+    showPostJob,
+    setShowPostJob
+  } = useHireData();
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#f7f5f2' }}>
@@ -98,7 +34,7 @@ export default function Hire() {
         <div className="max-w-6xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <Button 
-              onClick={() => navigate('/home')} 
+              onClick={() => navigate('/')} 
               variant="ghost"
               className="text-white hover:bg-gray-800"
             >
@@ -112,7 +48,6 @@ export default function Hire() {
               variant="outline"
               className="text-white border-white hover:bg-white hover:text-black"
             >
-              <User className="h-4 w-4 mr-2" />
               Create Portfolio
             </Button>
           </div>
@@ -139,7 +74,6 @@ export default function Hire() {
                 className="w-full"
                 style={{ backgroundColor: '#556ee6' }}
               >
-                <User className="h-4 w-4 mr-2" />
                 Create Your Portfolio
               </Button>
             </CardContent>
@@ -153,7 +87,7 @@ export default function Hire() {
               Browse Talent
             </TabsTrigger>
             <TabsTrigger value="jobs" className="flex items-center gap-2">
-              <Briefcase className="h-4 w-4" />
+              <Users className="h-4 w-4" />
               Job Board
             </TabsTrigger>
           </TabsList>
@@ -163,36 +97,52 @@ export default function Hire() {
             <div className="flex flex-col md:flex-row gap-4 mb-8">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <input
+                <Input
                   type="text"
                   placeholder="Search by name or specialty..."
-                  className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2"
+                  className="pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2"
                   style={{ borderColor: '#b99364', '--tw-ring-color': '#b99364' } as any}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
-              <select
-                className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2"
-                style={{ borderColor: '#b99364', '--tw-ring-color': '#b99364' } as any}
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-              >
-                <option value="all">All Categories</option>
-                <option value="wedding">Wedding</option>
-                <option value="portrait">Portrait</option>
-                <option value="event">Event</option>
-                <option value="corporate">Corporate</option>
-                <option value="editing">Editing</option>
-              </select>
+              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                <SelectTrigger className="w-full md:w-auto">
+                  <SelectValue placeholder="All Categories" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  <SelectItem value="wedding">Wedding</SelectItem>
+                  <SelectItem value="portrait">Portrait</SelectItem>
+                  <SelectItem value="event">Event</SelectItem>
+                  <SelectItem value="corporate">Corporate</SelectItem>
+                  <SelectItem value="editing">Editing</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Freelancers Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredFreelancers.map((freelancer) => (
-                <FreelancerCard key={freelancer.id} freelancer={freelancer} />
-              ))}
-            </div>
+            {isLoadingFreelancers ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <Skeleton key={i} className="h-64 w-full" />
+                ))}
+              </div>
+            ) : freelancers.length === 0 ? (
+              <div className="text-center py-12 border-2 border-dashed rounded-lg">
+                <Users className="h-12 w-12 mx-auto text-muted-foreground opacity-50 mb-4" />
+                <h3 className="text-lg font-medium text-muted-foreground mb-2">No freelancers found</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Try adjusting your search or filters
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {freelancers.map((freelancer) => (
+                  <FreelancerCard key={freelancer.id} freelancer={freelancer} />
+                ))}
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="jobs">
@@ -211,11 +161,35 @@ export default function Hire() {
             </div>
 
             {/* Job Listings */}
-            <div className="space-y-4">
-              {mockJobs.map((job) => (
-                <JobCard key={job.id} job={job} />
-              ))}
-            </div>
+            {isLoadingJobs ? (
+              <div className="space-y-4">
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-48 w-full" />
+                ))}
+              </div>
+            ) : jobs.length === 0 ? (
+              <div className="text-center py-12 border-2 border-dashed rounded-lg">
+                <Calendar className="h-12 w-12 mx-auto text-muted-foreground opacity-50 mb-4" />
+                <h3 className="text-lg font-medium text-muted-foreground mb-2">No job postings yet</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Be the first to post a job opportunity
+                </p>
+                <Button 
+                  onClick={() => setShowPostJob(true)}
+                  className="text-white"
+                  style={{ backgroundColor: '#556ee6' }}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Post a Job
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {jobs.map((job) => (
+                  <JobCard key={job.id} job={job} />
+                ))}
+              </div>
+            )}
           </TabsContent>
         </Tabs>
 

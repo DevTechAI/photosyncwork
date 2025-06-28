@@ -1,77 +1,36 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { Camera, Edit, Plus, Trash2, Eye, Share2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { Camera, Edit, Eye, Share2, Loader2 } from "lucide-react";
 import { PortfolioGallery } from "@/components/portfolio/PortfolioGallery";
 import { PortfolioEditor } from "@/components/portfolio/PortfolioEditor";
 import { PortfolioPreview } from "@/components/portfolio/PortfolioPreview";
+import { usePortfolioData } from "@/hooks/portfolio/usePortfolioData";
+import { useAuth } from "@/contexts/AuthContext";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Portfolio() {
-  const [isEditing, setIsEditing] = useState(false);
-  const [showPreview, setShowPreview] = useState(false);
-  const { toast } = useToast();
+  const { user } = useAuth();
+  const { 
+    portfolioData, 
+    setPortfolioData, 
+    isLoading, 
+    isEditing, 
+    setIsEditing, 
+    showPreview, 
+    setShowPreview, 
+    handleSave,
+    handleAddGalleryItem,
+    handleRemoveGalleryItem,
+    hasPortfolio
+  } = usePortfolioData();
 
-  const [portfolioData, setPortfolioData] = useState({
-    name: "John Doe Photography",
-    tagline: "Capturing Life's Beautiful Moments",
-    about: "Professional photographer specializing in weddings, portraits, and events. With over 5 years of experience, I bring creativity and passion to every shoot.",
-    services: [
-      "Wedding Photography",
-      "Portrait Sessions",
-      "Event Photography",
-      "Corporate Headshots"
-    ],
-    contact: {
-      email: "john@example.com",
-      phone: "+1 (555) 123-4567",
-      location: "New York, NY"
-    },
-    socialLinks: {
-      instagram: "",
-      facebook: "",
-      website: ""
-    },
-    gallery: [
-      {
-        id: "1",
-        url: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=800",
-        title: "Mountain Landscape",
-        category: "Nature"
-      },
-      {
-        id: "2",
-        url: "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=800",
-        title: "Foggy Summit",
-        category: "Landscape"
-      },
-      {
-        id: "3",
-        url: "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?w=800",
-        title: "Ocean Wave",
-        category: "Nature"
-      }
-    ]
-  });
-
-  const handleSave = () => {
-    // In a real app, this would save to a database
-    console.log("Saving portfolio data:", portfolioData);
-    toast({
-      title: "Portfolio saved",
-      description: "Your portfolio has been updated successfully."
-    });
-    setIsEditing(false);
-  };
-
-  const handlePublish = () => {
-    toast({
-      title: "Portfolio published",
-      description: "Your portfolio is now live and can be shared with clients."
+  // Handle upload complete from FileUploader
+  const handleUploadComplete = (url: string, fileName: string) => {
+    handleAddGalleryItem({
+      url,
+      title: fileName,
+      category: "Portfolio"
     });
   };
 
@@ -88,7 +47,10 @@ export default function Portfolio() {
               <Button variant="outline" onClick={() => setShowPreview(false)}>
                 Back to Editor
               </Button>
-              <Button onClick={handlePublish}>
+              <Button onClick={() => {
+                // In a real app, this would publish the portfolio
+                setShowPreview(false);
+              }}>
                 <Share2 className="h-4 w-4 mr-2" />
                 Publish
               </Button>
@@ -96,6 +58,30 @@ export default function Portfolio() {
           </div>
         </div>
         <PortfolioPreview data={portfolioData} />
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-6">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex items-center justify-between mb-6">
+            <Skeleton className="h-10 w-64" />
+            <Skeleton className="h-10 w-32" />
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2">
+              <Skeleton className="h-64 w-full mb-6" />
+              <Skeleton className="h-96 w-full" />
+            </div>
+            <div className="space-y-6">
+              <Skeleton className="h-48 w-full" />
+              <Skeleton className="h-48 w-full" />
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -125,7 +111,7 @@ export default function Portfolio() {
             ) : (
               <Button onClick={() => setIsEditing(true)}>
                 <Edit className="h-4 w-4 mr-2" />
-                Edit Portfolio
+                {hasPortfolio ? "Edit Portfolio" : "Create Portfolio"}
               </Button>
             )}
           </div>
@@ -137,6 +123,7 @@ export default function Portfolio() {
             onChange={setPortfolioData}
             onSave={handleSave}
             onCancel={() => setIsEditing(false)}
+            onUploadComplete={handleUploadComplete}
           />
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -148,18 +135,22 @@ export default function Portfolio() {
                 <CardContent>
                   <div className="space-y-4">
                     <div>
-                      <h3 className="text-xl font-semibold">{portfolioData.name}</h3>
-                      <p className="text-muted-foreground">{portfolioData.tagline}</p>
+                      <h3 className="text-xl font-semibold">{portfolioData.name || "Your Portfolio Name"}</h3>
+                      <p className="text-muted-foreground">{portfolioData.tagline || "Your professional tagline"}</p>
                     </div>
-                    <p className="text-sm">{portfolioData.about}</p>
-                    <div>
-                      <h4 className="font-medium mb-2">Services</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {portfolioData.services.map((service, index) => (
-                          <Badge key={index} variant="secondary">{service}</Badge>
-                        ))}
+                    <p className="text-sm">{portfolioData.about || "Add a description about your photography style and experience."}</p>
+                    {portfolioData.services.length > 0 && (
+                      <div>
+                        <h4 className="font-medium mb-2">Services</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {portfolioData.services.map((service, index) => (
+                            <div key={index} className="px-3 py-1 bg-gray-100 rounded-full text-sm">
+                              {service}
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -168,6 +159,9 @@ export default function Portfolio() {
                 <PortfolioGallery 
                   images={portfolioData.gallery}
                   isEditing={false}
+                  onImagesChange={() => {}}
+                  onUploadComplete={handleUploadComplete}
+                  onRemoveImage={handleRemoveGalleryItem}
                 />
               </div>
             </div>
@@ -180,15 +174,15 @@ export default function Portfolio() {
                 <CardContent className="space-y-2">
                   <div>
                     <span className="text-sm font-medium">Email:</span>
-                    <p className="text-sm text-muted-foreground">{portfolioData.contact.email}</p>
+                    <p className="text-sm text-muted-foreground">{portfolioData.contact.email || "Not set"}</p>
                   </div>
                   <div>
                     <span className="text-sm font-medium">Phone:</span>
-                    <p className="text-sm text-muted-foreground">{portfolioData.contact.phone}</p>
+                    <p className="text-sm text-muted-foreground">{portfolioData.contact.phone || "Not set"}</p>
                   </div>
                   <div>
                     <span className="text-sm font-medium">Location:</span>
-                    <p className="text-sm text-muted-foreground">{portfolioData.contact.location}</p>
+                    <p className="text-sm text-muted-foreground">{portfolioData.contact.location || "Not set"}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -208,10 +202,30 @@ export default function Portfolio() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm">Portfolio Status</span>
-                    <Badge variant="outline" className="text-xs">Draft</Badge>
+                    <div className="px-2 py-0.5 bg-yellow-100 text-yellow-800 rounded-full text-xs">
+                      {hasPortfolio ? "Published" : "Draft"}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
+              
+              {!user && (
+                <Card className="bg-blue-50 border-blue-200">
+                  <CardContent className="pt-6">
+                    <h3 className="font-semibold text-blue-900 mb-2">Sign in to save your portfolio</h3>
+                    <p className="text-sm text-blue-700 mb-3">
+                      Create an account to save your portfolio and make it accessible to potential clients.
+                    </p>
+                    <Button 
+                      onClick={() => navigate('/auth')}
+                      className="w-full"
+                      style={{ backgroundColor: '#556ee6' }}
+                    >
+                      Sign In or Create Account
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </div>
         )}
