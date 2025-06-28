@@ -12,7 +12,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [bypassAuth, setBypassAuth] = useState(false); // Add bypass state
+  const [bypassAuth, setBypassAuth] = useState(false);
+  const [mockProfile, setMockProfile] = useState<any>(null);
   const { toast } = useToast();
   
   const { profile, fetchUserProfile, updateProfile, clearProfile } = useProfileManager();
@@ -36,7 +37,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(mockUser);
       
       // Create a mock profile
-      const mockProfile = {
+      const mockProfileData = {
         id: 'bypass-user-id',
         email: 'bypass@example.com',
         full_name: 'Bypass User',
@@ -48,7 +49,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         updated_at: new Date().toISOString()
       };
       
-      setProfile(mockProfile);
+      setMockProfile(mockProfileData);
     }
     
     setLoading(false);
@@ -126,7 +127,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (bypassAuth) {
         setBypassAuth(false);
         setUser(null);
-        setProfile(null);
+        setMockProfile(null);
         localStorage.removeItem('bypassAuth');
         toast({
           title: "Signed out",
@@ -181,7 +182,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(mockUser);
       
       // Create a mock profile
-      const mockProfile = {
+      const mockProfileData = {
         id: 'bypass-user-id',
         email: `${role}@example.com`,
         full_name: `${role.charAt(0).toUpperCase() + role.slice(1)} User`,
@@ -193,7 +194,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         updated_at: new Date().toISOString()
       };
       
-      setProfile(mockProfile);
+      setMockProfile(mockProfileData);
       
       toast({
         title: "Bypass Mode Enabled",
@@ -201,7 +202,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
     } else {
       setUser(null);
-      setProfile(null);
+      setMockProfile(null);
       toast({
         title: "Bypass Mode Disabled",
         description: "Authentication bypass has been turned off"
@@ -211,7 +212,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const value = {
     user,
-    profile,
+    profile: bypassAuth ? mockProfile : profile,
     session,
     loading,
     signInWithEmail: authService.signInWithEmail,
@@ -219,8 +220,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signInWithGoogle: authService.signInWithGoogle,
     signOut,
     updateProfile: handleUpdateProfile,
-    bypassAuth, // Expose bypass state
-    toggleBypassAuth // Expose toggle function
+    bypassAuth,
+    toggleBypassAuth
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
