@@ -39,9 +39,10 @@ export function Header() {
     <header className="bg-white border-b shadow-sm sticky top-0 z-50">
       <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
+          {/* Logo positioned with margin-left to avoid overlap with menu button */}
           <button 
             onClick={handleLogoClick}
-            className="text-2xl font-bold text-dustyBlue-dark hover:text-dustyBlue transition-colors"
+            className="text-2xl font-bold text-dustyBlue-dark hover:text-dustyBlue transition-colors ml-8 lg:ml-0"
           >
             StudioSync
           </button>

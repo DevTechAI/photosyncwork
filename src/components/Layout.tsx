@@ -158,19 +158,22 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
       {/* Top bar for mobile navigation (only visible on mobile) */}
       <header className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-background border-b z-30 flex items-center px-4">
-        <div className="flex-1 flex items-center ml-12"> {/* Added margin-left to accommodate the menu button */}
-          {showBackToDashboard && (
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="mr-2 border-gray-200 bg-gray-50 hover:bg-gray-100 hover:text-gray-900" 
-              onClick={() => navigate("/dashboard")}
-            >
-              <ArrowLeft className="h-4 w-4 mr-1" />
-              Dashboard
-            </Button>
-          )}
-          <h1 className="text-xl font-semibold">StudioSync</h1>
+        <div className="flex-1 flex items-center">
+          {/* Add margin-left to accommodate the menu button */}
+          <div className="ml-12 flex items-center">
+            {showBackToDashboard && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="mr-2 border-gray-200 bg-gray-50 hover:bg-gray-100 hover:text-gray-900" 
+                onClick={() => navigate("/dashboard")}
+              >
+                <ArrowLeft className="h-4 w-4 mr-1" />
+                Dashboard
+              </Button>
+            )}
+            <h1 className="text-xl font-semibold">StudioSync</h1>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <DropdownMenu>
