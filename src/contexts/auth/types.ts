@@ -1,4 +1,3 @@
-
 import { User, Session } from "@supabase/supabase-js";
 
 export interface Profile {
@@ -23,4 +22,6 @@ export interface AuthContextType {
   signInWithGoogle: () => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<void>;
+  bypassAuth: boolean; // Add bypass state
+  toggleBypassAuth: (role?: string) => void; // Add toggle function
 }

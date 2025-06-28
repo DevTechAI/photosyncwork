@@ -18,8 +18,8 @@ import {
 import { Button } from "./ui/button";
 import { useEffect, useState } from "react";
 import { useUser } from "@/contexts/UserContext";
-import { useAuth } from "@/contexts/AuthContext";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Define navigation items with access control
 const navItems = [
@@ -27,37 +27,59 @@ const navItems = [
   { path: "/estimates", label: "Estimates", icon: FileText, access: ["manager", "crm"] },
   { path: "/invoices", label: "Invoices", icon: Receipt, access: ["manager", "accounts"] },
   { path: "/finances", label: "Finances", icon: LineChart, access: ["manager", "accounts"] },
-  { path: "/workflow", label: "Workflow", icon: Calendar, access: ["manager", "crm", "photographer", "videographer", "editor"] },
+  { path: "/workflow", label: "Workflow", icon: Calendar, access: ["all"] },
+  { path: "/portfolio", label: "Portfolio", icon: Camera, access: ["all"] },
 ];
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { currentUser } = useUser();
-  const { signOut } = useAuth();
+  const { user, signOut } = useAuth(); // Use Auth context instead of UserContext
   
   // Close mobile menu when route changes
   useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [location]);
   
+  // If user not authenticated, don't render the layout
+  if (!user) {
+    return null;
+  }
+  
   // Handle logout
-  const handleLogout = async () => {
-    await signOut();
+  const handleLogout = () => {
+    signOut();
     navigate("/auth");
   };
+  
+  // Determine if we're on a page that should have a back to dashboard button
+  const showBackToDashboard = location.pathname !== "/" && !location.pathname.startsWith("/auth");
+  
+  // Get user role from email (for bypass mode)
+  const getUserRole = () => {
+    if (!user || !user.email) return 'user';
+    
+    const email = user.email.toLowerCase();
+    if (email.includes('manager')) return 'manager';
+    if (email.includes('accounts')) return 'accounts';
+    if (email.includes('crm')) return 'crm';
+    if (email.includes('photographer')) return 'photographer';
+    if (email.includes('videographer')) return 'videographer';
+    if (email.includes('editor')) return 'editor';
+    
+    return 'manager'; // Default to manager
+  };
+  
+  const userRole = getUserRole();
   
   // Filter navigation items based on user role
   const filteredNavItems = navItems.filter(item => {
     if (item.access.includes("all")) return true;
-    if (currentUser?.role === "manager") return true;
-    return item.access.includes(currentUser?.role || "");
+    if (userRole === "manager") return true;
+    return item.access.includes(userRole);
   });
 
-  // Determine if we're on a page that should have a back to dashboard button
-  const showBackToDashboard = location.pathname !== "/" && !location.pathname.startsWith("/login");
-  
   return (
     <div className="min-h-screen bg-background flex">
       {/* Mobile Menu Button */}
@@ -111,8 +133,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           
           <div className="mt-auto border-t pt-4">
             <div className="px-2 py-2 mb-2">
-              <div className="font-medium truncate">{currentUser?.name}</div>
-              <div className="text-xs text-muted-foreground capitalize">{currentUser?.role}</div>
+              <div className="font-medium truncate">{user.user_metadata?.full_name || user.email}</div>
+              <div className="text-xs text-muted-foreground capitalize">{userRole}</div>
             </div>
             <Button 
               variant="ghost" 
