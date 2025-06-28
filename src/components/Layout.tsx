@@ -133,7 +133,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </nav>
       </aside>
 
-      {/* Mobile Menu Button - Positioned on the left */}
+      {/* Mobile Menu Button - Fixed position at top left */}
       <Button
         variant="outline"
         size="icon"
@@ -159,8 +159,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       {/* Top bar for mobile navigation (only visible on mobile) */}
       <header className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-background border-b z-30 flex items-center px-4">
         <div className="flex-1 flex items-center">
-          {/* Add margin-left to accommodate the menu button */}
-          <div className="ml-12 flex items-center">
+          {/* Add sufficient margin-left to accommodate the menu button */}
+          <div className="ml-16 flex items-center">
             {showBackToDashboard && (
               <Button 
                 variant="outline" 
