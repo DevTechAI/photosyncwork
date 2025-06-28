@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 export const authService = {
@@ -54,12 +53,17 @@ export const authService = {
     try {
       console.log('Attempting Google sign in');
       
+      // Use the current origin for the redirect URL
+      const redirectTo = `${window.location.origin}/auth`;
+      console.log('Using redirect URL:', redirectTo);
+      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth`,
+          redirectTo,
           queryParams: {
-            prompt: 'select_account'
+            prompt: 'select_account',
+            access_type: 'offline' // Request a refresh token
           }
         }
       });
@@ -78,7 +82,15 @@ export const authService = {
   },
 
   signOut: async () => {
-    const { error } = await supabase.auth.signOut();
-    return { error };
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Sign out error:', error);
+      }
+      return { error };
+    } catch (error: any) {
+      console.error('Sign out error:', error);
+      return { error };
+    }
   }
 };

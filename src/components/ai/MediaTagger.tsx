@@ -207,3 +207,6 @@ function MediaTaggerComponent({
 
 // Export memoized component to prevent unnecessary re-renders
 export const MediaTagger = memo(MediaTaggerComponent);
+
+// Default export for lazy loading
+export default { MediaTagger };
