@@ -1,5 +1,4 @@
-
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -80,7 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [fetchUserProfile, clearProfile]);
 
-  const signOut = async () => {
+  const signOut = useCallback(async () => {
     try {
       const { error } = await authService.signOut();
       if (error) {
@@ -102,13 +101,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         variant: "destructive"
       });
     }
-  };
+  }, [toast]);
 
-  const handleUpdateProfile = async (updates: Partial<typeof profile>) => {
+  const handleUpdateProfile = useCallback(async (updates: Partial<typeof profile>) => {
     await updateProfile(user, updates);
-  };
+  }, [user, updateProfile]);
 
-  const value = {
+  // Memoize the context value to prevent unnecessary re-renders
+  const value = useMemo(() => ({
     user,
     profile,
     session,
@@ -118,7 +118,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signInWithGoogle: authService.signInWithGoogle,
     signOut,
     updateProfile: handleUpdateProfile
-  };
+  }), [user, profile, session, loading, signOut, handleUpdateProfile]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

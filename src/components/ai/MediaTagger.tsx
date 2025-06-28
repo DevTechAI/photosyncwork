@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useCallback, memo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -19,7 +18,7 @@ interface MediaTaggerProps {
   onTagsGenerated?: (tags: Record<string, string[]>) => void;
 }
 
-export function MediaTagger({
+function MediaTaggerComponent({
   eventId,
   eventName,
   clientName,
@@ -33,7 +32,7 @@ export function MediaTagger({
   const [notes, setNotes] = useState("");
   const { toast } = useToast();
 
-  const handleGenerateTags = async () => {
+  const handleGenerateTags = useCallback(async () => {
     if (!mediaUrl) {
       toast({
         variant: "destructive",
@@ -90,36 +89,37 @@ export function MediaTagger({
     } finally {
       setLoading(false);
     }
-  };
+  }, [mediaUrl, mediaType, eventName, clientName, eventType, onTagsGenerated, toast]);
 
-  const copyAllTags = () => {
+  const copyAllTags = useCallback(() => {
     const allTags = Object.values(tags).flat().join(", ");
     navigator.clipboard.writeText(allTags);
     toast({
       title: "Tags Copied",
       description: "All tags have been copied to clipboard."
     });
-  };
+  }, [tags, toast]);
   
-  const clearResults = () => {
+  const clearResults = useCallback(() => {
     setTags({});
     setNotes("");
-  };
+  }, []);
 
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle className="flex justify-between items-center">
-          <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
             <Tag className="h-5 w-5" />
             <span>AI Media Tagger</span>
-          </div>
+          </CardTitle>
           {Object.keys(tags).length > 0 && (
             <Button variant="outline" size="sm" onClick={clearResults}>
-              <X className="h-4 w-4 mr-1" /> Clear
+              <X className="h-4 w-4 mr-1" />
+              Clear
             </Button>
           )}
-        </CardTitle>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-4 gap-4">
@@ -172,7 +172,7 @@ export function MediaTagger({
                   <h3 className="text-sm font-medium capitalize mb-1">{category}</h3>
                   <div className="flex flex-wrap gap-1">
                     {tagList.map((tag, i) => (
-                      <Badge key={i} variant="secondary">{tag}</Badge>
+                      <Badge key={i} variant="secondary" className="text-xs">{tag}</Badge>
                     ))}
                   </div>
                 </div>
@@ -204,3 +204,6 @@ export function MediaTagger({
     </Card>
   );
 }
+
+// Export memoized component to prevent unnecessary re-renders
+export const MediaTagger = memo(MediaTaggerComponent);

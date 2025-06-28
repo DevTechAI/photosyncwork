@@ -1,8 +1,21 @@
-
 import { useState, useEffect } from "react";
 import { Invoice, InvoiceItem } from "@/components/invoices/types";
 import { ClientDetailsFormState } from "@/components/invoices/types/formTypes";
 import { toast } from "sonner";
+import { z } from "zod";
+
+// Define validation schema
+const invoiceSchema = z.object({
+  clientName: z.string().min(1, "Client name is required"),
+  clientEmail: z.string().email("Invalid email format").optional().or(z.literal("")),
+  invoiceDate: z.string().min(1, "Invoice date is required"),
+  items: z.array(
+    z.object({
+      description: z.string().min(1, "Description is required"),
+      amount: z.string().min(1, "Amount is required")
+    })
+  ).min(1, "At least one item is required"),
+});
 
 export function useInvoiceForm(editingInvoice?: Invoice | null, estimateData?: any) {
   // Client Details State
@@ -31,6 +44,7 @@ export function useInvoiceForm(editingInvoice?: Invoice | null, estimateData?: a
   const [paidAmount, setPaidAmount] = useState("0");
   const [balanceAmount, setBalanceAmount] = useState("0");
   const [notes, setNotes] = useState("");
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
   // Pre-fill from estimate or editing invoice
   useEffect(() => {
@@ -111,21 +125,61 @@ export function useInvoiceForm(editingInvoice?: Invoice | null, estimateData?: a
   // Update client details field
   const updateClientDetail = (field: keyof ClientDetailsFormState, value: string | boolean) => {
     setClientDetails(prev => ({ ...prev, [field]: value }));
+    
+    // Clear validation error when field is updated
+    if (validationErrors[field]) {
+      setValidationErrors(prev => {
+        const updated = { ...prev };
+        delete updated[field];
+        return updated;
+      });
+    }
+  };
+
+  // Validate form
+  const validateForm = () => {
+    const errors: Record<string, string> = {};
+    
+    try {
+      // Validate using Zod schema
+      invoiceSchema.parse({
+        clientName: clientDetails.clientName,
+        clientEmail: clientDetails.clientEmail,
+        invoiceDate: clientDetails.invoiceDate,
+        items
+      });
+      
+      // Additional validations not covered by schema
+      if (items.some(item => isNaN(parseFloat(item.amount.replace(/[₹,]/g, ""))))) {
+        errors.items = "All item amounts must be valid numbers";
+      }
+      
+      if (clientDetails.invoiceType === "paid" && clientDetails.paymentReceived) {
+        if (!clientDetails.paymentDate) {
+          errors.paymentDate = "Payment date is required when payment is received";
+        }
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        error.errors.forEach(err => {
+          const path = err.path.join('.');
+          errors[path] = err.message;
+        });
+      }
+    }
+    
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   // Form submission handler
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>, onSave: (invoice: Invoice) => void) => {
     event.preventDefault();
     
-    // Validation
-    if (items.some(item => !item.description || !item.amount)) {
-      toast.error("Please fill in all invoice items");
-      return;
-    }
-    
-    if (!clientDetails.clientName) {
-      toast.error("Please enter client name");
-      return;
+    // Validate form
+    if (!validateForm()) {
+      toast.error("Please fix the validation errors before submitting");
+      return false;
     }
     
     const finalAmount = amount || calculateTotal();
@@ -180,6 +234,7 @@ export function useInvoiceForm(editingInvoice?: Invoice | null, estimateData?: a
     notes,
     setNotes,
     calculateTotal,
-    handleSubmit
+    handleSubmit,
+    validationErrors
   };
 }
