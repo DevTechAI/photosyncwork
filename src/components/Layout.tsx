@@ -82,11 +82,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-background flex">
-      {/* Mobile Menu Button */}
+      {/* Mobile Menu Button - Moved to left side */}
       <Button
         variant="ghost"
         size="icon"
-        className="fixed top-4 right-4 z-50 lg:hidden"
+        className="fixed top-4 left-4 z-50 lg:hidden"
         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
         aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
       >
@@ -158,7 +158,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
       {/* Top bar for mobile navigation (only visible on mobile) */}
       <header className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-background border-b z-30 flex items-center px-4">
-        <div className="flex-1 flex items-center">
+        <div className="flex-1 flex items-center ml-12"> {/* Added margin-left to accommodate the menu button */}
           {showBackToDashboard && (
             <Button 
               variant="outline" 
