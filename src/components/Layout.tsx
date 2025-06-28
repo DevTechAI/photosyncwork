@@ -135,9 +135,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
       {/* Mobile Menu Button - Positioned on the left */}
       <Button
-        variant="ghost"
+        variant="outline"
         size="icon"
-        className="fixed top-4 left-4 z-50 lg:hidden"
+        className="fixed top-4 left-4 z-50 lg:hidden bg-background border-gray-200 hover:bg-gray-100 hover:text-gray-900"
         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
         aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
       >
@@ -163,7 +163,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <Button 
               variant="outline" 
               size="sm" 
-              className="mr-2 border-2 bg-gray-50 hover:bg-gray-100 hover:shadow-sm transition-all duration-300" 
+              className="mr-2 border-gray-200 bg-gray-50 hover:bg-gray-100 hover:text-gray-900" 
               onClick={() => navigate("/dashboard")}
             >
               <ArrowLeft className="h-4 w-4 mr-1" />
