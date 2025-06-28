@@ -5,10 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Camera, Eye, EyeOff, ShieldCheck } from "lucide-react";
+import { Camera, Eye, EyeOff, ShieldCheck, AlertCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function Auth() {
   const { user, loading, signInWithGoogle, toggleBypassAuth } = useAuth();
@@ -18,6 +19,19 @@ export default function Auth() {
   
   const [showBypassOptions, setShowBypassOptions] = useState(false);
   const [bypassRole, setBypassRole] = useState("manager");
+  const [authError, setAuthError] = useState<string | null>(null);
+
+  // Check for auth callback errors in URL
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const error = urlParams.get('error');
+    const errorDescription = urlParams.get('error_description');
+    
+    if (error) {
+      console.error('OAuth callback error:', { error, errorDescription });
+      setAuthError(errorDescription || error);
+    }
+  }, []);
 
   // Redirect authenticated users immediately
   useEffect(() => {
@@ -54,9 +68,11 @@ export default function Auth() {
 
   const handleGoogleAuth = async () => {
     try {
+      setAuthError(null);
       await signInWithGoogle();
     } catch (error: any) {
       console.error('Google auth error:', error);
+      setAuthError(error.message || "Failed to sign in with Google");
       toast({
         title: "Error",
         description: "An unexpected error occurred. Please try again.",
@@ -93,6 +109,16 @@ export default function Auth() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+          {/* Auth Error Alert */}
+          {authError && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                {authError}
+              </AlertDescription>
+            </Alert>
+          )}
+          
           {/* Bypass Auth Section (Hidden by default) */}
           {showBypassOptions && (
             <div className="p-4 border border-yellow-300 bg-yellow-50 rounded-md mb-4">

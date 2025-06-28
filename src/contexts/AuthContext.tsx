@@ -111,7 +111,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Sign in with Google
   const handleSignInWithGoogle = async () => {
     try {
+      // Set loading state to prevent multiple sign-in attempts
+      setLoading(true);
+      
+      // Attempt to sign in with Google
       await signInWithGoogle();
+      
+      // Show success toast
       toast({
         title: "Signed in successfully",
         description: "Welcome to StudioSync!"
@@ -123,6 +129,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         description: error.message || "Failed to sign in with Google",
         variant: "destructive"
       });
+      
+      // Reset loading state on error
+      setLoading(false);
     }
   };
 
