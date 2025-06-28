@@ -1,116 +1,109 @@
-import { supabase } from "@/integrations/supabase/client";
+import { collection, doc, getDocs, getDoc, addDoc, updateDoc, deleteDoc, query, orderBy } from "firebase/firestore";
+import { firestore } from "@/integrations/google/firebaseConfig";
 import { Freelancer } from "@/types/hire";
 
 /**
- * Fetch all freelancers from the database
+ * Fetch all freelancers from Firestore
  */
 export const fetchFreelancers = async (): Promise<Freelancer[]> => {
   try {
-    const { data, error } = await supabase
-      .from('freelancers')
-      .select('*')
-      .order('name');
+    const freelancersRef = collection(firestore, "freelancers");
+    const q = query(freelancersRef, orderBy("name"));
+    const querySnapshot = await getDocs(q);
     
-    if (error) {
-      console.error("Error fetching freelancers:", error);
-      throw error;
-    }
-    
-    return data as Freelancer[];
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    })) as Freelancer[];
   } catch (error) {
-    console.error("Error in fetchFreelancers:", error);
+    console.error("Error fetching freelancers:", error);
     return [];
   }
 };
 
 /**
- * Add a new freelancer to the database
+ * Add a new freelancer to Firestore
  */
 export const addFreelancer = async (freelancer: Omit<Freelancer, 'id' | 'created_at' | 'updated_at'>): Promise<Freelancer> => {
   try {
-    const { data, error } = await supabase
-      .from('freelancers')
-      .insert(freelancer)
-      .select()
-      .single();
+    const freelancersRef = collection(firestore, "freelancers");
     
-    if (error) {
-      console.error("Error adding freelancer:", error);
-      throw error;
-    }
+    const freelancerData = {
+      ...freelancer,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
     
-    return data as Freelancer;
+    const docRef = await addDoc(freelancersRef, freelancerData);
+    
+    return {
+      id: docRef.id,
+      ...freelancerData
+    } as Freelancer;
   } catch (error) {
-    console.error("Error in addFreelancer:", error);
+    console.error("Error adding freelancer:", error);
     throw error;
   }
 };
 
 /**
- * Update an existing freelancer in the database
+ * Update an existing freelancer in Firestore
  */
 export const updateFreelancer = async (freelancer: Freelancer): Promise<Freelancer> => {
   try {
     const { id, created_at, ...updateData } = freelancer;
     
-    const { data, error } = await supabase
-      .from('freelancers')
-      .update(updateData)
-      .eq('id', id)
-      .select()
-      .single();
+    const freelancerRef = doc(firestore, "freelancers", id);
     
-    if (error) {
-      console.error("Error updating freelancer:", error);
-      throw error;
-    }
+    await updateDoc(freelancerRef, {
+      ...updateData,
+      updated_at: new Date().toISOString()
+    });
     
-    return data as Freelancer;
+    // Get the updated document
+    const docSnap = await getDoc(freelancerRef);
+    
+    return {
+      id: docSnap.id,
+      ...docSnap.data()
+    } as Freelancer;
   } catch (error) {
-    console.error("Error in updateFreelancer:", error);
+    console.error("Error updating freelancer:", error);
     throw error;
   }
 };
 
 /**
- * Delete a freelancer from the database
+ * Delete a freelancer from Firestore
  */
 export const deleteFreelancer = async (id: string): Promise<void> => {
   try {
-    const { error } = await supabase
-      .from('freelancers')
-      .delete()
-      .eq('id', id);
-    
-    if (error) {
-      console.error("Error deleting freelancer:", error);
-      throw error;
-    }
+    const freelancerRef = doc(firestore, "freelancers", id);
+    await deleteDoc(freelancerRef);
   } catch (error) {
-    console.error("Error in deleteFreelancer:", error);
+    console.error("Error deleting freelancer:", error);
     throw error;
   }
 };
 
 /**
- * Fetch a single freelancer by ID
+ * Fetch a single freelancer by ID from Firestore
  */
 export const fetchFreelancerById = async (id: string): Promise<Freelancer | null> => {
   try {
-    const { data, error } = await supabase
-      .from('freelancers')
-      .select('*')
-      .eq('id', id)
-      .single();
+    const freelancerRef = doc(firestore, "freelancers", id);
+    const docSnap = await getDoc(freelancerRef);
     
-    if (error) {
-      console.error("Error fetching freelancer by ID:", error);
-      throw error;
+    if (!docSnap.exists()) {
+      return null;
     }
     
-    return data as Freelancer;
+    return {
+      id: docSnap.id,
+      ...docSnap.data()
+    } as Freelancer;
   } catch (error) {
-    console.error("Error in fetchFreelancerById:", error);
+    console.error("Error fetching freelancer by ID:", error);
     return null;
   }
 };

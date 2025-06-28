@@ -1,4 +1,5 @@
-import { supabase } from "@/integrations/supabase/client";
+import { collection, doc, getDocs, getDoc, addDoc, updateDoc, deleteDoc, query, where, orderBy } from "firebase/firestore";
+import { firestore } from "@/integrations/google/firebaseConfig";
 import { FinanceTransaction } from "./types";
 
 export const fetchTransactions = async (filters?: {
@@ -11,47 +12,40 @@ export const fetchTransactions = async (filters?: {
   sourceType?: string;
 }): Promise<FinanceTransaction[]> => {
   try {
-    let query = supabase
-      .from('finance_transactions')
-      .select('*')
-      .order('transaction_date', { ascending: false });
+    const transactionsRef = collection(firestore, "finance_transactions");
+    let q = query(transactionsRef, orderBy("transaction_date", "desc"));
     
     if (filters) {
       if (filters.startDate) {
-        query = query.gte('transaction_date', filters.startDate);
+        q = query(q, where("transaction_date", ">=", filters.startDate));
       }
       if (filters.endDate) {
-        query = query.lte('transaction_date', filters.endDate);
+        q = query(q, where("transaction_date", "<=", filters.endDate));
       }
       if (filters.categoryId) {
-        query = query.eq('category_id', filters.categoryId);
+        q = query(q, where("category_id", "==", filters.categoryId));
       }
       if (filters.subcategoryId) {
-        query = query.eq('subcategory_id', filters.subcategoryId);
+        q = query(q, where("subcategory_id", "==", filters.subcategoryId));
       }
       if (filters.type) {
-        query = query.eq('transaction_type', filters.type);
+        q = query(q, where("transaction_type", "==", filters.type));
       }
       if (filters.sourceId) {
-        query = query.eq('source_id', filters.sourceId);
+        q = query(q, where("source_id", "==", filters.sourceId));
       }
       if (filters.sourceType) {
-        query = query.eq('source_type', filters.sourceType);
+        q = query(q, where("source_type", "==", filters.sourceType));
       }
     }
     
-    const { data, error } = await query;
+    const querySnapshot = await getDocs(q);
     
-    if (error) {
-      console.error("Error fetching transactions:", error);
-      throw new Error(`Failed to fetch transactions: ${error.message}`);
-    }
-    
-    // Ensure amount is returned as a number
-    return data ? data.map(item => ({
-      ...item,
-      amount: Number(item.amount)
-    })) as FinanceTransaction[] : [];
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      amount: Number(doc.data().amount)
+    })) as FinanceTransaction[];
   } catch (error) {
     console.error("Error in fetchTransactions:", error);
     throw error;
@@ -60,27 +54,24 @@ export const fetchTransactions = async (filters?: {
 
 export const fetchTransactionsBySource = async (sourceId: string, sourceType?: string): Promise<FinanceTransaction[]> => {
   try {
-    let query = supabase
-      .from('finance_transactions')
-      .select('*')
-      .eq('source_id', sourceId)
-      .order('transaction_date', { ascending: false });
+    const transactionsRef = collection(firestore, "finance_transactions");
+    let q = query(
+      transactionsRef, 
+      where("source_id", "==", sourceId),
+      orderBy("transaction_date", "desc")
+    );
     
     if (sourceType) {
-      query = query.eq('source_type', sourceType);
+      q = query(q, where("source_type", "==", sourceType));
     }
     
-    const { data, error } = await query;
+    const querySnapshot = await getDocs(q);
     
-    if (error) {
-      console.error("Error fetching transactions by source:", error);
-      throw new Error(`Failed to fetch transactions by source: ${error.message}`);
-    }
-    
-    return data ? data.map(item => ({
-      ...item,
-      amount: Number(item.amount)
-    })) as FinanceTransaction[] : [];
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      amount: Number(doc.data().amount)
+    })) as FinanceTransaction[];
   } catch (error) {
     console.error("Error in fetchTransactionsBySource:", error);
     throw error;
@@ -89,31 +80,20 @@ export const fetchTransactionsBySource = async (sourceId: string, sourceType?: s
 
 export const addTransaction = async (transaction: Omit<FinanceTransaction, 'id' | 'created_at' | 'updated_at'>): Promise<FinanceTransaction> => {
   try {
-    // Convert amount to number before sending to Supabase
+    const transactionsRef = collection(firestore, "finance_transactions");
+    
     const transactionData = {
       ...transaction,
-      amount: Number(transaction.amount)
+      amount: Number(transaction.amount),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     };
-
-    // For metadata, convert to plain object to ensure it's compatible with Supabase jsonb
-    if (transactionData.metadata && typeof transactionData.metadata === 'object') {
-      transactionData.metadata = JSON.parse(JSON.stringify(transactionData.metadata));
-    }
-
-    const { data, error } = await supabase
-      .from('finance_transactions')
-      .insert(transactionData)
-      .select()
-      .single();
-      
-    if (error) {
-      console.error("Error adding transaction:", error);
-      throw new Error(`Failed to add transaction: ${error.message}`);
-    }
+    
+    const docRef = await addDoc(transactionsRef, transactionData);
     
     return {
-      ...data,
-      amount: Number(data.amount)
+      id: docRef.id,
+      ...transactionData
     } as FinanceTransaction;
   } catch (error) {
     console.error("Error in addTransaction:", error);
@@ -123,34 +103,23 @@ export const addTransaction = async (transaction: Omit<FinanceTransaction, 'id' 
 
 export const updateTransaction = async (transaction: FinanceTransaction): Promise<FinanceTransaction> => {
   try {
-    const { id, created_at, updated_at, ...updateData } = transaction;
+    const { id, created_at, ...updateData } = transaction;
     
-    // Convert amount to number before sending to Supabase
-    const transactionData = {
+    const transactionRef = doc(firestore, "finance_transactions", id);
+    
+    await updateDoc(transactionRef, {
       ...updateData,
-      amount: Number(updateData.amount)
-    };
-
-    // For metadata, convert to plain object to ensure it's compatible with Supabase jsonb
-    if (transactionData.metadata && typeof transactionData.metadata === 'object') {
-      transactionData.metadata = JSON.parse(JSON.stringify(transactionData.metadata));
-    }
-
-    const { data, error } = await supabase
-      .from('finance_transactions')
-      .update(transactionData)
-      .eq('id', id)
-      .select()
-      .single();
-      
-    if (error) {
-      console.error("Error updating transaction:", error);
-      throw new Error(`Failed to update transaction: ${error.message}`);
-    }
+      amount: Number(updateData.amount),
+      updated_at: new Date().toISOString()
+    });
+    
+    // Get the updated document
+    const docSnap = await getDoc(transactionRef);
     
     return {
-      ...data,
-      amount: Number(data.amount)
+      id: docSnap.id,
+      ...docSnap.data(),
+      amount: Number(docSnap.data().amount)
     } as FinanceTransaction;
   } catch (error) {
     console.error("Error in updateTransaction:", error);
@@ -160,15 +129,8 @@ export const updateTransaction = async (transaction: FinanceTransaction): Promis
 
 export const deleteTransaction = async (id: string): Promise<void> => {
   try {
-    const { error } = await supabase
-      .from('finance_transactions')
-      .delete()
-      .eq('id', id);
-      
-    if (error) {
-      console.error("Error deleting transaction:", error);
-      throw new Error(`Failed to delete transaction: ${error.message}`);
-    }
+    const transactionRef = doc(firestore, "finance_transactions", id);
+    await deleteDoc(transactionRef);
   } catch (error) {
     console.error("Error in deleteTransaction:", error);
     throw error;

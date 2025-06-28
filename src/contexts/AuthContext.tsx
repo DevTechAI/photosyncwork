@@ -1,23 +1,46 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { User, Session } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
+import { User } from "firebase/auth";
+import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
+import { firestore } from "@/integrations/google/firebaseConfig";
+import { signInWithGoogle, signOutUser, onAuthStateChange } from "@/integrations/google/authClient";
 import { useToast } from "@/hooks/use-toast";
-import { AuthContextType, Profile } from "./auth/types";
-import { authService } from "./auth/authService";
-import { useProfileManager } from "./auth/useProfileManager";
 import { useBypassAuth } from "./BypassAuthContext";
 
+// Define profile type
+export interface Profile {
+  id: string;
+  email: string;
+  full_name: string;
+  avatar_url?: string;
+  storage_used: number;
+  storage_limit: number;
+  plan_type: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// Define context type
+interface AuthContextType {
+  user: User | null;
+  profile: Profile | null;
+  loading: boolean;
+  signInWithGoogle: () => Promise<void>;
+  signOut: () => Promise<void>;
+  updateProfile: (updates: Partial<Profile>) => Promise<void>;
+  bypassAuth: boolean;
+  toggleBypassAuth: (role?: string) => void;
+}
+
+// Create context
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [mockProfile, setMockProfile] = useState<Profile | null>(null);
   const { toast } = useToast();
   const { bypassEnabled, mockUser, mockProfile: bypassMockProfile, toggleBypass, setMockRole } = useBypassAuth();
-  
-  const { profile, fetchUserProfile, updateProfile, clearProfile } = useProfileManager();
 
   // Use bypass auth if enabled
   useEffect(() => {
@@ -28,73 +51,83 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [bypassEnabled, mockUser, bypassMockProfile]);
 
+  // Listen for auth state changes
   useEffect(() => {
-    // Skip Supabase auth if bypass is enabled
+    // Skip if bypass is enabled
     if (bypassEnabled) return;
     
-    console.log('AuthProvider: Setting up auth state listener');
-    let mounted = true;
-
-    // Get initial session
-    const initializeAuth = async () => {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (!mounted) return;
-        
-        console.log('Initial session check:', session?.user?.email || 'No session');
-        
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          fetchUserProfile(session.user.id);
+    setLoading(true);
+    
+    const unsubscribe = onAuthStateChange(async (authUser) => {
+      setUser(authUser);
+      
+      if (authUser) {
+        try {
+          // Fetch or create user profile
+          const userProfile = await fetchUserProfile(authUser);
+          setProfile(userProfile);
+        } catch (error) {
+          console.error("Error fetching user profile:", error);
         }
-      } catch (error) {
-        console.error('Error getting initial session:', error);
-      } finally {
-        if (mounted) {
-          setLoading(false);
-          console.log('Initial auth check complete, loading set to false');
-        }
+      } else {
+        setProfile(null);
       }
-    };
+      
+      setLoading(false);
+    });
+    
+    return () => unsubscribe();
+  }, [bypassEnabled]);
 
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (!mounted) return;
-        
-        console.log('Auth state changed:', event, session?.user?.email || 'No session');
-        
-        setSession(session);
-        setUser(session?.user ?? null);
+  // Fetch or create user profile
+  const fetchUserProfile = async (user: User): Promise<Profile> => {
+    const userRef = doc(firestore, "profiles", user.uid);
+    const docSnap = await getDoc(userRef);
+    
+    if (docSnap.exists()) {
+      // Profile exists, return it
+      return docSnap.data() as Profile;
+    } else {
+      // Create new profile
+      const newProfile: Profile = {
+        id: user.uid,
+        email: user.email || "",
+        full_name: user.displayName || user.email?.split('@')[0] || "User",
+        avatar_url: user.photoURL || undefined,
+        storage_used: 0,
+        storage_limit: 5368709120, // 5GB in bytes
+        plan_type: "pilot",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      
+      // Save new profile to Firestore
+      await setDoc(userRef, newProfile);
+      
+      return newProfile;
+    }
+  };
 
-        if (event === 'SIGNED_IN' && session?.user) {
-          console.log('User signed in successfully');
-          fetchUserProfile(session.user.id);
-        } else if (event === 'SIGNED_OUT') {
-          console.log('User signed out');
-          clearProfile();
-        }
-        
-        if (mounted) {
-          setLoading(false);
-          console.log('Auth state processed, loading set to false');
-        }
-      }
-    );
+  // Sign in with Google
+  const handleSignInWithGoogle = async () => {
+    try {
+      await signInWithGoogle();
+      toast({
+        title: "Signed in successfully",
+        description: "Welcome to StudioSync!"
+      });
+    } catch (error: any) {
+      console.error("Error signing in with Google:", error);
+      toast({
+        title: "Sign in failed",
+        description: error.message || "Failed to sign in with Google",
+        variant: "destructive"
+      });
+    }
+  };
 
-    // Initialize auth
-    initializeAuth();
-
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
-  }, [fetchUserProfile, clearProfile, bypassEnabled]);
-
-  const signOut = async () => {
+  // Sign out
+  const handleSignOut = async () => {
     try {
       // If using bypass, just clear the bypass
       if (bypassEnabled) {
@@ -107,28 +140,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       
       // Otherwise use normal sign out
-      const { error } = await authService.signOut();
-      if (error) {
-        toast({
-          title: "Sign out failed",
-          description: error.message,
-          variant: "destructive"
-        });
-      } else {
-        toast({
-          title: "Signed out",
-          description: "You have been signed out successfully"
-        });
-      }
+      await signOutUser();
+      toast({
+        title: "Signed out",
+        description: "You have been signed out successfully"
+      });
     } catch (error: any) {
+      console.error("Error signing out:", error);
       toast({
         title: "Sign out failed",
-        description: "Failed to sign out",
+        description: error.message || "Failed to sign out",
         variant: "destructive"
       });
     }
   };
 
+  // Update profile
   const handleUpdateProfile = async (updates: Partial<Profile>) => {
     if (bypassEnabled) {
       // Update mock profile for bypass mode
@@ -140,7 +167,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     
-    await updateProfile(user, updates);
+    if (!user || !profile) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to update your profile",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    try {
+      const userRef = doc(firestore, "profiles", user.uid);
+      
+      // Update profile in Firestore
+      await updateDoc(userRef, {
+        ...updates,
+        updated_at: new Date().toISOString()
+      });
+      
+      // Update local state
+      setProfile(prev => prev ? { ...prev, ...updates } : null);
+      
+      toast({
+        title: "Profile updated",
+        description: "Your profile has been updated successfully"
+      });
+    } catch (error: any) {
+      console.error("Error updating profile:", error);
+      toast({
+        title: "Update failed",
+        description: error.message || "Failed to update profile",
+        variant: "destructive"
+      });
+    }
   };
   
   // Add function to toggle bypass auth
@@ -149,15 +208,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     toggleBypass();
   };
 
+  // Context value
   const value = {
     user: bypassEnabled ? mockUser : user,
     profile: bypassEnabled ? bypassMockProfile || mockProfile : profile,
-    session,
     loading: bypassEnabled ? false : loading,
-    signInWithEmail: authService.signInWithEmail,
-    signUpWithEmail: authService.signUpWithEmail,
-    signInWithGoogle: authService.signInWithGoogle,
-    signOut,
+    signInWithGoogle: handleSignInWithGoogle,
+    signOut: handleSignOut,
     updateProfile: handleUpdateProfile,
     bypassAuth: bypassEnabled,
     toggleBypassAuth

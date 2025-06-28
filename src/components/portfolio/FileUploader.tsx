@@ -1,13 +1,12 @@
-
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Upload, X, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { uploadToS3 } from "@/integrations/aws/s3Client";
 
 interface FileUploaderProps {
   onUploadComplete: (url: string, fileName: string) => void;
@@ -25,6 +24,8 @@ export function FileUploader({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const { user, profile, updateProfile } = useAuth();
 
@@ -70,51 +71,32 @@ export function FileUploader({
     if (!selectedFile) return;
 
     setIsUploading(true);
+    setUploadProgress(0);
 
     try {
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        const base64 = reader.result?.toString().split(',')[1];
-        if (!base64) throw new Error('Failed to read file');
+      // Create user-specific folder structure
+      const userFolder = user ? `user-${user.uid}/${folder}` : `public/${folder}`;
+      const timestamp = Date.now();
+      const fileName = `${timestamp}-${selectedFile.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+      const key = `${userFolder}/${fileName}`;
 
-        // Create user-specific folder structure
-        const userFolder = user ? `user-${user.id}/${folder}` : `public/${folder}`;
+      // Upload file to S3
+      const url = await uploadToS3(selectedFile, key);
 
-        const response = await supabase.functions.invoke('upload-to-s3', {
-          body: {
-            fileName: selectedFile.name,
-            contentBase64: base64,
-            contentType: selectedFile.type,
-            folder: userFolder
-          }
+      // Update user's storage usage if authenticated
+      if (user && profile) {
+        await updateProfile({
+          storage_used: profile.storage_used + selectedFile.size
         });
+      }
 
-        if (response.error) {
-          throw new Error(response.error.message);
-        }
-
-        const result = response.data;
-
-        if (result.success) {
-          // Update user's storage usage if authenticated
-          if (user && profile) {
-            await updateProfile({
-              storage_used: profile.storage_used + selectedFile.size
-            });
-          }
-
-          toast({
-            title: "Upload successful",
-            description: "File has been uploaded successfully"
-          });
-          onUploadComplete(result.url, result.fileName);
-          clearFile();
-        } else {
-          throw new Error(result.error || 'Upload failed');
-        }
-      };
-
-      reader.readAsDataURL(selectedFile);
+      toast({
+        title: "Upload successful",
+        description: "File has been uploaded successfully"
+      });
+      
+      onUploadComplete(url, selectedFile.name);
+      clearFile();
     } catch (error: any) {
       console.error('Upload error:', error);
       toast({
@@ -124,12 +106,16 @@ export function FileUploader({
       });
     } finally {
       setIsUploading(false);
+      setUploadProgress(0);
     }
   };
 
   const clearFile = () => {
     setSelectedFile(null);
     setPreviewUrl(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   return (
@@ -151,6 +137,7 @@ export function FileUploader({
               accept={acceptedFileTypes}
               onChange={handleFileSelect}
               disabled={isUploading}
+              ref={fileInputRef}
             />
           </div>
 
@@ -181,6 +168,15 @@ export function FileUploader({
                     alt="Preview"
                     className="w-full h-full object-cover rounded-lg"
                   />
+                </div>
+              )}
+
+              {isUploading && (
+                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                  <div 
+                    className="bg-blue-600 h-2.5 rounded-full" 
+                    style={{ width: `${uploadProgress}%` }}
+                  ></div>
                 </div>
               )}
 

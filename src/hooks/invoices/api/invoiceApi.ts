@@ -1,11 +1,12 @@
-import { supabase } from "@/integrations/supabase/client";
+import { collection, doc, getDocs, getDoc, addDoc, updateDoc, deleteDoc, query, orderBy } from "firebase/firestore";
+import { firestore } from "@/integrations/google/firebaseConfig";
 import { Invoice } from "@/components/invoices/types";
-import { Json } from "@/integrations/supabase/types";
+import { v4 as uuidv4 } from "uuid";
 
-// Convert from our application type to database type
-export const mapInvoiceToDbInvoice = (invoice: Invoice) => {
+// Convert from our application type to Firestore type
+export const mapInvoiceToFirestoreInvoice = (invoice: Invoice) => {
   return {
-    id: invoice.id || undefined, // If empty string, make it undefined so Supabase generates one
+    id: invoice.id || undefined,
     display_number: invoice.displayNumber,
     client: invoice.client,
     client_email: invoice.clientEmail,
@@ -14,18 +15,18 @@ export const mapInvoiceToDbInvoice = (invoice: Invoice) => {
     paid_amount: invoice.paidAmount,
     balance_amount: invoice.balanceAmount,
     status: invoice.status,
-    items: invoice.items as unknown as Json,
+    items: invoice.items,
     estimate_id: invoice.estimateId,
     notes: invoice.notes,
     payment_date: invoice.paymentDate,
     payment_method: invoice.paymentMethod,
     gst_rate: invoice.gstRate,
-    payments: invoice.payments as unknown as Json
+    payments: invoice.payments
   };
 };
 
-// Convert from database type to our application type
-export const mapDbInvoiceToInvoice = (item: any): Invoice => {
+// Convert from Firestore type to our application type
+export const mapFirestoreInvoiceToInvoice = (item: any): Invoice => {
   return {
     id: item.id,
     displayNumber: item.display_number,
@@ -36,7 +37,7 @@ export const mapDbInvoiceToInvoice = (item: any): Invoice => {
     paidAmount: item.paid_amount,
     balanceAmount: item.balance_amount,
     status: item.status as "pending" | "partial" | "paid",
-    items: item.items as unknown as any[],
+    items: item.items,
     estimateId: item.estimate_id,
     notes: item.notes,
     paymentDate: item.payment_date,
@@ -53,75 +54,90 @@ export const generateInvoiceNumber = async (): Promise<string> => {
   const month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
   
   // Get count of invoices this month to determine the next sequential number
-  const { count, error } = await supabase
-    .from('invoices')
-    .select('*', { count: 'exact', head: true })
-    .like('display_number', `INV-${year}${month}-%`);
-    
-  if (error) {
-    console.error("Error counting invoices:", error);
-    throw error;
-  }
+  const invoicesRef = collection(firestore, "invoices");
+  const q = query(invoicesRef);
+  const querySnapshot = await getDocs(q);
+  
+  // Count invoices with the current month/year prefix
+  const prefix = `INV-${year}${month}-`;
+  let count = 0;
+  
+  querySnapshot.forEach(doc => {
+    const data = doc.data();
+    if (data.display_number && data.display_number.startsWith(prefix)) {
+      count++;
+    }
+  });
   
   // Format: INV-YYYYMM-XXX where XXX is sequential
-  const sequentialNumber = ((count || 0) + 1).toString().padStart(3, '0');
-  return `INV-${year}${month}-${sequentialNumber}`;
+  const sequentialNumber = (count + 1).toString().padStart(3, '0');
+  return `${prefix}${sequentialNumber}`;
 };
 
 // Fetch all invoices
 export const fetchInvoices = async (): Promise<Invoice[]> => {
-  const { data, error } = await supabase
-    .from('invoices')
-    .select('*');
-  
-  if (error) {
+  try {
+    const invoicesRef = collection(firestore, "invoices");
+    const q = query(invoicesRef, orderBy("date", "desc"));
+    const querySnapshot = await getDocs(q);
+    
+    return querySnapshot.docs.map(doc => mapFirestoreInvoiceToInvoice({
+      id: doc.id,
+      ...doc.data()
+    }));
+  } catch (error) {
     console.error("Error fetching invoices:", error);
     throw error;
   }
-  
-  return data.map(mapDbInvoiceToInvoice);
 };
 
 // Add a new invoice
 export const addInvoice = async (invoice: Invoice): Promise<Invoice> => {
-  // Generate friendly invoice number if not provided
-  if (!invoice.displayNumber) {
-    invoice.displayNumber = await generateInvoiceNumber();
-  }
-  
-  const dbInvoice = mapInvoiceToDbInvoice(invoice);
-  
-  const { data, error } = await supabase
-    .from('invoices')
-    .insert(dbInvoice)
-    .select()
-    .single();
+  try {
+    // Generate friendly invoice number if not provided
+    if (!invoice.displayNumber) {
+      invoice.displayNumber = await generateInvoiceNumber();
+    }
     
-  if (error) {
+    // Generate ID if not provided
+    if (!invoice.id) {
+      invoice.id = uuidv4();
+    }
+    
+    const invoiceData = mapInvoiceToFirestoreInvoice(invoice);
+    const invoicesRef = collection(firestore, "invoices");
+    
+    const docRef = await addDoc(invoicesRef, invoiceData);
+    
+    return {
+      ...invoice,
+      id: docRef.id
+    };
+  } catch (error) {
     console.error("Error adding invoice:", error);
     throw error;
   }
-  
-  return mapDbInvoiceToInvoice(data);
 };
 
 // Update an existing invoice
 export const updateInvoice = async (invoice: Invoice): Promise<Invoice> => {
-  const dbInvoice = mapInvoiceToDbInvoice(invoice);
-  // Remove id from update data as it's used in the where clause
-  const { id, ...updateData } = dbInvoice;
-  
-  const { data, error } = await supabase
-    .from('invoices')
-    .update(updateData)
-    .eq('id', invoice.id)
-    .select()
-    .single();
+  try {
+    const invoiceData = mapInvoiceToFirestoreInvoice(invoice);
+    // Remove id from update data as it's used in the where clause
+    const { id, ...updateData } = invoiceData;
     
-  if (error) {
+    const invoiceRef = doc(firestore, "invoices", invoice.id);
+    await updateDoc(invoiceRef, updateData);
+    
+    // Get the updated document
+    const docSnap = await getDoc(invoiceRef);
+    
+    return mapFirestoreInvoiceToInvoice({
+      id: docSnap.id,
+      ...docSnap.data()
+    });
+  } catch (error) {
     console.error("Error updating invoice:", error);
     throw error;
   }
-  
-  return mapDbInvoiceToInvoice(data);
 };

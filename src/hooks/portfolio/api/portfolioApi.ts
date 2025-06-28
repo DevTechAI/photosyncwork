@@ -1,158 +1,141 @@
-import { supabase } from "@/integrations/supabase/client";
+import { doc, collection, getDocs, getDoc, setDoc, updateDoc, deleteDoc, query, where, orderBy } from "firebase/firestore";
+import { firestore } from "@/integrations/google/firebaseConfig";
 import { Portfolio, PortfolioGalleryItem, PortfolioFormData } from "@/types/portfolio";
+import { v4 as uuidv4 } from "uuid";
 
 /**
- * Fetch a user's portfolio from the database
+ * Fetch a user's portfolio from Firestore
  */
 export const fetchPortfolio = async (userId: string): Promise<Portfolio | null> => {
   try {
-    const { data, error } = await supabase
-      .from('portfolios')
-      .select('*')
-      .eq('user_id', userId)
-      .single();
+    const portfolioRef = doc(firestore, "portfolios", userId);
+    const docSnap = await getDoc(portfolioRef);
     
-    if (error) {
-      if (error.code === 'PGRST116') {
-        // No portfolio found for this user
-        return null;
-      }
-      console.error("Error fetching portfolio:", error);
-      throw error;
+    if (!docSnap.exists()) {
+      return null;
     }
     
-    return data as Portfolio;
+    return { id: docSnap.id, ...docSnap.data() } as Portfolio;
   } catch (error) {
-    console.error("Error in fetchPortfolio:", error);
+    console.error("Error fetching portfolio:", error);
     return null;
   }
 };
 
 /**
- * Create a new portfolio for a user
+ * Create a new portfolio for a user in Firestore
  */
 export const createPortfolio = async (userId: string, portfolio: PortfolioFormData): Promise<Portfolio> => {
   try {
-    const { data, error } = await supabase
-      .from('portfolios')
-      .insert({
-        user_id: userId,
-        name: portfolio.name,
-        tagline: portfolio.tagline,
-        about: portfolio.about,
-        services: portfolio.services,
-        contact: portfolio.contact,
-        socialLinks: portfolio.socialLinks
-      })
-      .select()
-      .single();
+    const portfolioData: Portfolio = {
+      id: userId,
+      user_id: userId,
+      name: portfolio.name,
+      tagline: portfolio.tagline,
+      about: portfolio.about,
+      services: portfolio.services,
+      contact: portfolio.contact,
+      socialLinks: portfolio.socialLinks,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
     
-    if (error) {
-      console.error("Error creating portfolio:", error);
-      throw error;
-    }
+    const portfolioRef = doc(firestore, "portfolios", userId);
+    await setDoc(portfolioRef, portfolioData);
     
-    return data as Portfolio;
+    return portfolioData;
   } catch (error) {
-    console.error("Error in createPortfolio:", error);
+    console.error("Error creating portfolio:", error);
     throw error;
   }
 };
 
 /**
- * Update an existing portfolio
+ * Update an existing portfolio in Firestore
  */
 export const updatePortfolio = async (portfolioId: string, portfolio: PortfolioFormData): Promise<Portfolio> => {
   try {
-    const { data, error } = await supabase
-      .from('portfolios')
-      .update({
-        name: portfolio.name,
-        tagline: portfolio.tagline,
-        about: portfolio.about,
-        services: portfolio.services,
-        contact: portfolio.contact,
-        socialLinks: portfolio.socialLinks,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', portfolioId)
-      .select()
-      .single();
+    const portfolioRef = doc(firestore, "portfolios", portfolioId);
     
-    if (error) {
-      console.error("Error updating portfolio:", error);
-      throw error;
-    }
+    const updateData = {
+      name: portfolio.name,
+      tagline: portfolio.tagline,
+      about: portfolio.about,
+      services: portfolio.services,
+      contact: portfolio.contact,
+      socialLinks: portfolio.socialLinks,
+      updated_at: new Date().toISOString()
+    };
     
-    return data as Portfolio;
+    await updateDoc(portfolioRef, updateData);
+    
+    // Get the updated document
+    const docSnap = await getDoc(portfolioRef);
+    
+    return { id: docSnap.id, ...docSnap.data() } as Portfolio;
   } catch (error) {
-    console.error("Error in updatePortfolio:", error);
+    console.error("Error updating portfolio:", error);
     throw error;
   }
 };
 
 /**
- * Fetch gallery items for a portfolio
+ * Fetch gallery items for a portfolio from Firestore
  */
 export const fetchPortfolioGallery = async (portfolioId: string): Promise<PortfolioGalleryItem[]> => {
   try {
-    const { data, error } = await supabase
-      .from('portfolio_gallery')
-      .select('*')
-      .eq('portfolio_id', portfolioId)
-      .order('created_at', { ascending: false });
+    const galleryRef = collection(firestore, "portfolio_gallery");
+    const q = query(
+      galleryRef, 
+      where("portfolio_id", "==", portfolioId),
+      orderBy("created_at", "desc")
+    );
     
-    if (error) {
-      console.error("Error fetching portfolio gallery:", error);
-      throw error;
-    }
+    const querySnapshot = await getDocs(q);
     
-    return data as PortfolioGalleryItem[];
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    })) as PortfolioGalleryItem[];
   } catch (error) {
-    console.error("Error in fetchPortfolioGallery:", error);
+    console.error("Error fetching portfolio gallery:", error);
     return [];
   }
 };
 
 /**
- * Add a new gallery item to a portfolio
+ * Add a new gallery item to a portfolio in Firestore
  */
 export const addGalleryItem = async (item: Omit<PortfolioGalleryItem, 'id' | 'created_at' | 'updated_at'>): Promise<PortfolioGalleryItem> => {
   try {
-    const { data, error } = await supabase
-      .from('portfolio_gallery')
-      .insert(item)
-      .select()
-      .single();
+    const itemId = uuidv4();
+    const galleryRef = doc(firestore, "portfolio_gallery", itemId);
     
-    if (error) {
-      console.error("Error adding gallery item:", error);
-      throw error;
-    }
+    const itemData = {
+      ...item,
+      id: itemId,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
     
-    return data as PortfolioGalleryItem;
+    await setDoc(galleryRef, itemData);
+    
+    return itemData as PortfolioGalleryItem;
   } catch (error) {
-    console.error("Error in addGalleryItem:", error);
+    console.error("Error adding gallery item:", error);
     throw error;
   }
 };
 
 /**
- * Delete a gallery item from a portfolio
+ * Delete a gallery item from a portfolio in Firestore
  */
 export const deleteGalleryItem = async (itemId: string): Promise<void> => {
   try {
-    const { error } = await supabase
-      .from('portfolio_gallery')
-      .delete()
-      .eq('id', itemId);
-    
-    if (error) {
-      console.error("Error deleting gallery item:", error);
-      throw error;
-    }
+    const galleryRef = doc(firestore, "portfolio_gallery", itemId);
+    await deleteDoc(galleryRef);
   } catch (error) {
-    console.error("Error in deleteGalleryItem:", error);
+    console.error("Error deleting gallery item:", error);
     throw error;
   }
 };

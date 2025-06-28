@@ -1,80 +1,108 @@
-
-import { supabase } from "@/integrations/supabase/client";
+import { collection, doc, getDocs, getDoc, addDoc, updateDoc, deleteDoc, query, where, orderBy } from "firebase/firestore";
+import { firestore } from "@/integrations/google/firebaseConfig";
 import { FinanceSubcategory } from "./types";
 
 export const fetchSubcategories = async (categoryId?: string): Promise<FinanceSubcategory[]> => {
-  let query = supabase
-    .from('finance_subcategories')
-    .select('*')
-    .order('name');
-  
-  if (categoryId) {
-    query = query.eq('category_id', categoryId);
-  }
-  
-  const { data, error } = await query;
-  
-  if (error) {
+  try {
+    const subcategoriesRef = collection(firestore, "finance_subcategories");
+    let q = query(subcategoriesRef, orderBy("name"));
+    
+    if (categoryId) {
+      q = query(subcategoriesRef, where("category_id", "==", categoryId), orderBy("name"));
+    }
+    
+    const querySnapshot = await getDocs(q);
+    
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    })) as FinanceSubcategory[];
+  } catch (error) {
     console.error("Error fetching subcategories:", error);
     throw error;
   }
-  
-  return data as unknown as FinanceSubcategory[];
 };
 
 export const addSubcategory = async (subcategory: Omit<FinanceSubcategory, 'id' | 'created_at' | 'updated_at'>): Promise<FinanceSubcategory> => {
-  const { data, error } = await supabase
-    .from('finance_subcategories')
-    .insert(subcategory)
-    .select()
-    .single();
+  try {
+    const subcategoriesRef = collection(firestore, "finance_subcategories");
     
-  if (error) {
+    const subcategoryData = {
+      ...subcategory,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+    
+    const docRef = await addDoc(subcategoriesRef, subcategoryData);
+    
+    return {
+      id: docRef.id,
+      ...subcategoryData
+    } as FinanceSubcategory;
+  } catch (error) {
     console.error("Error adding subcategory:", error);
     throw error;
   }
-  
-  return data as unknown as FinanceSubcategory;
 };
 
 export const updateSubcategory = async (subcategory: FinanceSubcategory): Promise<FinanceSubcategory> => {
-  const { data, error } = await supabase
-    .from('finance_subcategories')
-    .update({ name: subcategory.name, category_id: subcategory.category_id })
-    .eq('id', subcategory.id)
-    .select()
-    .single();
+  try {
+    const { id, created_at, ...updateData } = subcategory;
     
-  if (error) {
+    const subcategoryRef = doc(firestore, "finance_subcategories", id);
+    
+    await updateDoc(subcategoryRef, {
+      ...updateData,
+      updated_at: new Date().toISOString()
+    });
+    
+    // Get the updated document
+    const docSnap = await getDoc(subcategoryRef);
+    
+    return {
+      id: docSnap.id,
+      ...docSnap.data()
+    } as FinanceSubcategory;
+  } catch (error) {
     console.error("Error updating subcategory:", error);
     throw error;
   }
-  
-  return data as unknown as FinanceSubcategory;
 };
 
 export const deleteSubcategory = async (id: string): Promise<void> => {
-  const { error } = await supabase
-    .from('finance_subcategories')
-    .delete()
-    .eq('id', id);
-    
-  if (error) {
+  try {
+    const subcategoryRef = doc(firestore, "finance_subcategories", id);
+    await deleteDoc(subcategoryRef);
+  } catch (error) {
     console.error("Error deleting subcategory:", error);
     throw error;
   }
 };
 
 export const bulkImportSubcategories = async (subcategories: Array<Omit<FinanceSubcategory, 'id' | 'created_at' | 'updated_at'>>): Promise<FinanceSubcategory[]> => {
-  const { data, error } = await supabase
-    .from('finance_subcategories')
-    .insert(subcategories)
-    .select();
+  try {
+    const subcategoriesRef = collection(firestore, "finance_subcategories");
+    const results: FinanceSubcategory[] = [];
     
-  if (error) {
+    // Add each subcategory
+    for (const subcategory of subcategories) {
+      const subcategoryData = {
+        ...subcategory,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      
+      const docRef = await addDoc(subcategoriesRef, subcategoryData);
+      
+      results.push({
+        id: docRef.id,
+        ...subcategoryData
+      } as FinanceSubcategory);
+    }
+    
+    return results;
+  } catch (error) {
     console.error("Error bulk importing subcategories:", error);
     throw error;
   }
-  
-  return data as unknown as FinanceSubcategory[];
 };

@@ -11,43 +11,13 @@ import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function Auth() {
-  const { user, loading, signInWithEmail, signUpWithEmail, signInWithGoogle, toggleBypassAuth } = useAuth();
+  const { user, loading, signInWithGoogle, toggleBypassAuth } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
   
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [fullName, setFullName] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [showBypassOptions, setShowBypassOptions] = useState(false);
   const [bypassRole, setBypassRole] = useState("manager");
-
-  // Check for auth callback errors in URL
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const error = urlParams.get('error');
-    const errorDescription = urlParams.get('error_description');
-    
-    console.log('Auth page URL params:', {
-      error,
-      errorDescription,
-      fullURL: window.location.href,
-      search: window.location.search,
-      hash: window.location.hash
-    });
-
-    if (error) {
-      console.error('OAuth callback error:', { error, errorDescription });
-      toast({
-        title: "Authentication Error",
-        description: errorDescription || error,
-        variant: "destructive"
-      });
-    }
-  }, [toast]);
 
   // Redirect authenticated users immediately
   useEffect(() => {
@@ -82,75 +52,9 @@ export default function Auth() {
     );
   }
 
-  const handleEmailAuth = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
-    try {
-      if (isSignUp) {
-        console.log('Attempting sign up for:', email);
-        const { error } = await signUpWithEmail(email, password, fullName);
-        if (error) {
-          console.error('Sign up error:', error);
-          toast({
-            title: "Sign up failed",
-            description: error.message || "Failed to create account. Please try again.",
-            variant: "destructive"
-          });
-        } else {
-          console.log('Sign up successful');
-          toast({
-            title: "Account created!",
-            description: "Welcome to StudioSync!",
-          });
-        }
-      } else {
-        console.log('Attempting sign in for:', email);
-        const { error } = await signInWithEmail(email, password);
-        if (error) {
-          console.error('Sign in error:', error);
-          toast({
-            title: "Sign in failed",
-            description: error.message || "Invalid email or password. Please try again.",
-            variant: "destructive"
-          });
-        } else {
-          console.log('Sign in successful');
-          toast({
-            title: "Welcome back!",
-            description: "You have been signed in successfully.",
-          });
-        }
-      }
-    } catch (error: any) {
-      console.error('Auth error:', error);
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   const handleGoogleAuth = async () => {
-    setIsSubmitting(true);
-    console.log('Google auth button clicked');
-    
     try {
-      console.log('Attempting Google sign in');
-      const { error } = await signInWithGoogle();
-      if (error) {
-        console.error('Google sign in error:', error);
-        toast({
-          title: "Google sign in failed",
-          description: error.message || "Failed to sign in with Google. Please try again.",
-          variant: "destructive"
-        });
-      } else {
-        console.log('Google auth request initiated successfully');
-      }
+      await signInWithGoogle();
     } catch (error: any) {
       console.error('Google auth error:', error);
       toast({
@@ -158,8 +62,6 @@ export default function Auth() {
         description: "An unexpected error occurred. Please try again.",
         variant: "destructive"
       });
-    } finally {
-      setIsSubmitting(false);
     }
   };
   
@@ -184,13 +86,10 @@ export default function Auth() {
             <Camera className="h-8 w-8 text-primary" />
           </div>
           <CardTitle className="text-2xl font-bold">
-            {isSignUp ? "Create Account" : "Welcome Back"}
+            Welcome to StudioSync
           </CardTitle>
           <CardDescription>
-            {isSignUp 
-              ? "Join StudioSync to manage your photography business" 
-              : "Sign in to your StudioSync account"
-            }
+            Sign in to manage your photography business
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -230,7 +129,6 @@ export default function Auth() {
             type="button"
             variant="outline"
             onClick={handleGoogleAuth}
-            disabled={isSubmitting}
             className="w-full border-gray-300 bg-white hover:bg-gray-50 text-gray-700 hover:text-gray-900 focus:ring-gray-500"
             size="lg"
           >
@@ -261,112 +159,23 @@ export default function Auth() {
             </div>
             <div className="relative flex justify-center text-xs uppercase">
               <span className="bg-background px-2 text-muted-foreground">
-                Or continue with email
+                Or
               </span>
             </div>
           </div>
 
-          {/* Email/Password Form */}
-          <form onSubmit={handleEmailAuth} className="space-y-4">
-            {isSignUp && (
-              <div className="space-y-2">
-                <Label htmlFor="fullName">Full Name</Label>
-                <Input
-                  id="fullName"
-                  type="text"
-                  placeholder="Enter your full name"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  required
-                />
-              </div>
-            )}
-            
-            <div className="space-y-2">
-              <Label htmlFor="email">Email Address</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  minLength={6}
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </Button>
-              </div>
-              {isSignUp && (
-                <p className="text-xs text-muted-foreground">
-                  Password must be at least 6 characters long
-                </p>
-              )}
-            </div>
-            
-            <Button 
-              type="submit"
-              disabled={isSubmitting || loading}
-              className="w-full"
-              size="lg"
-            >
-              {isSubmitting 
-                ? (isSignUp ? "Creating Account..." : "Signing In...") 
-                : (isSignUp ? "Create Account" : "Sign In")
-              }
-            </Button>
-          </form>
-          
           <div className="text-center">
-            <Button
-              type="button"
-              variant="link"
-              onClick={() => {
-                setIsSignUp(!isSignUp);
-                setEmail("");
-                setPassword("");
-                setFullName("");
-              }}
-              className="text-sm"
-            >
-              {isSignUp 
-                ? "Already have an account? Sign in" 
-                : "Don't have an account? Sign up"
-              }
-            </Button>
+            <p className="text-sm text-muted-foreground">
+              By signing in, you agree to our Terms of Service and Privacy Policy.
+            </p>
           </div>
           
-          {!isSignUp && (
-            <div className="text-xs text-muted-foreground space-y-1 mt-4 p-3 bg-muted rounded-md">
-              <p>✓ 5GB free storage included</p>
-              <p>✓ Portfolio creation tools</p>
-              <p>✓ CRM and project management</p>
-              <p>✓ Team collaboration features</p>
-            </div>
-          )}
+          <div className="text-xs text-muted-foreground space-y-1 mt-4 p-3 bg-muted rounded-md">
+            <p>✓ 5GB free storage included</p>
+            <p>✓ Portfolio creation tools</p>
+            <p>✓ CRM and project management</p>
+            <p>✓ Team collaboration features</p>
+          </div>
         </CardContent>
       </Card>
     </div>

@@ -1,116 +1,109 @@
-import { supabase } from "@/integrations/supabase/client";
+import { collection, doc, getDocs, getDoc, addDoc, updateDoc, deleteDoc, query, orderBy } from "firebase/firestore";
+import { firestore } from "@/integrations/google/firebaseConfig";
 import { Client } from "@/types/client";
 
 /**
- * Fetch all clients from the database
+ * Fetch all clients from Firestore
  */
 export const fetchClients = async (): Promise<Client[]> => {
   try {
-    const { data, error } = await supabase
-      .from('clients')
-      .select('*')
-      .order('name');
+    const clientsRef = collection(firestore, "clients");
+    const q = query(clientsRef, orderBy("name"));
+    const querySnapshot = await getDocs(q);
     
-    if (error) {
-      console.error("Error fetching clients:", error);
-      throw error;
-    }
-    
-    return data as Client[];
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    })) as Client[];
   } catch (error) {
-    console.error("Error in fetchClients:", error);
+    console.error("Error fetching clients:", error);
     return [];
   }
 };
 
 /**
- * Add a new client to the database
+ * Add a new client to Firestore
  */
 export const addClient = async (client: Omit<Client, 'id' | 'created_at' | 'updated_at'>): Promise<Client> => {
   try {
-    const { data, error } = await supabase
-      .from('clients')
-      .insert(client)
-      .select()
-      .single();
+    const clientsRef = collection(firestore, "clients");
     
-    if (error) {
-      console.error("Error adding client:", error);
-      throw error;
-    }
+    const clientData = {
+      ...client,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
     
-    return data as Client;
+    const docRef = await addDoc(clientsRef, clientData);
+    
+    return {
+      id: docRef.id,
+      ...clientData
+    } as Client;
   } catch (error) {
-    console.error("Error in addClient:", error);
+    console.error("Error adding client:", error);
     throw error;
   }
 };
 
 /**
- * Update an existing client in the database
+ * Update an existing client in Firestore
  */
 export const updateClient = async (client: Client): Promise<Client> => {
   try {
     const { id, created_at, ...updateData } = client;
     
-    const { data, error } = await supabase
-      .from('clients')
-      .update(updateData)
-      .eq('id', id)
-      .select()
-      .single();
+    const clientRef = doc(firestore, "clients", id);
     
-    if (error) {
-      console.error("Error updating client:", error);
-      throw error;
-    }
+    await updateDoc(clientRef, {
+      ...updateData,
+      updated_at: new Date().toISOString()
+    });
     
-    return data as Client;
+    // Get the updated document
+    const docSnap = await getDoc(clientRef);
+    
+    return {
+      id: docSnap.id,
+      ...docSnap.data()
+    } as Client;
   } catch (error) {
-    console.error("Error in updateClient:", error);
+    console.error("Error updating client:", error);
     throw error;
   }
 };
 
 /**
- * Delete a client from the database
+ * Delete a client from Firestore
  */
 export const deleteClient = async (id: string): Promise<void> => {
   try {
-    const { error } = await supabase
-      .from('clients')
-      .delete()
-      .eq('id', id);
-    
-    if (error) {
-      console.error("Error deleting client:", error);
-      throw error;
-    }
+    const clientRef = doc(firestore, "clients", id);
+    await deleteDoc(clientRef);
   } catch (error) {
-    console.error("Error in deleteClient:", error);
+    console.error("Error deleting client:", error);
     throw error;
   }
 };
 
 /**
- * Fetch a single client by ID
+ * Fetch a single client by ID from Firestore
  */
 export const fetchClientById = async (id: string): Promise<Client | null> => {
   try {
-    const { data, error } = await supabase
-      .from('clients')
-      .select('*')
-      .eq('id', id)
-      .single();
+    const clientRef = doc(firestore, "clients", id);
+    const docSnap = await getDoc(clientRef);
     
-    if (error) {
-      console.error("Error fetching client by ID:", error);
-      throw error;
+    if (!docSnap.exists()) {
+      return null;
     }
     
-    return data as Client;
+    return {
+      id: docSnap.id,
+      ...docSnap.data()
+    } as Client;
   } catch (error) {
-    console.error("Error in fetchClientById:", error);
+    console.error("Error fetching client by ID:", error);
     return null;
   }
 };

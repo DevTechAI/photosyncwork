@@ -1,4 +1,5 @@
-import { supabase } from "@/integrations/supabase/client";
+import { collection, doc, getDocs, getDoc, addDoc, updateDoc, deleteDoc, query, orderBy } from "firebase/firestore";
+import { firestore } from "@/integrations/google/firebaseConfig";
 import { Job, JobFormData } from "@/types/hire";
 
 /**
@@ -24,118 +25,88 @@ const formatPostedDate = (dateString: string): string => {
 };
 
 /**
- * Fetch all job postings from the database
+ * Fetch all job postings from Firestore
  */
 export const fetchJobs = async (): Promise<Job[]> => {
   try {
-    const { data, error } = await supabase
-      .from('job_postings')
-      .select('*')
-      .order('created_at', { ascending: false });
+    const jobsRef = collection(firestore, "job_postings");
+    const q = query(jobsRef, orderBy("created_at", "desc"));
+    const querySnapshot = await getDocs(q);
     
-    if (error) {
-      console.error("Error fetching jobs:", error);
-      throw error;
-    }
-    
-    return data.map(job => ({
-      ...job,
-      postedDate: formatPostedDate(job.created_at)
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      postedDate: formatPostedDate(doc.data().created_at)
     })) as Job[];
   } catch (error) {
-    console.error("Error in fetchJobs:", error);
+    console.error("Error fetching jobs:", error);
     return [];
   }
 };
 
 /**
- * Add a new job posting to the database
+ * Add a new job posting to Firestore
  */
 export const addJob = async (job: JobFormData): Promise<Job> => {
   try {
-    const { data, error } = await supabase
-      .from('job_postings')
-      .insert({
-        title: job.title,
-        company: job.company,
-        location: job.location,
-        type: job.type,
-        budget: job.budget,
-        date: job.date,
-        description: job.description,
-        requirements: job.requirements
-      })
-      .select()
-      .single();
+    const jobsRef = collection(firestore, "job_postings");
     
-    if (error) {
-      console.error("Error adding job:", error);
-      throw error;
-    }
+    const jobData = {
+      ...job,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+    
+    const docRef = await addDoc(jobsRef, jobData);
     
     return {
-      ...data,
-      postedDate: formatPostedDate(data.created_at)
+      id: docRef.id,
+      ...jobData,
+      postedDate: "Just now"
     } as Job;
   } catch (error) {
-    console.error("Error in addJob:", error);
+    console.error("Error adding job:", error);
     throw error;
   }
 };
 
 /**
- * Update an existing job posting in the database
+ * Update an existing job posting in Firestore
  */
 export const updateJob = async (id: string, job: JobFormData): Promise<Job> => {
   try {
-    const { data, error } = await supabase
-      .from('job_postings')
-      .update({
-        title: job.title,
-        company: job.company,
-        location: job.location,
-        type: job.type,
-        budget: job.budget,
-        date: job.date,
-        description: job.description,
-        requirements: job.requirements,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', id)
-      .select()
-      .single();
+    const jobRef = doc(firestore, "job_postings", id);
     
-    if (error) {
-      console.error("Error updating job:", error);
-      throw error;
-    }
+    const updateData = {
+      ...job,
+      updated_at: new Date().toISOString()
+    };
+    
+    await updateDoc(jobRef, updateData);
+    
+    // Get the updated document
+    const docSnap = await getDoc(jobRef);
     
     return {
-      ...data,
-      postedDate: formatPostedDate(data.created_at)
+      id: docSnap.id,
+      ...docSnap.data(),
+      postedDate: formatPostedDate(docSnap.data().created_at)
     } as Job;
   } catch (error) {
-    console.error("Error in updateJob:", error);
+    console.error("Error updating job:", error);
     throw error;
   }
 };
 
 /**
- * Delete a job posting from the database
+ * Delete a job posting from Firestore
  */
 export const deleteJob = async (id: string): Promise<void> => {
   try {
-    const { error } = await supabase
-      .from('job_postings')
-      .delete()
-      .eq('id', id);
-    
-    if (error) {
-      console.error("Error deleting job:", error);
-      throw error;
-    }
+    const jobRef = doc(firestore, "job_postings", id);
+    await deleteDoc(jobRef);
   } catch (error) {
-    console.error("Error in deleteJob:", error);
+    console.error("Error deleting job:", error);
     throw error;
   }
 };
