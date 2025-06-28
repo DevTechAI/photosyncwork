@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { useAuth } from "./AuthContext";
 
 // Define user roles
 export type UserRole = "manager" | "accounts" | "crm" | "photographer" | "videographer" | "editor";
@@ -70,15 +71,29 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 export function UserProvider({ children }: { children: React.ReactNode }) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true); // Add loading state
+  const { user, profile } = useAuth();
   
-  // On mount, check for saved user in localStorage
+  // On mount, check for saved user in localStorage or use auth context
   useEffect(() => {
     const savedUser = localStorage.getItem("currentUser");
+    
     if (savedUser) {
       setCurrentUser(JSON.parse(savedUser));
+    } else if (user) {
+      // If we have a user from auth context, create a user object
+      const role = user.user_metadata?.role || "manager";
+      const newUser: User = {
+        id: user.id,
+        name: profile?.full_name || user.email?.split('@')[0] || "User",
+        email: user.email || "",
+        role: role as UserRole
+      };
+      setCurrentUser(newUser);
+      localStorage.setItem("currentUser", JSON.stringify(newUser));
     }
-    setLoading(false); // Set loading to false after we've checked local storage
-  }, []);
+    
+    setLoading(false);
+  }, [user, profile]);
   
   // Save user to localStorage when it changes
   useEffect(() => {

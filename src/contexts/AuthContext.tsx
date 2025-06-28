@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { AuthContextType } from "./auth/types";
 import { authService } from "./auth/authService";
 import { useProfileManager } from "./auth/useProfileManager";
+import { useBypassAuth } from "./BypassAuthContext";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -15,8 +16,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
   
   const { profile, fetchUserProfile, updateProfile, clearProfile } = useProfileManager();
+  const { bypassEnabled, mockUser, mockProfile } = useBypassAuth();
 
   useEffect(() => {
+    // If bypass is enabled, use mock user and profile
+    if (bypassEnabled) {
+      console.log('AuthProvider: Using mock user and profile');
+      setUser(mockUser);
+      setLoading(false);
+      return;
+    }
+
     console.log('AuthProvider: Setting up auth state listener');
     let mounted = true;
 
@@ -77,10 +87,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [fetchUserProfile, clearProfile]);
+  }, [fetchUserProfile, clearProfile, bypassEnabled, mockUser]);
 
   const signOut = useCallback(async () => {
     try {
+      // If using bypass auth, just disable it
+      if (bypassEnabled) {
+        // This will be handled by the bypass context
+        return { error: null };
+      }
+
       const { error } = await authService.signOut();
       if (error) {
         toast({
@@ -94,31 +110,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           description: "You have been signed out successfully"
         });
       }
+      return { error };
     } catch (error: any) {
       toast({
         title: "Sign out failed",
         description: "Failed to sign out",
         variant: "destructive"
       });
+      return { error };
     }
-  }, [toast]);
+  }, [toast, bypassEnabled]);
 
   const handleUpdateProfile = useCallback(async (updates: Partial<typeof profile>) => {
+    if (bypassEnabled) {
+      // No-op for mock profile
+      return;
+    }
     await updateProfile(user, updates);
-  }, [user, updateProfile]);
+  }, [user, updateProfile, bypassEnabled]);
 
   // Memoize the context value to prevent unnecessary re-renders
   const value = useMemo(() => ({
-    user,
-    profile,
+    user: bypassEnabled ? mockUser : user,
+    profile: bypassEnabled ? mockProfile : profile,
     session,
-    loading,
+    loading: bypassEnabled ? false : loading,
     signInWithEmail: authService.signInWithEmail,
     signUpWithEmail: authService.signUpWithEmail,
     signInWithGoogle: authService.signInWithGoogle,
     signOut,
     updateProfile: handleUpdateProfile
-  }), [user, profile, session, loading, signOut, handleUpdateProfile]);
+  }), [user, profile, session, loading, signOut, handleUpdateProfile, bypassEnabled, mockUser, mockProfile]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
