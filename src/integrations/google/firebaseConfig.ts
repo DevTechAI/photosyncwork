@@ -4,13 +4,14 @@ import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
 // Firebase configuration
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyDZPiCM2S5uxqDnjGQ-OXn0BqzQXfh9wMc",
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "studiosync-demo.firebaseapp.com",
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "studiosync-demo",
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "studiosync-demo.appspot.com",
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "123456789012",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:123456789012:web:abcdef1234567890"
+c{
+  apiKey: "AIzaSyBrupAKp2MikmLpfQl2LZKhsh63OrdwpE4",
+  authDomain: "studiosync-e59aa.firebaseapp.com",
+  projectId: "studiosync-e59aa",
+  storageBucket: "studiosync-e59aa.firebasestorage.app",
+  messagingSenderId: "834257764754",
+  appId: "1:834257764754:web:979ebfded8e3633b99814b",
+  measurementId: "G-TPBV1K7GK6"
 };
 
 // Initialize Firebase
