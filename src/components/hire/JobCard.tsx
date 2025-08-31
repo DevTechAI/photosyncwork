@@ -1,4 +1,5 @@
 
+import { memo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -19,7 +20,7 @@ interface JobProps {
   };
 }
 
-export function JobCard({ job }: JobProps) {
+function JobCard({ job }: JobProps) {
   return (
     <Card className="hover:shadow-lg transition-shadow">
       <CardHeader>
@@ -98,3 +99,5 @@ export function JobCard({ job }: JobProps) {
     </Card>
   );
 }
+
+export default memo(JobCard);

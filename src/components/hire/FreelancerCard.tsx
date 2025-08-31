@@ -1,4 +1,5 @@
 
+import { memo } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -19,7 +20,7 @@ interface FreelancerProps {
   };
 }
 
-export function FreelancerCard({ freelancer }: FreelancerProps) {
+function FreelancerCard({ freelancer }: FreelancerProps) {
   return (
     <Card className="hover:shadow-lg transition-shadow cursor-pointer">
       <CardHeader className="text-center pb-4">
@@ -28,6 +29,7 @@ export function FreelancerCard({ freelancer }: FreelancerProps) {
             src={freelancer.avatar}
             alt={freelancer.name}
             className="w-20 h-20 rounded-full object-cover mx-auto"
+            loading="lazy"
           />
           <div className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full border-2 border-white ${
             freelancer.isAvailable ? 'bg-green-500' : 'bg-gray-400'
@@ -103,3 +105,5 @@ export function FreelancerCard({ freelancer }: FreelancerProps) {
     </Card>
   );
 }
+
+export default memo(FreelancerCard);

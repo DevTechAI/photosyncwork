@@ -1,4 +1,4 @@
-import React, { Suspense } from "react";
+import React, { Suspense, memo } from "react";
 import Layout from "@/components/Layout";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,7 +25,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 // Lazy-loaded components
 const MediaTagger = React.lazy(() => import("@/components/ai/MediaTagger").then(mod => ({ default: mod.MediaTagger })));
 
-export default function Dashboard() {
+function Dashboard() {
   const { user, profile, loading } = useAuth();
   const navigate = useNavigate();
 
@@ -297,3 +297,5 @@ export default function Dashboard() {
     </Layout>
   );
 }
+
+export default memo(Dashboard);

@@ -1,5 +1,5 @@
 import { Client } from "@/types/client";
-import { ClientCard } from "./ClientCard";
+import ClientCard from "./ClientCard";
 import { Button } from "@/components/ui/button";
 import { Plus, UserRound } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";

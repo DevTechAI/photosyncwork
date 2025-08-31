@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 import { Link } from "react-router-dom";
 import { Phone, Mail, MoreVertical } from "lucide-react";
 import { ProjectProgress } from "./ProjectProgress";
@@ -17,7 +17,7 @@ interface ClientCardProps {
   onDelete?: (client: Client) => void;
 }
 
-export function ClientCard({ client, onEdit, onDelete }: ClientCardProps) {
+function ClientCard({ client, onEdit, onDelete }: ClientCardProps) {
   return (
     <div className="border rounded-lg p-6 space-y-4">
       <div className="flex justify-between items-start">
@@ -94,3 +94,5 @@ export function ClientCard({ client, onEdit, onDelete }: ClientCardProps) {
     </div>
   );
 }
+
+export default memo(ClientCard);
