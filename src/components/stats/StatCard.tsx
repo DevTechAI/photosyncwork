@@ -2,7 +2,7 @@
 import { memo } from "react";
 import { cn } from "@/lib/utils";
 import { Card } from "../ui/card";
-import { DivideIcon as LucideIcon } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 interface StatCardProps {
   title: string;
