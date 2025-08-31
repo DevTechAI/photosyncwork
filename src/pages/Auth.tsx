@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function Auth() {
-  const { user, loading, signInWithGoogle, toggleBypassAuth } = useAuth();
+  const { user, loading, signInWithGoogle, toggleBypassAuth, signInWithEmail, signUpWithEmail } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
@@ -20,6 +20,14 @@ export default function Auth() {
   const [showBypassOptions, setShowBypassOptions] = useState(false);
   const [bypassRole, setBypassRole] = useState("manager");
   const [authError, setAuthError] = useState<string | null>(null);
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [emailPasswordLoading, setEmailPasswordLoading] = useState(false);
 
   // Check for auth callback errors in URL
   useEffect(() => {
@@ -81,6 +89,49 @@ export default function Auth() {
     }
   };
   
+  const handleEmailAuth = async () => {
+    if (!email || !password) {
+      setAuthError("Please fill in all required fields");
+      return;
+    }
+
+    if (isSignUp && password !== confirmPassword) {
+      setAuthError("Passwords do not match");
+      return;
+    }
+
+    if (password.length < 6) {
+      setAuthError("Password must be at least 6 characters long");
+      return;
+    }
+
+    setEmailPasswordLoading(true);
+    setAuthError(null);
+
+    try {
+      let result;
+      if (isSignUp) {
+        result = await signUpWithEmail(email, password, fullName);
+      } else {
+        result = await signInWithEmail(email, password);
+      }
+
+      if (result.error) {
+        setAuthError(result.error.message || `Failed to ${isSignUp ? 'sign up' : 'sign in'}`);
+      } else {
+        toast({
+          title: isSignUp ? "Account Created" : "Signed In",
+          description: isSignUp ? "Your account has been created successfully" : "Welcome back!",
+        });
+      }
+    } catch (error: any) {
+      console.error('Email auth error:', error);
+      setAuthError(error.message || `Failed to ${isSignUp ? 'sign up' : 'sign in'}`);
+    } finally {
+      setEmailPasswordLoading(false);
+    }
+  };
+
   const handleBypassAuth = () => {
     toggleBypassAuth(bypassRole);
     navigate('/dashboard');
@@ -187,6 +238,129 @@ export default function Auth() {
               <span className="bg-background px-2 text-muted-foreground">
                 Or
               </span>
+            </div>
+          </div>
+
+          {/* Email/Password Form */}
+          <div className="space-y-4">
+            {isSignUp && (
+              <div className="space-y-2">
+                <Label htmlFor="fullName">Full Name</Label>
+                <Input
+                  id="fullName"
+                  type="text"
+                  placeholder="Enter your full name"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  disabled={emailPasswordLoading}
+                />
+              </div>
+            )}
+            
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={emailPasswordLoading}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={emailPasswordLoading}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  onClick={() => setShowPassword(!showPassword)}
+                  disabled={emailPasswordLoading}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+            </div>
+            
+            {isSignUp && (
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <div className="relative">
+                  <Input
+                    id="confirmPassword"
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="Confirm your password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    disabled={emailPasswordLoading}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    disabled={emailPasswordLoading}
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+            )}
+            
+            <Button
+              type="button"
+              onClick={handleEmailAuth}
+              className="w-full"
+              size="lg"
+              disabled={emailPasswordLoading}
+            >
+              {emailPasswordLoading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  {isSignUp ? "Creating Account..." : "Signing In..."}
+                </>
+              ) : (
+                isSignUp ? "Create Account" : "Sign In"
+              )}
+            </Button>
+            
+            <div className="text-center">
+              <Button
+                type="button"
+                variant="link"
+                onClick={() => {
+                  setIsSignUp(!isSignUp);
+                  setAuthError(null);
+                  setEmail("");
+                  setPassword("");
+                  setConfirmPassword("");
+                  setFullName("");
+                }}
+                disabled={emailPasswordLoading}
+                className="text-sm"
+              >
+                {isSignUp ? "Already have an account? Sign in" : "Don't have an account? Sign up"}
+              </Button>
             </div>
           </div>
 

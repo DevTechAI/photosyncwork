@@ -26,6 +26,8 @@ interface AuthContextType {
   user: User | null;
   profile: Profile | null;
   loading: boolean;
+  signInWithEmail: (email: string, password: string) => Promise<{ error: any }>;
+  signUpWithEmail: (email: string, password: string, fullName?: string) => Promise<{ error: any }>;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<void>;
@@ -236,6 +238,53 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Sign in with email and password
+  const handleSignInWithEmail = async (email: string, password: string) => {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      if (error) {
+        console.error('Email sign in error:', error);
+        return { error };
+      }
+      
+      console.log('Email sign in successful:', data.user?.email);
+      return { error: null };
+    } catch (error: any) {
+      console.error('Email sign in error:', error);
+      return { error };
+    }
+  };
+
+  // Sign up with email and password
+  const handleSignUpWithEmail = async (email: string, password: string, fullName?: string) => {
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth`,
+          data: {
+            full_name: fullName || email.split('@')[0],
+          }
+        }
+      });
+      
+      if (error) {
+        console.error('Email sign up error:', error);
+        return { error };
+      }
+      
+      console.log('Email sign up successful:', data.user?.email);
+      return { error: null };
+    } catch (error: any) {
+      console.error('Email sign up error:', error);
+      return { error };
+    }
+  };
   // Sign out
   const handleSignOut = async () => {
     try {
@@ -323,6 +372,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user: bypassEnabled ? mockUser : user,
     profile: bypassEnabled ? bypassMockProfile || mockProfile : profile,
     loading: bypassEnabled ? false : loading,
+    signInWithEmail: handleSignInWithEmail,
+    signUpWithEmail: handleSignUpWithEmail,
     signInWithGoogle: handleSignInWithGoogle,
     signOut: handleSignOut,
     updateProfile: handleUpdateProfile,
