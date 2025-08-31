@@ -10,9 +10,6 @@ import { Loader2, Tag, X } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
-// Lazy load heavy components
-const HeavyMediaProcessor = lazy(() => import("./HeavyMediaProcessor").catch(() => ({ default: () => null })));
-
 interface MediaTaggerProps {
   eventId?: string;
   eventName?: string;
