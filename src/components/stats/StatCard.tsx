@@ -15,7 +15,7 @@ interface StatCardProps {
   className?: string;
 }
 
-function StatCard({
+export const StatCard = memo(function StatCard({
   title,
   value,
   icon: Icon,
@@ -45,6 +45,4 @@ function StatCard({
       </div>
     </Card>
   );
-}
-
-export const StatCard = memo(StatCard);
+});
