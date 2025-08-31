@@ -5,6 +5,8 @@ import { EstimatesTabs } from "@/components/estimates/list/EstimatesTabs";
 import { EstimateForm } from "@/components/estimates/EstimateForm";
 import { EstimatePreview } from "@/components/estimates/EstimatePreview";
 import { useEstimatesPage } from "@/hooks/estimates/useEstimatesPage";
+import { PermissionGuard } from "@/components/rbac/PermissionGuard";
+import { PERMISSIONS } from "@/types/rbac";
 
 export default function EstimatesPage() {
   const {
@@ -28,7 +30,10 @@ export default function EstimatesPage() {
   return (
     <Layout>
       <div className="space-y-6">
-        <EstimatesHeader onNewEstimate={handleCreateNewEstimate} />
+        <EstimatesHeader 
+          onNewEstimate={handleCreateNewEstimate}
+          canCreate={true} // Will be controlled by PermissionGuard
+        />
         
         <EstimatesTabs
           currentTab={currentTab}
@@ -41,11 +46,13 @@ export default function EstimatesPage() {
           onNewEstimate={handleCreateNewEstimate}
         />
 
-        <EstimateForm
-          open={showNewEstimateForm}
-          onClose={handleCloseForm}
-          editingEstimate={isEditing ? selectedEstimate : null}
-        />
+        <PermissionGuard permission={PERMISSIONS.ESTIMATES_CREATE}>
+          <EstimateForm
+            open={showNewEstimateForm}
+            onClose={handleCloseForm}
+            editingEstimate={isEditing ? selectedEstimate : null}
+          />
+        </PermissionGuard>
 
         {selectedEstimate && (
           <EstimatePreview

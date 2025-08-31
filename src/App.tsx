@@ -14,6 +14,8 @@ import Dashboard from "./pages/Dashboard";
 import { AuthGuard } from "./components/auth/AuthGuard";
 import { Header } from "./components/layout/Header";
 import { BypassAuthToggle } from "./components/ui/bypass-auth-toggle";
+import { PermissionGuard } from "./components/rbac/PermissionGuard";
+import { RoleManager } from "./components/rbac/RoleManager";
 
 // Import other pages
 import Index from "./pages/Index";
@@ -118,19 +120,44 @@ function App() {
         
         <Route path="/finances/*" element={
           <AuthGuard>
-            <FinancesPage />
+            <PermissionGuard permission="finances.view">
+              <FinancesPage />
+            </PermissionGuard>
+          </AuthGuard>
+        } />
+        
+        {/* Admin routes - Role management */}
+        <Route path="/admin/roles" element={
+          <AuthGuard>
+            <PermissionGuard role="manager">
+              <div className="min-h-screen bg-gray-50 p-6">
+                <div className="max-w-6xl mx-auto">
+                  <div className="mb-6">
+                    <h1 className="text-3xl font-bold">Role Management</h1>
+                    <p className="text-muted-foreground mt-2">
+                      Manage team member roles and permissions
+                    </p>
+                  </div>
+                  <RoleManager />
+                </div>
+              </div>
+            </PermissionGuard>
           </AuthGuard>
         } />
         <Route path="/invoices" element={
           <AuthGuard>
-            <InvoicesPage />
+            <PermissionGuard permission="invoices.view">
+              <InvoicesPage />
+            </PermissionGuard>
           </AuthGuard>
         } />
         
         {/* 404 catch-all */}
         <Route path="*" element={<NotFound />} />
       </Routes>
-      
+            <PermissionGuard permission="workflow.view">
+              <UnifiedWorkflowPage />
+            </PermissionGuard>
       {/* Bypass Auth Toggle */}
       <BypassAuthToggle />
       

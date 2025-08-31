@@ -14,28 +14,33 @@ import {
   LogOut,
   User,
   ArrowLeft,
+  Shield,
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { useEffect, useState } from "react";
 import { useUser } from "@/contexts/UserContext";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
+import { useRBAC } from "@/hooks/rbac/useRBAC";
+import { PERMISSIONS } from "@/types/rbac";
+import { PermissionGuard } from "@/components/rbac/PermissionGuard";
 
 // Define navigation items with access control
 const navItems = [
-  { path: "/dashboard", label: "Dashboard", icon: Home, access: ["all"] },
-  { path: "/estimates", label: "Estimates", icon: FileText, access: ["manager", "crm"] },
-  { path: "/invoices", label: "Invoices", icon: Receipt, access: ["manager", "accounts"] },
-  { path: "/finances", label: "Finances", icon: LineChart, access: ["manager", "accounts"] },
-  { path: "/workflow", label: "Workflow", icon: Calendar, access: ["all"] },
-  { path: "/portfolio", label: "Portfolio", icon: Camera, access: ["all"] },
+  { path: "/dashboard", label: "Dashboard", icon: Home, permission: PERMISSIONS.DASHBOARD_VIEW },
+  { path: "/estimates", label: "Estimates", icon: FileText, permission: PERMISSIONS.ESTIMATES_VIEW },
+  { path: "/invoices", label: "Invoices", icon: Receipt, permission: PERMISSIONS.INVOICES_VIEW },
+  { path: "/finances", label: "Finances", icon: LineChart, permission: PERMISSIONS.FINANCES_VIEW },
+  { path: "/workflow", label: "Workflow", icon: Calendar, permission: PERMISSIONS.WORKFLOW_VIEW },
+  { path: "/portfolio", label: "Portfolio", icon: Camera, permission: PERMISSIONS.PORTFOLIO_VIEW },
 ];
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, signOut } = useAuth(); // Use Auth context instead of UserContext
+  const { user, signOut, hasRole } = useAuth();
+  const { hasPermission } = useRBAC();
   
   // Close mobile menu when route changes
   useEffect(() => {
@@ -56,29 +61,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   // Determine if we're on a page that should have a back to dashboard button
   const showBackToDashboard = location.pathname !== "/dashboard" && !location.pathname.startsWith("/auth");
   
-  // Get user role from email (for bypass mode)
-  const getUserRole = () => {
-    if (!user || !user.email) return 'user';
-    
-    const email = user.email.toLowerCase();
-    if (email.includes('manager')) return 'manager';
-    if (email.includes('accounts')) return 'accounts';
-    if (email.includes('crm')) return 'crm';
-    if (email.includes('photographer')) return 'photographer';
-    if (email.includes('videographer')) return 'videographer';
-    if (email.includes('editor')) return 'editor';
-    
-    return 'manager'; // Default to manager
-  };
-  
-  const userRole = getUserRole();
-  
-  // Filter navigation items based on user role
-  const filteredNavItems = navItems.filter(item => {
-    if (item.access.includes("all")) return true;
-    if (userRole === "manager") return true;
-    return item.access.includes(userRole);
-  });
+  // Filter navigation items based on user permissions
+  const filteredNavItems = navItems.filter(item => hasPermission(item.permission));
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -99,27 +83,51 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             {filteredNavItems.map((item) => {
               const Icon = item.icon;
               return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-colors",
-                    location.pathname === item.path
-                      ? "bg-accent text-accent-foreground"
-                      : "hover:bg-accent/50 text-muted-foreground"
-                  )}
-                >
-                  <Icon className="h-5 w-5 flex-shrink-0" />
-                  <span className="truncate">{item.label}</span>
-                </Link>
+                <PermissionGuard key={item.path} permission={item.permission}>
+                  <Link
+                    to={item.path}
+                    className={cn(
+                      "flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-colors",
+                      location.pathname === item.path
+                        ? "bg-accent text-accent-foreground"
+                        : "hover:bg-accent/50 text-muted-foreground"
+                    )}
+                  >
+                    <Icon className="h-5 w-5 flex-shrink-0" />
+                    <span className="truncate">{item.label}</span>
+                  </Link>
+                </PermissionGuard>
               );
             })}
+            
+            {/* Role Management - Only for managers */}
+            <PermissionGuard role="manager">
+              <Link
+                to="/admin/roles"
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-colors",
+                  location.pathname === "/admin/roles"
+                    ? "bg-accent text-accent-foreground"
+                    : "hover:bg-accent/50 text-muted-foreground"
+                )}
+              >
+                <Shield className="h-5 w-5 flex-shrink-0" />
+                <span className="truncate">Role Management</span>
+              </Link>
+            </PermissionGuard>
           </div>
           
           <div className="mt-auto border-t pt-4">
             <div className="px-2 py-2 mb-2">
               <div className="font-medium truncate">{user.user_metadata?.full_name || user.email}</div>
-              <div className="text-xs text-muted-foreground capitalize">{userRole}</div>
+              <div className="text-xs text-muted-foreground">
+                {hasRole('manager') ? 'Manager' : 
+                 hasRole('photographer') ? 'Photographer' :
+                 hasRole('videographer') ? 'Videographer' :
+                 hasRole('editor') ? 'Editor' :
+                 hasRole('accounts') ? 'Accounts' :
+                 hasRole('crm') ? 'CRM' : 'User'}
+              </div>
             </div>
             <Button 
               variant="ghost" 

@@ -5,6 +5,7 @@ import { firestore } from "@/integrations/google/firebaseConfig";
 import { signInWithGoogle, signOutUser, onAuthStateChange } from "@/integrations/google/authClient";
 import { useToast } from "@/hooks/use-toast";
 import { useBypassAuth } from "./BypassAuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 // Define profile type
 export interface Profile {
@@ -15,6 +16,7 @@ export interface Profile {
   storage_used: number;
   storage_limit: number;
   plan_type: string;
+  primary_role?: string;
   created_at: string;
   updated_at: string;
 }
@@ -29,6 +31,9 @@ interface AuthContextType {
   updateProfile: (updates: Partial<Profile>) => Promise<void>;
   bypassAuth: boolean;
   toggleBypassAuth: (role?: string) => void;
+  userRoles: string[];
+  hasPermission: (permission: string) => boolean;
+  hasRole: (role: string) => boolean;
 }
 
 // Create context
@@ -39,6 +44,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [mockProfile, setMockProfile] = useState<Profile | null>(null);
+  const [userRoles, setUserRoles] = useState<string[]>([]);
+  const [userPermissions, setUserPermissions] = useState<string[]>([]);
   const { toast } = useToast();
   const { bypassEnabled, mockUser, mockProfile: bypassMockProfile, toggleBypass, setMockRole } = useBypassAuth();
 
@@ -66,11 +73,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // Fetch or create user profile
           const userProfile = await fetchUserProfile(authUser);
           setProfile(userProfile);
+          
+          // Load user roles and permissions
+          await loadUserRolesAndPermissions(authUser.uid);
         } catch (error) {
           console.error("Error fetching user profile:", error);
         }
       } else {
         setProfile(null);
+        setUserRoles([]);
+        setUserPermissions([]);
       }
       
       setLoading(false);
@@ -78,6 +90,82 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     return () => unsubscribe();
   }, [bypassEnabled]);
+
+  // Load user roles and permissions from Supabase
+  const loadUserRolesAndPermissions = async (userId: string) => {
+    try {
+      // Get user roles
+      const { data: rolesData, error: rolesError } = await supabase
+        .rpc('get_user_roles', { user_id: userId });
+
+      if (rolesError) {
+        console.error('Error fetching user roles:', rolesError);
+        // Assign default role if no roles found
+        await assignDefaultRole(userId);
+        return;
+      }
+
+      // Get user permissions
+      const { data: permissionsData, error: permissionsError } = await supabase
+        .rpc('get_user_permissions', { user_id: userId });
+
+      if (permissionsError) {
+        console.error('Error fetching user permissions:', permissionsError);
+        return;
+      }
+
+      const roles = (rolesData || []).map((role: any) => role.role_name);
+      const permissions = (permissionsData || []).map((perm: any) => perm.permission_name);
+
+      setUserRoles(roles);
+      setUserPermissions(permissions);
+    } catch (error) {
+      console.error('Error loading RBAC data:', error);
+    }
+  };
+
+  // Assign default role to new users
+  const assignDefaultRole = async (userId: string) => {
+    try {
+      // Get default role (photographer)
+      const { data: roleData } = await supabase
+        .from('roles')
+        .select('id')
+        .eq('name', 'photographer')
+        .single();
+
+      if (roleData) {
+        await supabase
+          .from('user_roles')
+          .insert({
+            user_id: userId,
+            role_id: roleData.id,
+            assigned_by: userId
+          });
+
+        // Reload roles
+        await loadUserRolesAndPermissions(userId);
+      }
+    } catch (error) {
+      console.error('Error assigning default role:', error);
+    }
+  };
+
+  // Check if user has specific permission
+  const hasPermission = (permission: string): boolean => {
+    if (bypassEnabled) return true; // Bypass mode has all permissions
+    return userPermissions.includes(permission);
+  };
+
+  // Check if user has specific role
+  const hasRole = (role: string): boolean => {
+    if (bypassEnabled) {
+      // In bypass mode, check the mock role
+      const mockRole = bypassMockProfile?.primary_role || 'manager';
+      return role === mockRole;
+    }
+    return userRoles.includes(role);
+  };
 
   // Fetch or create user profile
   const fetchUserProfile = async (user: User): Promise<Profile> => {
@@ -97,6 +185,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         storage_used: 0,
         storage_limit: 5368709120, // 5GB in bytes
         plan_type: "pilot",
+        primary_role: "photographer",
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
@@ -226,7 +315,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signOut: handleSignOut,
     updateProfile: handleUpdateProfile,
     bypassAuth: bypassEnabled,
-    toggleBypassAuth
+    toggleBypassAuth,
+    userRoles: bypassEnabled ? [bypassMockProfile?.primary_role || 'manager'] : userRoles,
+    hasPermission,
+    hasRole
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

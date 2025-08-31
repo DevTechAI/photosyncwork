@@ -11,6 +11,8 @@ import { FinancialReports } from "@/components/finances/reports/FinancialReports
 import { useFinancesPage } from "@/hooks/finances/useFinancesPage";
 import { FinancesHeader } from "@/components/finances/overview/FinancesHeader";
 import { FinancesOverviewTab } from "@/components/finances/overview/FinancesOverviewTab";
+import { PermissionGuard } from "@/components/rbac/PermissionGuard";
+import { PERMISSIONS } from "@/types/rbac";
 
 export default function FinancesPage() {
   const {
@@ -49,8 +51,12 @@ export default function FinancesPage() {
         >
           <TabsList className="grid w-full grid-cols-3 mb-8">
             <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="transactions">Transactions</TabsTrigger>
-            <TabsTrigger value="reports">Reports & Analysis</TabsTrigger>
+            <PermissionGuard permission={PERMISSIONS.FINANCES_MANAGE} fallback={<></>}>
+              <TabsTrigger value="transactions">Transactions</TabsTrigger>
+            </PermissionGuard>
+            <PermissionGuard permission={PERMISSIONS.FINANCES_REPORTS} fallback={<></>}>
+              <TabsTrigger value="reports">Reports & Analysis</TabsTrigger>
+            </PermissionGuard>
           </TabsList>
           
           <TabsContent value="overview" className="mt-0">
@@ -60,31 +66,37 @@ export default function FinancesPage() {
             />
           </TabsContent>
           
-          <TabsContent value="transactions" className="mt-0">
-            <TransactionsView 
-              categories={categories} 
-              onAddTransaction={handleNewTransaction} 
-            />
-          </TabsContent>
+          <PermissionGuard permission={PERMISSIONS.FINANCES_MANAGE}>
+            <TabsContent value="transactions" className="mt-0">
+              <TransactionsView 
+                categories={categories} 
+                onAddTransaction={handleNewTransaction} 
+              />
+            </TabsContent>
+          </PermissionGuard>
           
-          <TabsContent value="reports" className="mt-0">
-            <FinancialReports year={selectedYear} />
-          </TabsContent>
+          <PermissionGuard permission={PERMISSIONS.FINANCES_REPORTS}>
+            <TabsContent value="reports" className="mt-0">
+              <FinancialReports year={selectedYear} />
+            </TabsContent>
+          </PermissionGuard>
         </Tabs>
       </div>
       
-      <Dialog open={isTransactionModalOpen} onOpenChange={setIsTransactionModalOpen}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>Record New Transaction</DialogTitle>
-          </DialogHeader>
-          <TransactionForm 
-            onSubmit={handleTransactionSubmit} 
-            categories={categories} 
-            onCancel={() => setIsTransactionModalOpen(false)} 
-          />
-        </DialogContent>
-      </Dialog>
+      <PermissionGuard permission={PERMISSIONS.FINANCES_MANAGE}>
+        <Dialog open={isTransactionModalOpen} onOpenChange={setIsTransactionModalOpen}>
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>Record New Transaction</DialogTitle>
+            </DialogHeader>
+            <TransactionForm 
+              onSubmit={handleTransactionSubmit} 
+              categories={categories} 
+              onCancel={() => setIsTransactionModalOpen(false)} 
+            />
+          </DialogContent>
+        </Dialog>
+      </PermissionGuard>
     </Layout>
   );
 }

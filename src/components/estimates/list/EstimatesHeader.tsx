@@ -1,12 +1,15 @@
 
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
+import { PermissionGuard } from "@/components/rbac/PermissionGuard";
+import { PERMISSIONS } from "@/types/rbac";
 
 interface EstimatesHeaderProps {
   onNewEstimate: () => void;
+  canCreate?: boolean;
 }
 
-export function EstimatesHeader({ onNewEstimate }: EstimatesHeaderProps) {
+export function EstimatesHeader({ onNewEstimate, canCreate = true }: EstimatesHeaderProps) {
   return (
     <div className="flex items-center justify-between">
       <div className="space-y-1">
@@ -15,10 +18,12 @@ export function EstimatesHeader({ onNewEstimate }: EstimatesHeaderProps) {
           Create and manage your photography service estimates.
         </p>
       </div>
-      <Button onClick={onNewEstimate}>
-        <Plus className="h-4 w-4 mr-2" />
-        New Estimate
-      </Button>
+      <PermissionGuard permission={PERMISSIONS.ESTIMATES_CREATE}>
+        <Button onClick={onNewEstimate}>
+          <Plus className="h-4 w-4 mr-2" />
+          New Estimate
+        </Button>
+      </PermissionGuard>
     </div>
   );
 }
