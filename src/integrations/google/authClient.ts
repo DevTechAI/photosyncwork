@@ -21,12 +21,6 @@ googleProvider.setCustomParameters({
 export const signInWithGoogle = async () => {
   try {
     console.log("Starting Google sign-in process");
-    
-    // Force auth domain to be the one registered in Firebase
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-      auth.config.authDomain = 'studiosync-e59aa.firebaseapp.com';
-    }
-    
     await signInWithRedirect(auth, googleProvider);
     console.log("Google sign-in redirect initiated");
     return null; // Redirect doesn't return immediately

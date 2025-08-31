@@ -22,11 +22,6 @@ export const auth = getAuth(app);
 
 // Set custom auth domain to allow localhost
 auth.useDeviceLanguage();
-// This is a workaround for the unauthorized domain issue
-// It allows authentication to work on localhost during development
-if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-  auth.config.authDomain = 'studiosync-e59aa.firebaseapp.com';
-}
 
 export const firestore = getFirestore(app);
 export const storage = getStorage(app);
