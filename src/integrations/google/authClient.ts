@@ -1,4 +1,4 @@
-import { GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, User } from "firebase/auth";
+import { GoogleAuthProvider, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged, User } from "firebase/auth";
 import { auth } from "./firebaseConfig";
 
 // Google Auth Provider
@@ -27,11 +27,29 @@ export const signInWithGoogle = async () => {
       auth.config.authDomain = 'studiosync-e59aa.firebaseapp.com';
     }
     
-    const result = await signInWithPopup(auth, googleProvider);
-    console.log("Google sign-in successful:", result.user.email);
-    return result;
+    await signInWithRedirect(auth, googleProvider);
+    console.log("Google sign-in redirect initiated");
+    return null; // Redirect doesn't return immediately
   } catch (error) {
     console.error("Error signing in with Google:", error);
+    throw error;
+  }
+};
+
+/**
+ * Handle redirect result after Google sign-in
+ * @returns The user credentials or null if no redirect result
+ */
+export const handleGoogleRedirectResult = async () => {
+  try {
+    const result = await getRedirectResult(auth);
+    if (result) {
+      console.log("Google sign-in successful:", result.user.email);
+      return result;
+    }
+    return null;
+  } catch (error) {
+    console.error("Error handling Google redirect result:", error);
     throw error;
   }
 };

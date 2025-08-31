@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { User } from "firebase/auth";
 import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { firestore } from "@/integrations/google/firebaseConfig";
-import { signInWithGoogle, signOutUser, onAuthStateChange } from "@/integrations/google/authClient";
+import { signInWithGoogle, signOutUser, onAuthStateChange, handleGoogleRedirectResult } from "@/integrations/google/authClient";
 import { useToast } from "@/hooks/use-toast";
 import { useBypassAuth } from "./BypassAuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -64,6 +64,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (bypassEnabled) return;
     
     setLoading(true);
+    
+    // Check for redirect result on page load
+    const checkRedirectResult = async () => {
+      try {
+        await handleGoogleRedirectResult();
+      } catch (error) {
+        console.error("Error handling redirect result:", error);
+        toast({
+          title: "Sign in failed",
+          description: "Failed to complete Google sign-in",
+          variant: "destructive"
+        });
+      }
+    };
+    
+    checkRedirectResult();
     
     const unsubscribe = onAuthStateChange(async (authUser) => {
       setUser(authUser);
@@ -206,11 +222,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Attempt to sign in with Google
       await signInWithGoogle();
       
-      // Show success toast
-      toast({
-        title: "Signed in successfully",
-        description: "Welcome to StudioSync!"
-      });
+      // Note: Success toast will be shown after redirect completes
     } catch (error: any) {
       console.error("Error signing in with Google:", error);
       toast({
