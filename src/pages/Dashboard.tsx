@@ -17,7 +17,8 @@ import {
   Image,
   Video,
   Edit,
-  Loader2
+  Loader2,
+  MessageSquare
 } from "lucide-react";
 import { StatCard } from "@/components/stats/StatCard";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -134,12 +135,12 @@ function Dashboard() {
         </div>
 
         {/* Stats Overview */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
           <StatCard
-            title="Active Projects"
-            value="12"
-            icon={FileText}
-            trend={{ value: 3, label: "vs last month" }}
+            title="Quote Enquiries"
+            value="8"
+            icon={MessageSquare}
+            trend={{ value: 5, label: "vs last week" }}
           />
           <StatCard
             title="Monthly Revenue"
@@ -158,6 +159,12 @@ function Dashboard() {
             value="4"
             icon={Receipt}
             trend={{ value: -1, label: "vs last week" }}
+          />
+          <StatCard
+            title="Active Projects"
+            value="12"
+            icon={FileText}
+            trend={{ value: 3, label: "vs last month" }}
           />
         </div>
 
