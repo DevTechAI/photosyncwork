@@ -13,6 +13,7 @@ interface StatCardProps {
     label: string;
   };
   className?: string;
+  onClick?: () => void;
 }
 
 export const StatCard = memo(function StatCard({
@@ -21,17 +22,25 @@ export const StatCard = memo(function StatCard({
   icon: Icon,
   trend,
   className,
+  onClick,
 }: StatCardProps) {
   return (
-    <Card className={cn(
-      "relative overflow-hidden transition-all hover:shadow-lg",
-      className
-    )}>
+    <Card 
+      className={cn(
+        "relative overflow-hidden transition-all hover:shadow-lg",
+        onClick && "cursor-pointer hover:scale-105",
+        className
+      )}
+      onClick={onClick}
+    >
       <div className="p-6">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium text-muted-foreground">{title}</p>
-            <h3 className="text-2xl font-semibold mt-2">{value}</h3>
+            <p className="text-sm font-medium text-muted-foreground whitespace-nowrap">{title}</p>
+            <h3 className={cn(
+              "text-2xl font-semibold mt-2",
+              onClick && "text-blue-600 font-bold"
+            )}>{value}</h3>
             {trend && (
               <p className="text-xs text-muted-foreground mt-1">
                 {trend.value >= 0 ? "+" : "-"}{Math.abs(trend.value)}% {trend.label}

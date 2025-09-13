@@ -5,6 +5,7 @@ import { QueryProvider } from "./QueryProvider";
 import { AuthProvider } from "./contexts/AuthContext";
 import { UserProvider } from "./contexts/UserContext";
 import { BypassAuthProvider } from "./contexts/BypassAuthContext";
+import { EnquiryProvider } from "./contexts/EnquiryContext";
 import App from "./App";
 import "./index.css";
 
@@ -15,7 +16,9 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
         <BypassAuthProvider>
           <AuthProvider>
             <UserProvider>
-              <App />
+              <EnquiryProvider>
+                <App />
+              </EnquiryProvider>
             </UserProvider>
           </AuthProvider>
         </BypassAuthProvider>

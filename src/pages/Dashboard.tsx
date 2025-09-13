@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { useEnquiries } from "@/contexts/EnquiryContext";
 import { 
   Camera, 
   DollarSign, 
@@ -28,6 +29,7 @@ const MediaTagger = React.lazy(() => import("@/components/ai/MediaTagger").then(
 
 function Dashboard() {
   const { user, profile, loading } = useAuth();
+  const { pendingCount } = useEnquiries();
   const navigate = useNavigate();
 
   // Show loading if still checking auth
@@ -138,9 +140,10 @@ function Dashboard() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
           <StatCard
             title="Quote Enquiries"
-            value="8"
+            value={pendingCount}
             icon={MessageSquare}
             trend={{ value: 5, label: "vs last week" }}
+            onClick={() => navigate("/quote-enquiries")}
           />
           <StatCard
             title="Monthly Revenue"

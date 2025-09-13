@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster as RadixToaster } from "@/components/ui/toaster";
 import { AuthProvider } from "./contexts/AuthContext";
 import { UserProvider } from "./contexts/UserContext";
+import { EnquiryProvider } from "./contexts/EnquiryContext";
 import { AuthGuard } from "./components/auth/AuthGuard";
 import { Header } from "./components/layout/Header";
 import { BypassAuthToggle } from "./components/ui/bypass-auth-toggle";
@@ -28,6 +29,7 @@ const Hire = React.lazy(() => import("./pages/Hire"));
 const NotFound = React.lazy(() => import("./pages/NotFound"));
 const ClientPortal = React.lazy(() => import("./pages/ClientPortal"));
 const UnifiedWorkflowPage = React.lazy(() => import("./pages/UnifiedWorkflowPage"));
+const QuoteEnquiries = React.lazy(() => import("./pages/QuoteEnquiries"));
 const RoleManager = React.lazy(() => import("./components/rbac/RoleManager").then(mod => ({ default: mod.RoleManager })));
 
 function App() {
@@ -73,6 +75,11 @@ function App() {
           <Route path="/estimates" element={
             <AuthGuard>
               <EstimatesPage />
+            </AuthGuard>
+          } />
+          <Route path="/quote-enquiries" element={
+            <AuthGuard>
+              <QuoteEnquiries />
             </AuthGuard>
           } />
           
