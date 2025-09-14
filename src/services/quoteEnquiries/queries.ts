@@ -17,6 +17,9 @@ export interface QuoteEnquiry {
   enquiry_datetime_stamp: string;
   status: 'pending' | 'accepted' | 'rejected';
   received_date: string;
+  photographer_id?: string;
+  budget_range?: string;
+  is_flexible?: boolean;
   created_at: string;
   updated_at: string;
 }

@@ -350,7 +350,7 @@ export default function QuoteEnquiries() {
                       <div className="flex items-center justify-between text-xs text-gray-500">
                         <span className="flex items-center space-x-1">
                           <DollarSign className="h-3 w-3" />
-                          <span>{formatCurrency(enquiry.quote_amount)}</span>
+                          <span>{enquiry.budget_range || formatCurrency(enquiry.quote_amount)}</span>
                         </span>
                         <span className="flex items-center space-x-1">
                           <Calendar className="h-3 w-3" />
@@ -438,10 +438,10 @@ export default function QuoteEnquiries() {
                           </p>
                         </div>
                         <div>
-                          <h4 className="text-sm font-medium text-gray-500 mb-1">Quote Amount</h4>
+                          <h4 className="text-sm font-medium text-gray-500 mb-1">Budget Range</h4>
                           <p className="flex items-center space-x-2">
                             <DollarSign className="h-4 w-4 text-gray-400" />
-                            <span className="font-semibold">{formatCurrency(enquiry.quote_amount)}</span>
+                            <span className="font-semibold">{enquiry.budget_range || formatCurrency(enquiry.quote_amount)}</span>
                           </p>
                         </div>
                       </div>

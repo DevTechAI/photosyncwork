@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import Layout from "@/components/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +12,7 @@ import {
   MapPin,
   Star
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 
@@ -47,7 +47,7 @@ interface QuotationForm {
   customer_email?: string;
 }
 
-export default function PhotographersPortal() {
+export default function PublicPhotographerDirectory() {
   const navigate = useNavigate();
   const [photographers, setPhotographers] = useState<Photographer[]>([]);
   const [loading, setLoading] = useState(true);
@@ -183,6 +183,7 @@ export default function PhotographersPortal() {
         status: 'pending',
         received_date: new Date().toISOString().split('T')[0],
         enquiry_datetime_stamp: new Date().toISOString(),
+        photographer_id: formData.photographer_id,
         budget_range: formData.budget_range || "",
         is_flexible: formData.is_flexible
       };
@@ -223,30 +224,32 @@ export default function PhotographersPortal() {
   ];
 
   if (loading) {
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 flex items-center justify-center p-4">
-        <div className="text-center">
-          <Camera className="h-8 w-8 animate-pulse mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading photographers...</p>
-        </div>
+    return (
+      <Layout>
+        <div className="flex min-h-screen items-center justify-center">
+          <div className="text-center">
+            <Camera className="h-8 w-8 animate-pulse mx-auto mb-4" />
+            <p className="text-muted-foreground">Loading photographers...</p>
           </div>
+        </div>
+      </Layout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
+    <Layout>
       <div className="space-y-6 p-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <Button 
+            <Button
               variant="ghost"
               size="sm"
-              onClick={() => navigate("/auth")}
+              onClick={() => navigate("/dashboard")}
               className="flex items-center space-x-2"
             >
               <ArrowLeft className="h-4 w-4" />
-              <span>Back to Login</span>
+              <span>Back to Dashboard</span>
             </Button>
             <div>
               <h1 className="text-3xl font-bold flex items-center space-x-3">
@@ -301,28 +304,28 @@ export default function PhotographersPortal() {
 
                 {/* Portfolio Link */}
                 <div className="flex items-center space-x-2">
-            <Button 
-              variant="outline"
+                  <Button
+                    variant="outline"
                     size="sm"
                     onClick={() => window.open(photographer.portfolio_url, '_blank')}
                     className="flex items-center space-x-2"
                   >
                     <ExternalLink className="h-4 w-4" />
                     <span>View Portfolio</span>
-            </Button>
+                  </Button>
                 </div>
-            
+
                 {/* Get Quotation Button */}
-            <Button 
+                <Button
                   onClick={() => handleGetQuotation(photographer)}
                   className="w-full bg-blue-600 hover:bg-blue-700"
                 >
                   Get Quotation
-            </Button>
+                </Button>
               </CardContent>
             </Card>
           ))}
-          </div>
+        </div>
 
         {/* Quotation Form Modal */}
         {showQuotationForm && (
@@ -469,11 +472,11 @@ export default function PhotographersPortal() {
                     </Button>
                   </form>
                 )}
-        </CardContent>
-      </Card>
+              </CardContent>
+            </Card>
           </div>
         )}
       </div>
-    </div>
+    </Layout>
   );
 }

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Camera, Eye, EyeOff, ShieldCheck, AlertCircle } from "lucide-react";
+import { Camera, Eye, EyeOff, ShieldCheck, AlertCircle, Users } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -158,6 +158,18 @@ export default function Auth() {
           <CardDescription>
             Sign in to manage your photography business
           </CardDescription>
+          
+          {/* Public User Access Button */}
+          <div className="mt-4">
+            <Button 
+              onClick={() => navigate("/photographers")} 
+              variant="outline"
+              className="w-full bg-green-50 border-green-200 text-green-700 hover:bg-green-100"
+            >
+              <Users className="h-4 w-4 mr-2" />
+              Non-PG End Public User
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Auth Error Alert */}

@@ -29,6 +29,7 @@ const NotFound = React.lazy(() => import("./pages/NotFound"));
 const ClientPortal = React.lazy(() => import("./pages/ClientPortal"));
 const UnifiedWorkflowPage = React.lazy(() => import("./pages/UnifiedWorkflowPage"));
 const QuoteEnquiries = React.lazy(() => import("./pages/QuoteEnquiries"));
+const PublicPhotographerDirectory = React.lazy(() => import("./pages/PublicPhotographerDirectory"));
 const RoleManager = React.lazy(() => import("./components/rbac/RoleManager").then(mod => ({ default: mod.RoleManager })));
 
 function App() {
@@ -43,6 +44,7 @@ function App() {
           <Route path="/login" element={<Navigate to="/auth" replace />} />
           <Route path="/hire" element={<Hire />} />
           <Route path="/photographers" element={<PhotographersPortal />} />
+          <Route path="/public-photographers" element={<PublicPhotographerDirectory />} />
           
           {/* Client Portal - Public access with its own authentication */}
           <Route path="/client-portal" element={<ClientPortal />} />
