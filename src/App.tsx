@@ -6,7 +6,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster as RadixToaster } from "@/components/ui/toaster";
 import { AuthProvider } from "./contexts/AuthContext";
 import { UserProvider } from "./contexts/UserContext";
-import { EnquiryProvider } from "./contexts/EnquiryContext";
 import { AuthGuard } from "./components/auth/AuthGuard";
 import { Header } from "./components/layout/Header";
 import { BypassAuthToggle } from "./components/ui/bypass-auth-toggle";
