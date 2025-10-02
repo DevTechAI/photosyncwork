@@ -254,7 +254,7 @@ export default function PublicPhotographerDirectory() {
             <div>
               <h1 className="text-3xl font-bold flex items-center space-x-3">
                 <Users className="h-8 w-8" />
-                <span>StudioSync PhotoGraphers</span>
+                <span>PhotoSync PhotoGraphers</span>
               </h1>
               <p className="text-muted-foreground mt-2">
                 Choose from our talented team of professional photographers

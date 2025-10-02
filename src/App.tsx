@@ -16,6 +16,8 @@ import { LoadingSpinner } from "./components/ui/loading-spinner";
 const Home = React.lazy(() => import("./pages/Home"));
 const Auth = React.lazy(() => import("./pages/Auth"));
 const Portfolio = React.lazy(() => import("./pages/Portfolio"));
+const PortfolioTemplate = React.lazy(() => import("./pages/PortfolioTemplate"));
+const PortfolioEditor = React.lazy(() => import("./pages/PortfolioEditor"));
 const PhotographersPortal = React.lazy(() => import("./pages/PhotographersPortal"));
 const Profile = React.lazy(() => import("./pages/Profile"));
 const Settings = React.lazy(() => import("./pages/Settings"));
@@ -51,6 +53,8 @@ function App() {
           
           {/* Portfolio can be accessed without login for creation */}
           <Route path="/portfolio" element={<Portfolio />} />
+          <Route path="/portfolio/template/:templateId" element={<PortfolioTemplate />} />
+          <Route path="/portfolio/editor" element={<PortfolioEditor />} />
           
           {/* Protected routes - require authentication */}
           <Route path="/dashboard" element={

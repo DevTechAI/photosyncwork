@@ -153,7 +153,7 @@ export default function Auth() {
             <Camera className="h-8 w-8 text-primary" />
           </div>
           <CardTitle className="text-2xl font-bold">
-            Welcome to StudioSync
+            Welcome to PhotoSync
           </CardTitle>
           <CardDescription>
             Sign in to manage your photography business

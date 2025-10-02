@@ -14,7 +14,7 @@ export function GetStartedSection() {
             Ready to Transform Your Studio?
           </h2>
           <p className="text-xl text-dustyBlue-muted max-w-2xl mx-auto">
-            Join thousands of photographers who have streamlined their business with StudioSync
+            Join thousands of photographers who have streamlined their business with PhotoSync
           </p>
         </div>
         

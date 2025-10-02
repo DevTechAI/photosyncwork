@@ -24,8 +24,8 @@ export function HeroSection() {
         onMouseEnter={() => setButtonsVisible(true)}
       >
         <img 
-          src="/lovable-uploads/b5a2c474-15f8-4a49-b102-73278d7c52f1.png" 
-          alt="StudioSync Logo" 
+          src="/favicon.png" 
+          alt="PhotoSync Logo" 
           className="h-24 md:h-32 w-auto object-contain mx-auto drop-shadow-lg"
         />
       </div>

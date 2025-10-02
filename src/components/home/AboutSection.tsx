@@ -6,10 +6,10 @@ export function AboutSection() {
     <section className="py-20 px-4 bg-cream">
       <div className="max-w-6xl mx-auto text-center">
         <h2 className="text-4xl font-bold mb-8 font-playfair text-velvet-dark">
-          About StudioSync
+          About PhotoSync
         </h2>
         <p className="text-xl max-w-3xl mx-auto mb-12 text-velvet-muted">
-          StudioSync is the complete platform designed for photographers, videographers, and their clients. 
+          PhotoSync is the complete platform designed for photographers, videographers, and their clients. 
           We streamline every aspect of your creative business, from initial consultation to final delivery, 
           making collaboration seamless and professional.
         </p>
