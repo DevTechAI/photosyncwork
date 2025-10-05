@@ -1,5 +1,4 @@
-import { collection, doc, getDocs, getDoc, addDoc, updateDoc, deleteDoc, query, where, orderBy } from "firebase/firestore";
-import { firestore } from "@/integrations/google/firebaseConfig";
+import { supabase } from "@/integrations/supabase/client";
 import { FinanceTransaction } from "./types";
 
 export const fetchTransactions = async (filters?: {

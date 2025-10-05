@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -196,10 +196,6 @@ export default function Portfolio() {
                           <Move className="h-4 w-4 mr-2" />
                           {isDragMode ? "Exit Drag Mode" : "Drag & Drop"}
                         </Button>
-                        <Button variant="outline" onClick={() => setShowTemplateSelector(!showTemplateSelector)}>
-                          <Settings className="h-4 w-4 mr-2" />
-                          Manage Portfolio
-                        </Button>
             {isEditing ? (
               <>
                 <Button variant="outline" onClick={() => setIsEditing(false)}>
@@ -281,15 +277,21 @@ export default function Portfolio() {
                           {sortedLayout.find(el => el.id === 'hero')?.visible && (
                             <Card className="mb-6">
                               <CardHeader>
-                                <CardTitle>Portfolio Overview</CardTitle>
+                                <div className="flex items-center justify-between">
+                                  <CardTitle>Portfolio Overview</CardTitle>
+                                  <Button variant="outline" size="sm" onClick={() => setShowTemplateSelector(!showTemplateSelector)}>
+                                    <Settings className="h-4 w-4 mr-2" />
+                                    Manage Portfolio
+                                  </Button>
+                                </div>
                               </CardHeader>
                               <CardContent>
                                 <div className="space-y-4">
                                   <div>
-                                    <h3 className="text-xl font-semibold">{portfolioData.name || "Your Portfolio Name"}</h3>
-                                    <p className="text-muted-foreground">{portfolioData.tagline || "Your professional tagline"}</p>
+                                    <h3 className="text-xl font-semibold">{portfolioData.name || "Sarah Johnson Photography"}</h3>
+                                    <p className="text-muted-foreground">{portfolioData.tagline || "Capturing life's beautiful moments with artistic vision"}</p>
                                   </div>
-                                  <p className="text-sm">{portfolioData.about || "Add a description about your photography style and experience."}</p>
+                                  <p className="text-sm">{portfolioData.about || "I'm Sarah Johnson, a passionate photographer specializing in portrait, event, and commercial photography. With over 5 years of experience, I bring a unique blend of technical expertise and creative vision to every project. My style combines natural lighting with authentic moments, creating timeless images that tell your story beautifully."}</p>
                                   {portfolioData.services.length > 0 && (
                                     <div>
                                       <h4 className="font-medium mb-2">Services</h4>

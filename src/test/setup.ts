@@ -1,52 +1,88 @@
-import '@testing-library/jest-dom'
+import { vi } from 'vitest';
 
 // Mock environment variables
 Object.defineProperty(import.meta, 'env', {
   value: {
     VITE_SUPABASE_URL: 'https://test.supabase.co',
     VITE_SUPABASE_ANON_KEY: 'test-anon-key',
-    VITE_CLOUDINARY_CLOUD_NAME: 'test-cloud',
-    VITE_CLOUDINARY_API_KEY: 'test-api-key',
-    VITE_CLOUDINARY_API_SECRET: 'test-api-secret',
-    VITE_AWS_REGION: 'us-east-1',
-    VITE_AWS_ACCESS_KEY_ID: 'test-access-key',
-    VITE_AWS_SECRET_ACCESS_KEY: 'test-secret-key',
-    VITE_AWS_BUCKET_NAME: 'test-bucket'
   },
-  writable: true
-})
+});
 
-// Mock FileReader
+// Mock FileReader for file upload tests
 global.FileReader = class FileReader {
-  result: string | null = null
-  error: any = null
-  readyState: number = 0
-  onload: ((event: any) => void) | null = null
-  onerror: ((event: any) => void) | null = null
+  result: string | null = null;
+  error: Error | null = null;
+  readyState: number = 0;
+  onload: ((event: ProgressEvent<FileReader>) => void) | null = null;
+  onerror: ((event: ProgressEvent<FileReader>) => void) | null = null;
+  onloadend: ((event: ProgressEvent<FileReader>) => void) | null = null;
 
-  readAsDataURL(file: File) {
-    setTimeout(() => {
-      this.result = `data:${file.type};base64,test-base64-data`
-      this.readyState = 2
-      if (this.onload) {
-        this.onload({ target: this })
-      }
-    }, 0)
+  readAsDataURL() {
+    this.result = 'data:image/jpeg;base64,test-base64-data';
+    this.readyState = 2;
+    if (this.onload) {
+      this.onload({} as ProgressEvent<FileReader>);
+    }
+    if (this.onloadend) {
+      this.onloadend({} as ProgressEvent<FileReader>);
+    }
   }
-} as any
+
+  readAsText() {
+    this.result = 'test-file-content';
+    this.readyState = 2;
+    if (this.onload) {
+      this.onload({} as ProgressEvent<FileReader>);
+    }
+    if (this.onloadend) {
+      this.onloadend({} as ProgressEvent<FileReader>);
+    }
+  }
+};
 
 // Mock URL.createObjectURL
-global.URL.createObjectURL = vi.fn(() => 'mock-object-url')
-global.URL.revokeObjectURL = vi.fn()
+global.URL.createObjectURL = vi.fn(() => 'mock-object-url');
+global.URL.revokeObjectURL = vi.fn();
+
+// Mock window.matchMedia
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: vi.fn().mockImplementation(query => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  })),
+});
+
+// Mock IntersectionObserver
+global.IntersectionObserver = vi.fn().mockImplementation(() => ({
+  observe: vi.fn(),
+  unobserve: vi.fn(),
+  disconnect: vi.fn(),
+}));
+
+// Mock ResizeObserver
+global.ResizeObserver = vi.fn().mockImplementation(() => ({
+  observe: vi.fn(),
+  unobserve: vi.fn(),
+  disconnect: vi.fn(),
+}));
 
 // Mock console methods to reduce noise in tests
-const originalConsoleError = console.error
-console.error = (...args) => {
-  if (
-    typeof args[0] === 'string' &&
-    args[0].includes('Warning: ReactDOM.render is no longer supported')
-  ) {
-    return
-  }
-  originalConsoleError.call(console, ...args)
-}
+const originalConsoleError = console.error;
+const originalConsoleWarn = console.warn;
+
+beforeEach(() => {
+  console.error = vi.fn();
+  console.warn = vi.fn();
+});
+
+afterEach(() => {
+  console.error = originalConsoleError;
+  console.warn = originalConsoleWarn;
+});

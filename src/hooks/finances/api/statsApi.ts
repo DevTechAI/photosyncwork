@@ -1,5 +1,4 @@
-import { collection, query, where, getDocs } from "firebase/firestore";
-import { firestore } from "@/integrations/google/firebaseConfig";
+import { supabase } from "@/integrations/supabase/client";
 import { TransactionStats } from "./types";
 import { FinanceTransaction } from "./types";
 

@@ -132,6 +132,14 @@ export default function Auth() {
     }
   };
 
+  // Handle Enter key press
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !emailPasswordLoading) {
+      e.preventDefault();
+      handleEmailAuth();
+    }
+  };
+
   const handleBypassAuth = () => {
     toggleBypassAuth(bypassRole);
     navigate('/dashboard');
@@ -258,7 +266,7 @@ export default function Auth() {
           </div>
 
           {/* Email/Password Form */}
-          <div className="space-y-4">
+          <form onSubmit={(e) => { e.preventDefault(); handleEmailAuth(); }} className="space-y-4">
             {isSignUp && (
               <div className="space-y-2">
                 <Label htmlFor="fullName">Full Name</Label>
@@ -268,6 +276,7 @@ export default function Auth() {
                   placeholder="Enter your full name"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
+                  onKeyDown={handleKeyDown}
                   disabled={emailPasswordLoading}
                 />
               </div>
@@ -281,6 +290,7 @@ export default function Auth() {
                 placeholder="Enter your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                onKeyDown={handleKeyDown}
                 disabled={emailPasswordLoading}
               />
             </div>
@@ -294,6 +304,7 @@ export default function Auth() {
                   placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  onKeyDown={handleKeyDown}
                   disabled={emailPasswordLoading}
                 />
                 <Button
@@ -323,6 +334,7 @@ export default function Auth() {
                     placeholder="Confirm your password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
+                    onKeyDown={handleKeyDown}
                     disabled={emailPasswordLoading}
                   />
                   <Button
@@ -344,7 +356,7 @@ export default function Auth() {
             )}
             
             <Button
-              type="button"
+              type="submit"
               onClick={handleEmailAuth}
               className="w-full"
               size="lg"
@@ -378,7 +390,7 @@ export default function Auth() {
                 {isSignUp ? "Already have an account? Sign in" : "Don't have an account? Sign up"}
               </Button>
             </div>
-          </div>
+          </form>
 
           <div className="text-center">
             <p className="text-sm text-muted-foreground">

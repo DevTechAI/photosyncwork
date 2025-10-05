@@ -92,7 +92,7 @@ export function WeddingTemplate({
   isEditing = false 
 }: WeddingTemplateProps) {
   const navigate = useNavigate();
-  const [activeSection, setActiveSection] = useState('hero');
+  const [activeSection, setActiveSection] = useState('gallery');
   const [showImageSelector, setShowImageSelector] = useState(true);
   const [showPreview, setShowPreview] = useState(false);
   const { toast } = useToast();

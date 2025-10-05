@@ -1,8 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { User } from "firebase/auth";
-import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
-import { firestore } from "@/integrations/google/firebaseConfig";
-import { signInWithGoogle, signOutUser, onAuthStateChange, handleGoogleRedirectResult } from "@/integrations/google/authClient";
+import { User } from "@supabase/supabase-js";
 import { useToast } from "@/hooks/use-toast";
 import { useBypassAuth } from "./BypassAuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -67,36 +64,56 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     setLoading(true);
     
-    // Check for redirect result on page load
-    const checkRedirectResult = async () => {
-      try {
-        await handleGoogleRedirectResult();
-      } catch (error) {
-        console.error("Error handling redirect result:", error);
-        toast({
-          title: "Sign in failed",
-          description: "Failed to complete Google sign-in",
-          variant: "destructive"
-        });
-      }
-    };
-    
-    checkRedirectResult();
-    
-    const unsubscribe = onAuthStateChange(async (authUser) => {
-      setUser(authUser);
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
       
-      if (authUser) {
-        try {
-          // Fetch or create user profile
-          const userProfile = await fetchUserProfile(authUser);
-          setProfile(userProfile);
-          
-          // Load user roles and permissions
-          await loadUserRolesAndPermissions(authUser.uid);
-        } catch (error) {
-          console.error("Error fetching user profile:", error);
-        }
+      // Create a simple profile for authenticated users
+      if (session?.user) {
+        const simpleProfile: Profile = {
+          id: session.user.id,
+          email: session.user.email || "",
+          full_name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || "User",
+          avatar_url: session.user.user_metadata?.avatar_url || undefined,
+          storage_used: 0,
+          storage_limit: 5368709120,
+          plan_type: "pilot",
+          primary_role: "photographer",
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+        setProfile(simpleProfile);
+        setUserRoles(['photographer']);
+        setUserPermissions([]);
+      }
+      
+      setLoading(false);
+    }).catch(error => {
+      console.error('AuthContext: Error getting session:', error);
+      setLoading(false);
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        // Create a simple profile for authenticated users
+        const simpleProfile: Profile = {
+          id: session.user.id,
+          email: session.user.email || "",
+          full_name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || "User",
+          avatar_url: session.user.user_metadata?.avatar_url || undefined,
+          storage_used: 0,
+          storage_limit: 5368709120,
+          plan_type: "pilot",
+          primary_role: "photographer",
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+        setProfile(simpleProfile);
+        setUserRoles(['photographer']);
+        setUserPermissions([]);
       } else {
         setProfile(null);
         setUserRoles([]);
@@ -106,68 +123,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
     });
     
-    return () => unsubscribe();
+    return () => subscription.unsubscribe();
   }, [bypassEnabled]);
-
-  // Load user roles and permissions from Supabase
-  const loadUserRolesAndPermissions = async (userId: string) => {
-    try {
-      // Get user roles
-      const { data: rolesData, error: rolesError } = await supabase
-        .rpc('get_user_roles', { user_id: userId });
-
-      if (rolesError) {
-        console.error('Error fetching user roles:', rolesError);
-        // Assign default role if no roles found
-        await assignDefaultRole(userId);
-        return;
-      }
-
-      // Get user permissions
-      const { data: permissionsData, error: permissionsError } = await supabase
-        .rpc('get_user_permissions', { user_id: userId });
-
-      if (permissionsError) {
-        console.error('Error fetching user permissions:', permissionsError);
-        return;
-      }
-
-      const roles = (rolesData || []).map((role: any) => role.role_name);
-      const permissions = (permissionsData || []).map((perm: any) => perm.permission_name);
-
-      setUserRoles(roles);
-      setUserPermissions(permissions);
-    } catch (error) {
-      console.error('Error loading RBAC data:', error);
-    }
-  };
-
-  // Assign default role to new users
-  const assignDefaultRole = async (userId: string) => {
-    try {
-      // Get default role (photographer)
-      const { data: roleData } = await supabase
-        .from('roles')
-        .select('id')
-        .eq('name', 'photographer')
-        .single();
-
-      if (roleData) {
-        await supabase
-          .from('user_roles')
-          .insert({
-            user_id: userId,
-            role_id: roleData.id,
-            assigned_by: userId
-          });
-
-        // Reload roles
-        await loadUserRolesAndPermissions(userId);
-      }
-    } catch (error) {
-      console.error('Error assigning default role:', error);
-    }
-  };
 
   // Check if user has specific permission
   const hasPermission = (permission: string): boolean => {
@@ -185,44 +142,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return userRoles.includes(role);
   };
 
-  // Fetch or create user profile
-  const fetchUserProfile = async (user: User): Promise<Profile> => {
-    const userRef = doc(firestore, "profiles", user.uid);
-    const docSnap = await getDoc(userRef);
-    
-    if (docSnap.exists()) {
-      // Profile exists, return it
-      return docSnap.data() as Profile;
-    } else {
-      // Create new profile
-      const newProfile: Profile = {
-        id: user.uid,
-        email: user.email || "",
-        full_name: user.displayName || user.email?.split('@')[0] || "User",
-        avatar_url: user.photoURL || undefined,
-        storage_used: 0,
-        storage_limit: 5368709120, // 5GB in bytes
-        plan_type: "pilot",
-        primary_role: "photographer",
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-      
-      // Save new profile to Firestore
-      await setDoc(userRef, newProfile);
-      
-      return newProfile;
-    }
-  };
-
   // Sign in with Google
   const handleSignInWithGoogle = async () => {
     try {
       // Set loading state to prevent multiple sign-in attempts
       setLoading(true);
       
-      // Attempt to sign in with Google
-      await signInWithGoogle();
+      // Sign in with Google using Supabase
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`
+        }
+      });
+      
+      if (error) {
+        throw error;
+      }
       
       // Note: Success toast will be shown after redirect completes
     } catch (error: any) {
@@ -298,8 +234,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
       
-      // Otherwise use normal sign out
-      await signOutUser();
+      // Otherwise use Supabase sign out
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        throw error;
+      }
+      
       toast({
         title: "Signed out",
         description: "You have been signed out successfully"
@@ -336,16 +277,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     
     try {
-      const userRef = doc(firestore, "profiles", user.uid);
+      // Update profile in Supabase
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id);
       
-      // Update profile in Firestore
-      await updateDoc(userRef, {
-        ...updates,
-        updated_at: new Date().toISOString()
-      });
+      if (error) {
+        throw error;
+      }
       
       // Update local state
-      setProfile(prev => prev ? { ...prev, ...updates } : null);
+      setProfile(prev => prev ? { ...prev, ...updates, updated_at: new Date().toISOString() } : null);
       
       toast({
         title: "Profile updated",

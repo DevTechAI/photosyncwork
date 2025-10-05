@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { User } from "firebase/auth";
+import { User } from "@supabase/supabase-js";
 import { Profile } from "./AuthContext";
 import { v4 as uuidv4 } from "uuid";
 
