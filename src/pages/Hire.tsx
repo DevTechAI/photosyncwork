@@ -2,29 +2,40 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, Plus, Search, MapPin, Calendar, DollarSign, Clock } from "lucide-react";
+import { Users, Plus, Search, MapPin, Calendar, DollarSign, Clock, UserCheck, UserX, UserPlus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { PostJobForm } from "@/components/hire/PostJobForm";
 import FreelancerCard from "@/components/hire/FreelancerCard";
 import JobCard from "@/components/hire/JobCard";
+import { FreelancerProfileForm } from "@/components/hire/FreelancerProfileForm";
 import { useHireData } from "@/hooks/hire/useHireData";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Hire() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [showCreateProfile, setShowCreateProfile] = useState(false);
   const { 
     freelancers, 
     jobs, 
     isLoadingFreelancers, 
     isLoadingJobs,
+    currentUserFreelancer,
+    isLoadingCurrentUserFreelancer,
     searchTerm,
     setSearchTerm,
     selectedCategory,
     setSelectedCategory,
     showPostJob,
-    setShowPostJob
+    setShowPostJob,
+    handleViewPortfolio,
+    showPortfolioModal,
+    selectedFreelancer,
+    handleClosePortfolioModal,
+    handleToggleEnlistStatus
   } = useHireData();
 
   return (
@@ -43,13 +54,46 @@ export default function Hire() {
             <h1 className="text-2xl font-bold" style={{ color: '#b99364' }}>
               Hire Talent
             </h1>
-            <Button 
-              onClick={() => navigate('/portfolio')} 
-              variant="outline"
-              className="text-white border-white hover:bg-white hover:text-black"
-            >
-              Create Portfolio
-            </Button>
+            <div className="flex items-center gap-3">
+              {/* Profile Management Button */}
+              {user && (
+                <>
+                  {currentUserFreelancer ? (
+                    <Button 
+                      onClick={handleToggleEnlistStatus}
+                      variant={currentUserFreelancer.enlist_status === 'enlisted' ? 'default' : 'outline'}
+                      className={`flex items-center gap-2 ${
+                        currentUserFreelancer.enlist_status === 'enlisted' 
+                          ? 'bg-red-600 hover:bg-red-700 text-white' 
+                          : 'text-white border-white hover:bg-white hover:text-black'
+                      }`}
+                      disabled={isLoadingCurrentUserFreelancer}
+                    >
+                      {currentUserFreelancer.enlist_status === 'enlisted' ? (
+                        <>
+                          <UserX className="h-4 w-4" />
+                          Delist My Profile
+                        </>
+                      ) : (
+                        <>
+                          <UserCheck className="h-4 w-4" />
+                          Enlist My Profile
+                        </>
+                      )}
+                    </Button>
+                  ) : (
+                    <Button 
+                      onClick={() => setShowCreateProfile(true)}
+                      variant="outline"
+                      className="text-gray-800 border-gray-300 hover:bg-gray-100 hover:text-gray-900 flex items-center gap-2 font-bold bg-white"
+                    >
+                      <UserPlus className="h-4 w-4" />
+                      Become Freelancer
+                    </Button>
+                  )}
+                </>
+              )}
+            </div>
           </div>
         </div>
       </header>
@@ -139,7 +183,11 @@ export default function Hire() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {freelancers.map((freelancer) => (
-                  <FreelancerCard key={freelancer.id} freelancer={freelancer} />
+                  <FreelancerCard 
+                    key={freelancer.id} 
+                    freelancer={freelancer} 
+                    onViewPortfolio={handleViewPortfolio}
+                  />
                 ))}
               </div>
             )}
@@ -197,7 +245,101 @@ export default function Hire() {
         {showPostJob && (
           <PostJobForm onClose={() => setShowPostJob(false)} />
         )}
+
+        {/* Portfolio Modal */}
+        {showPortfolioModal && selectedFreelancer && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-6">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-2xl font-bold" style={{ color: '#1a2238' }}>
+                    {selectedFreelancer.name}'s Portfolio
+                  </h2>
+                  <Button
+                    variant="ghost"
+                    onClick={handleClosePortfolioModal}
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    ✕
+                  </Button>
+                </div>
+                
+                {selectedFreelancer.portfolio ? (
+                  <div className="space-y-6">
+                    {/* Portfolio Info */}
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <h3 className="text-lg font-semibold mb-2">{selectedFreelancer.portfolio.name}</h3>
+                      {selectedFreelancer.portfolio.tagline && (
+                        <p className="text-gray-600 mb-2">{selectedFreelancer.portfolio.tagline}</p>
+                      )}
+                      {selectedFreelancer.portfolio.about && (
+                        <p className="text-gray-700">{selectedFreelancer.portfolio.about}</p>
+                      )}
+                    </div>
+
+                    {/* Services */}
+                    {selectedFreelancer.portfolio.services && selectedFreelancer.portfolio.services.length > 0 && (
+                      <div>
+                        <h4 className="font-semibold mb-2">Services</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedFreelancer.portfolio.services.map((service, index) => (
+                            <span key={index} className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">
+                              {service}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Contact Info */}
+                    <div>
+                      <h4 className="font-semibold mb-2">Contact Information</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <p><strong>Email:</strong> {selectedFreelancer.portfolio.contact?.email || 'Not provided'}</p>
+                          <p><strong>Phone:</strong> {selectedFreelancer.portfolio.contact?.phone || 'Not provided'}</p>
+                          <p><strong>Location:</strong> {selectedFreelancer.portfolio.contact?.location || 'Not provided'}</p>
+                        </div>
+                        <div>
+                          <p><strong>Website:</strong> {selectedFreelancer.portfolio.social_links?.website || 'Not provided'}</p>
+                          <p><strong>Instagram:</strong> {selectedFreelancer.portfolio.social_links?.instagram || 'Not provided'}</p>
+                          <p><strong>Facebook:</strong> {selectedFreelancer.portfolio.social_links?.facebook || 'Not provided'}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Portfolio Gallery Placeholder */}
+                    <div className="bg-gray-100 p-8 rounded-lg text-center">
+                      <p className="text-gray-500">Portfolio gallery would be displayed here</p>
+                      <p className="text-sm text-gray-400 mt-2">This would show the freelancer's work samples</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-gray-500">No portfolio available for this freelancer</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </main>
+
+      {/* Create Profile Modal */}
+      {showCreateProfile && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <FreelancerProfileForm
+              onSuccess={() => {
+                setShowCreateProfile(false);
+                // Refresh the page or refetch data
+                window.location.reload();
+              }}
+              onCancel={() => setShowCreateProfile(false)}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

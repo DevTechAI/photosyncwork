@@ -3,16 +3,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { Upload, X, Loader2 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Upload, X, Loader2, Cloud, Database } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { uploadToS3 } from "@/integrations/aws/s3Client";
+import { uploadToCloudinary, ImageTransformations } from "@/integrations/cloudinary/cloudinaryClient";
 
 interface FileUploaderProps {
-  onUploadComplete: (url: string, fileName: string) => void;
+  onUploadComplete: (url: string, fileName: string, publicId?: string) => void;
   acceptedFileTypes?: string;
   maxFileSize?: number; // in MB
   folder?: string;
+  storageProvider?: 's3' | 'cloudinary' | 'auto';
+  enableTransformations?: boolean;
 }
 
 export function FileUploader({ 

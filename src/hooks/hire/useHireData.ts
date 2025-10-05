@@ -1,8 +1,15 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchFreelancers } from "./api/freelancerApi";
+import { 
+  fetchFreelancersWithPortfolio, 
+  searchFreelancers, 
+  fetchFreelancersBySpecialty,
+  linkFreelancerPortfolio,
+  getCurrentUserFreelancerProfile,
+  toggleFreelancerEnlistStatus
+} from "./api/freelancerApi";
 import { fetchJobs, addJob, updateJob, deleteJob } from "./api/jobApi";
-import { Freelancer, Job, JobFormData } from "@/types/hire";
+import { FreelancerWithPortfolio, Job, JobFormData } from "@/types/hire";
 import { useToast } from "@/hooks/use-toast";
 
 export function useHireData() {
@@ -14,14 +21,16 @@ export function useHireData() {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [isEditJobModalOpen, setIsEditJobModalOpen] = useState(false);
   const [isDeleteJobConfirmOpen, setIsDeleteJobConfirmOpen] = useState(false);
+  const [selectedFreelancer, setSelectedFreelancer] = useState<FreelancerWithPortfolio | null>(null);
+  const [showPortfolioModal, setShowPortfolioModal] = useState(false);
 
-  // Fetch freelancers
+  // Fetch freelancers with portfolio data
   const { 
     data: freelancers = [], 
     isLoading: isLoadingFreelancers 
   } = useQuery({
-    queryKey: ['freelancers'],
-    queryFn: fetchFreelancers,
+    queryKey: ['freelancers-with-portfolio'],
+    queryFn: fetchFreelancersWithPortfolio,
     onError: (error: any) => {
       console.error("Error fetching freelancers:", error);
       toast({
@@ -49,18 +58,108 @@ export function useHireData() {
     }
   });
 
+  // Fetch current user's freelancer profile
+  const { 
+    data: currentUserFreelancer, 
+    isLoading: isLoadingCurrentUserFreelancer,
+    refetch: refetchCurrentUserFreelancer
+  } = useQuery({
+    queryKey: ['current-user-freelancer'],
+    queryFn: getCurrentUserFreelancerProfile,
+    onError: (error: any) => {
+      console.error("Error fetching current user freelancer:", error);
+    }
+  });
+
+  // Filter freelancers based on search term and category
+  const filteredFreelancers = freelancers.filter(freelancer => {
+    const matchesSearch = !searchTerm || 
+      freelancer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      freelancer.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      freelancer.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      freelancer.specialties?.some(specialty => 
+        specialty.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+
+    const matchesCategory = selectedCategory === "all" || 
+      freelancer.specialties?.includes(selectedCategory);
+
+    return matchesSearch && matchesCategory;
+  });
+
+  // Search freelancers mutation
+  const searchFreelancersMutation = useMutation({
+    mutationFn: ({ specialty, location }: { specialty?: string; location?: string }) =>
+      searchFreelancers(specialty, location),
+    onSuccess: (data) => {
+      console.log("Search results:", data);
+    },
+    onError: (error: any) => {
+      console.error("Error searching freelancers:", error);
+      toast({
+        title: "Search Error",
+        description: "Failed to search freelancers",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Link freelancer to portfolio mutation
+  const linkPortfolioMutation = useMutation({
+    mutationFn: ({ freelancerId, portfolioId }: { freelancerId: string; portfolioId: string }) =>
+      linkFreelancerPortfolio(freelancerId, portfolioId),
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Portfolio linked successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ['freelancers-with-portfolio'] });
+    },
+    onError: (error: any) => {
+      console.error("Error linking portfolio:", error);
+      toast({
+        title: "Error",
+        description: "Failed to link portfolio",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Toggle freelancer enlist status mutation
+  const toggleEnlistMutation = useMutation({
+    mutationFn: toggleFreelancerEnlistStatus,
+    onSuccess: (newStatus) => {
+      const statusText = newStatus === 'enlisted' ? 'enlisted' : 'delisted';
+      toast({
+        title: "Success",
+        description: `Profile ${statusText} successfully`,
+      });
+      queryClient.invalidateQueries({ queryKey: ['current-user-freelancer'] });
+      queryClient.invalidateQueries({ queryKey: ['freelancers-with-portfolio'] });
+    },
+    onError: (error: any) => {
+      console.error("Error toggling enlist status:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update profile status",
+        variant: "destructive"
+      });
+    }
+  });
+
   // Add job mutation
   const addJobMutation = useMutation({
-    mutationFn: (jobData: JobFormData) => addJob(jobData),
+    mutationFn: addJob,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['jobs'] });
       toast({
-        title: "Job Posted",
-        description: "Your job has been posted successfully"
+        title: "Success",
+        description: "Job posted successfully",
       });
+      queryClient.invalidateQueries({ queryKey: ['jobs'] });
       setShowPostJob(false);
     },
     onError: (error: any) => {
+      console.error("Error adding job:", error);
       toast({
         title: "Error",
         description: "Failed to post job",
@@ -71,21 +170,22 @@ export function useHireData() {
 
   // Update job mutation
   const updateJobMutation = useMutation({
-    mutationFn: ({ id, jobData }: { id: string; jobData: JobFormData }) => 
-      updateJob(id, jobData),
+    mutationFn: ({ id, updates }: { id: string; updates: Partial<JobFormData> }) =>
+      updateJob(id, updates),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['jobs'] });
       toast({
-        title: "Job Updated",
-        description: "Your job posting has been updated successfully"
+        title: "Success",
+        description: "Job updated successfully",
       });
+      queryClient.invalidateQueries({ queryKey: ['jobs'] });
       setIsEditJobModalOpen(false);
       setSelectedJob(null);
     },
     onError: (error: any) => {
+      console.error("Error updating job:", error);
       toast({
         title: "Error",
-        description: "Failed to update job posting",
+        description: "Failed to update job",
         variant: "destructive"
       });
     }
@@ -93,53 +193,65 @@ export function useHireData() {
 
   // Delete job mutation
   const deleteJobMutation = useMutation({
-    mutationFn: (id: string) => deleteJob(id),
+    mutationFn: deleteJob,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['jobs'] });
       toast({
-        title: "Job Deleted",
-        description: "Your job posting has been deleted successfully"
+        title: "Success",
+        description: "Job deleted successfully",
       });
+      queryClient.invalidateQueries({ queryKey: ['jobs'] });
       setIsDeleteJobConfirmOpen(false);
       setSelectedJob(null);
     },
     onError: (error: any) => {
+      console.error("Error deleting job:", error);
       toast({
         title: "Error",
-        description: "Failed to delete job posting",
+        description: "Failed to delete job",
         variant: "destructive"
       });
     }
   });
 
-  // Filter freelancers based on search term and category
-  const filteredFreelancers = freelancers.filter(freelancer => {
-    const matchesSearch = 
-      freelancer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      freelancer.role.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesCategory = 
-      selectedCategory === "all" || 
-      freelancer.specialties.some(s => s.toLowerCase().includes(selectedCategory.toLowerCase()));
-    
-    return matchesSearch && matchesCategory;
-  });
+  // Handle freelancer search
+  const handleSearchFreelancers = (specialty?: string, location?: string) => {
+    searchFreelancersMutation.mutate({ specialty, location });
+  };
 
-  // Handle adding a new job
+  // Handle portfolio linking
+  const handleLinkPortfolio = (freelancerId: string, portfolioId: string) => {
+    linkPortfolioMutation.mutate({ freelancerId, portfolioId });
+  };
+
+  // Handle job operations
   const handleAddJob = (jobData: JobFormData) => {
     addJobMutation.mutate(jobData);
   };
 
-  // Handle updating a job
-  const handleUpdateJob = (jobData: JobFormData) => {
-    if (!selectedJob) return;
-    updateJobMutation.mutate({ id: selectedJob.id, jobData });
+  const handleUpdateJob = (id: string, updates: Partial<JobFormData>) => {
+    updateJobMutation.mutate({ id, updates });
   };
 
-  // Handle deleting a job
-  const handleDeleteJob = () => {
-    if (!selectedJob) return;
-    deleteJobMutation.mutate(selectedJob.id);
+  const handleDeleteJob = (id: string) => {
+    deleteJobMutation.mutate(id);
+  };
+
+  // Handle portfolio viewing
+  const handleViewPortfolio = (freelancer: FreelancerWithPortfolio) => {
+    setSelectedFreelancer(freelancer);
+    setShowPortfolioModal(true);
+  };
+
+  const handleClosePortfolioModal = () => {
+    setShowPortfolioModal(false);
+    setSelectedFreelancer(null);
+  };
+
+  // Handle enlist status toggle
+  const handleToggleEnlistStatus = () => {
+    if (currentUserFreelancer?.id) {
+      toggleEnlistMutation.mutate(currentUserFreelancer.id);
+    }
   };
 
   // Open edit modal for a job
@@ -155,25 +267,55 @@ export function useHireData() {
   };
 
   return {
+    // Data
     freelancers: filteredFreelancers,
     jobs,
+    selectedFreelancer,
+    currentUserFreelancer,
+    
+    // Loading states
     isLoadingFreelancers,
     isLoadingJobs,
+    isLoadingCurrentUserFreelancer,
+    isSearching: searchFreelancersMutation.isPending,
+    isLinkingPortfolio: linkPortfolioMutation.isPending,
+    isAddingJob: addJobMutation.isPending,
+    isUpdatingJob: updateJobMutation.isPending,
+    isDeletingJob: deleteJobMutation.isPending,
+    
+    // Search and filters
     searchTerm,
     setSearchTerm,
     selectedCategory,
     setSelectedCategory,
+    
+    // Modals and UI state
     showPostJob,
     setShowPostJob,
-    selectedJob,
+    showPortfolioModal,
+    setShowPortfolioModal,
     isEditJobModalOpen,
-    isDeleteJobConfirmOpen,
     setIsEditJobModalOpen,
+    isDeleteJobConfirmOpen,
     setIsDeleteJobConfirmOpen,
+    
+    // Job operations
+    selectedJob,
+    setSelectedJob,
     handleAddJob,
     handleUpdateJob,
     handleDeleteJob,
     handleEditJob,
-    handleConfirmDeleteJob
+    handleConfirmDeleteJob,
+    
+    // Freelancer operations
+    handleSearchFreelancers,
+    handleLinkPortfolio,
+    handleViewPortfolio,
+    handleClosePortfolioModal,
+    handleToggleEnlistStatus,
+    
+    // Search results
+    searchResults: searchFreelancersMutation.data || [],
   };
 }

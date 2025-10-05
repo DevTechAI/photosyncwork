@@ -9,6 +9,258 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      accounts: {
+        Row: {
+          account_name: string
+          account_number: string
+          account_type: string
+          auto_invoice: boolean
+          billing_frequency: string
+          client_address: Json | null
+          client_email: string | null
+          client_name: string | null
+          client_phone: string | null
+          created_at: string
+          created_by: string | null
+          credit_limit: number
+          currency: string
+          current_balance: number
+          id: string
+          last_invoice_date: string | null
+          last_payment_date: string | null
+          metadata: Json | null
+          notes: string | null
+          outstanding_balance: number
+          payment_terms: number
+          preferred_payment_method: string | null
+          status: string
+          status_reason: string | null
+          tags: string[]
+          tax_exempt: boolean
+          tax_id: string | null
+          tax_rate: number
+          total_invoiced: number
+          total_paid: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          account_name: string
+          account_number?: string
+          account_type?: string
+          auto_invoice?: boolean
+          billing_frequency?: string
+          client_address?: Json | null
+          client_email?: string | null
+          client_name?: string | null
+          client_phone?: string | null
+          created_at?: string
+          created_by?: string | null
+          credit_limit?: number
+          currency?: string
+          current_balance?: number
+          id?: string
+          last_invoice_date?: string | null
+          last_payment_date?: string | null
+          metadata?: Json | null
+          notes?: string | null
+          outstanding_balance?: number
+          payment_terms?: number
+          preferred_payment_method?: string | null
+          status?: string
+          status_reason?: string | null
+          tags?: string[]
+          tax_exempt?: boolean
+          tax_id?: string | null
+          tax_rate?: number
+          total_invoiced?: number
+          total_paid?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          account_name?: string
+          account_number?: string
+          account_type?: string
+          auto_invoice?: boolean
+          billing_frequency?: string
+          client_address?: Json | null
+          client_email?: string | null
+          client_name?: string | null
+          client_phone?: string | null
+          created_at?: string
+          created_by?: string | null
+          credit_limit?: number
+          currency?: string
+          current_balance?: number
+          id?: string
+          last_invoice_date?: string | null
+          last_payment_date?: string | null
+          metadata?: Json | null
+          notes?: string | null
+          outstanding_balance?: number
+          payment_terms?: number
+          preferred_payment_method?: string | null
+          status?: string
+          status_reason?: string | null
+          tags?: string[]
+          tax_exempt?: boolean
+          tax_id?: string | null
+          tax_rate?: number
+          total_invoiced?: number
+          total_paid?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accounts_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounts_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      freelancers: {
+        Row: {
+          avatar: string | null
+          bio: string | null
+          created_at: string
+          email: string | null
+          experience_years: number | null
+          hourly_rate: string | null
+          id: string
+          instagram: string | null
+          is_available: boolean | null
+          linkedin: string | null
+          location: string
+          name: string
+          phone: string | null
+          portfolio_id: string | null
+          portfolio_url: string | null
+          rating: number | null
+          review_count: number | null
+          role: string
+          specialties: string[]
+          updated_at: string
+          user_id: string | null
+          website: string | null
+        }
+        Insert: {
+          avatar?: string | null
+          bio?: string | null
+          created_at?: string
+          email?: string | null
+          experience_years?: number | null
+          hourly_rate?: string | null
+          id?: string
+          instagram?: string | null
+          is_available?: boolean | null
+          linkedin?: string | null
+          location: string
+          name: string
+          phone?: string | null
+          portfolio_id?: string | null
+          portfolio_url?: string | null
+          rating?: number | null
+          review_count?: number | null
+          role: string
+          specialties?: string[]
+          updated_at?: string
+          user_id?: string | null
+          website?: string | null
+        }
+        Update: {
+          avatar?: string | null
+          bio?: string | null
+          created_at?: string
+          email?: string | null
+          experience_years?: number | null
+          hourly_rate?: string | null
+          id?: string
+          instagram?: string | null
+          is_available?: boolean | null
+          linkedin?: string | null
+          location?: string
+          name?: string
+          phone?: string | null
+          portfolio_id?: string | null
+          portfolio_url?: string | null
+          rating?: number | null
+          review_count?: number | null
+          role?: string
+          specialties?: string[]
+          updated_at?: string
+          user_id?: string | null
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "freelancers_portfolio_id_fkey"
+            columns: ["portfolio_id"]
+            isOneToOne: false
+            referencedRelation: "portfolios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "freelancers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      job_postings: {
+        Row: {
+          budget: string
+          company: string
+          created_at: string
+          date: string | null
+          description: string
+          id: string
+          location: string
+          requirements: string[]
+          title: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          budget: string
+          company: string
+          created_at?: string
+          date?: string | null
+          description: string
+          id?: string
+          location: string
+          requirements?: string[]
+          title: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          budget?: string
+          company?: string
+          created_at?: string
+          date?: string | null
+          description?: string
+          id?: string
+          location?: string
+          requirements?: string[]
+          title?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       client_deliverables: {
         Row: {
           created_at: string

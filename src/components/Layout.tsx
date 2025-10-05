@@ -77,11 +77,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <div className="space-y-2 py-4">
             <div className="flex items-center space-x-3 px-2">
               <img 
-                src="/favicon.png" 
-                alt="PhotoSync Logo" 
+                src="/photosyncwork-logo.png" 
+                alt="PhotoSyncWork Logo" 
                 className="h-8 w-8 object-contain"
               />
-              <h1 className="text-2xl font-semibold">PhotoSync</h1>
+              <h1 className="text-2xl font-semibold">PhotoSyncWork</h1>
             </div>
             <p className="text-sm text-muted-foreground px-2">Studio Success System</p>
           </div>
@@ -189,11 +189,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             )}
             <div className="flex items-center space-x-2">
               <img 
-                src="/favicon.png" 
-                alt="PhotoSync Logo" 
+                src="/photosyncwork-logo.png" 
+                alt="PhotoSyncWork Logo" 
                 className="h-6 w-6 object-contain"
               />
-              <h1 className="text-xl font-semibold">PhotoSync</h1>
+              <h1 className="text-xl font-semibold">PhotoSyncWork</h1>
             </div>
           </div>
         </div>

@@ -12,6 +12,18 @@ export interface Freelancer {
   avatar: string;
   specialties: string[];
   isAvailable: boolean;
+  // New fields for enhanced freelancer management
+  portfolio_id?: string;
+  user_id?: string;
+  email?: string;
+  phone?: string;
+  bio?: string;
+  experience_years?: number;
+  portfolio_url?: string;
+  website?: string;
+  linkedin?: string;
+  instagram?: string;
+  enlist_status?: 'enlisted' | 'delisted';
   created_at?: string;
   updated_at?: string;
 }
@@ -59,4 +71,51 @@ export interface FreelancerFormData {
   avatar: string;
   specialties: string[];
   isAvailable: boolean;
+  // New fields for enhanced freelancer management
+  portfolio_id?: string;
+  email?: string;
+  phone?: string;
+  bio?: string;
+  experience_years?: number;
+  portfolio_url?: string;
+  website?: string;
+  linkedin?: string;
+  instagram?: string;
+  enlist_status?: 'enlisted' | 'delisted';
+}
+
+/**
+ * FreelancerWithPortfolio interface combining freelancer and portfolio data
+ */
+export interface FreelancerWithPortfolio extends Freelancer {
+  portfolio?: {
+    id: string;
+    name: string;
+    tagline?: string;
+    about?: string;
+    services: string[];
+    contact: {
+      email: string;
+      phone: string;
+      location: string;
+    };
+    social_links: {
+      instagram: string;
+      facebook: string;
+      website: string;
+    };
+  };
+}
+
+/**
+ * FreelancerSearchFilters interface for filtering freelancers
+ */
+export interface FreelancerSearchFilters {
+  specialty?: string;
+  location?: string;
+  minRating?: number;
+  maxHourlyRate?: number;
+  experience_years?: number;
+  isAvailable?: boolean;
+  hasPortfolio?: boolean;
 }

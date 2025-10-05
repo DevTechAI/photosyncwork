@@ -150,10 +150,14 @@ export default function Auth() {
             className="mx-auto mb-4 p-3 bg-primary/10 rounded-full w-fit cursor-pointer"
             onClick={handleLogoClick}
           >
-            <Camera className="h-8 w-8 text-primary" />
+            <img 
+              src="/photosyncwork-logo.png" 
+              alt="PhotoSyncWork Logo" 
+              className="h-8 w-8 object-contain"
+            />
           </div>
           <CardTitle className="text-2xl font-bold">
-            Welcome to PhotoSync
+            Welcome to PhotoSyncWork
           </CardTitle>
           <CardDescription>
             Sign in to manage your photography business

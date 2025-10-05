@@ -223,13 +223,30 @@ export default function PhotographersPortal() {
   ];
 
   if (loading) {
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 flex items-center justify-center p-4">
-        <div className="text-center">
-          <Camera className="h-8 w-8 animate-pulse mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading photographers...</p>
-        </div>
-          </div>
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md text-center">
+          <CardHeader>
+            <div className="mx-auto mb-4 p-3 bg-primary/10 rounded-full w-fit">
+              <img 
+                src="/photosyncwork-logo.png" 
+                alt="PhotoSyncWork Logo" 
+                className="h-8 w-8 object-contain"
+              />
+            </div>
+            <CardTitle className="text-2xl font-bold">PhotoSyncWork Photographers</CardTitle>
+            <CardDescription>
+              Professional photography & videography management platform
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-center">
+              <Camera className="h-8 w-8 animate-pulse mr-2" />
+              <p className="text-muted-foreground">Loading photographers...</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 

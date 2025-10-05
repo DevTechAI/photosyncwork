@@ -11,7 +11,7 @@ max_rows = 1000
 [db]
 port = 54322
 shadow_port = 54320
-major_version = 15
+major_version = 17
 
 [db.pooler]
 enabled = false
@@ -33,6 +33,10 @@ openai_api_key = "env(OPENAI_API_KEY)"
 
 [inbucket]
 enabled = true
+<<<<<<< Updated upstream
+=======
+port = 54325
+>>>>>>> Stashed changes
 smtp_port = 54326
 pop3_port = 54327
 
