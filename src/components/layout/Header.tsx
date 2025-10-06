@@ -8,6 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { WorkInProgress } from "@/components/ui/WorkInProgress";
 
 export function Header() {
   const { user, signOut } = useAuth();
@@ -51,6 +52,9 @@ export function Header() {
             />
             <span>PhotoSyncWork</span>
           </button>
+          
+          {/* Work in Progress Indicator */}
+          <WorkInProgress size="sm" showText={true} text="Dev-Work In Progress" className="text-xs" />
           
           <div className="flex items-center space-x-4">
             {!isClientPortal && (
