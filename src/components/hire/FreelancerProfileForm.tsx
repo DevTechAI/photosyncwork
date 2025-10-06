@@ -100,7 +100,7 @@ export function FreelancerProfileForm({ onSuccess, onCancel }: FreelancerProfile
           enlist_status: 'enlisted',
           rating: 0.0,
           review_count: 0,
-          avatar: '/photosyncwork-logo.png'
+          avatar: '/photosyncwork-logo.svg'
         }]);
 
       if (error) throw error;

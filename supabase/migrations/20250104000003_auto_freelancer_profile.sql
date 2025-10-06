@@ -92,7 +92,7 @@ BEGIN
     0.0,
     0,
     '$50-100/hour',
-    '/photosyncwork-logo.png',
+    '/photosyncwork-logo.svg',
     CASE 
       WHEN user_role = 'photographer' THEN ARRAY['Photography', 'Portrait', 'Event']
       WHEN user_role = 'videographer' THEN ARRAY['Videography', 'Cinematography', 'Editing']

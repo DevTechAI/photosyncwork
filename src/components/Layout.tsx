@@ -77,7 +77,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <div className="space-y-2 py-4">
             <div className="flex items-center space-x-3 px-2">
               <img 
-                src="/photosyncwork-logo.png" 
+                src="/photosyncwork-logo.svg" 
                 alt="PhotoSyncWork Logo" 
                 className="h-8 w-8 object-contain"
               />
@@ -189,7 +189,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             )}
             <div className="flex items-center space-x-2">
               <img 
-                src="/photosyncwork-logo.png" 
+                src="/photosyncwork-logo.svg" 
                 alt="PhotoSyncWork Logo" 
                 className="h-6 w-6 object-contain"
               />

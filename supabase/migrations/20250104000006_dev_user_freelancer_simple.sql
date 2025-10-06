@@ -17,7 +17,7 @@ SELECT
   u.id,
   'dev@photosyncwork.com',
   'Dev Photographer',
-  '/photosyncwork-logo.png',
+  '/photosyncwork-logo.svg',
   now(),
   now()
 FROM auth.users u
@@ -76,7 +76,7 @@ SELECT
   4.8,
   45,
   '$120-180/hour',
-  '/photosyncwork-logo.png',
+  '/photosyncwork-logo.svg',
   ARRAY['Portrait Photography', 'Event Photography', 'Commercial', 'Product Photography'],
   true,
   'dev@photosyncwork.com',
@@ -169,7 +169,7 @@ INSERT INTO public.portfolio_gallery (
 SELECT 
   gen_random_uuid(),
   p.id,
-  '/photosyncwork-logo.png',
+  '/photosyncwork-logo.svg',
   'Portrait Session',
   'Portrait',
   now(),
@@ -183,7 +183,7 @@ UNION ALL
 SELECT 
   gen_random_uuid(),
   p.id,
-  '/photosyncwork-logo.png',
+  '/photosyncwork-logo.svg',
   'Corporate Event',
   'Event',
   now(),
@@ -197,7 +197,7 @@ UNION ALL
 SELECT 
   gen_random_uuid(),
   p.id,
-  '/photosyncwork-logo.png',
+  '/photosyncwork-logo.svg',
   'Product Photography',
   'Commercial',
   now(),

@@ -22,7 +22,7 @@ The freelancer profile auto-creation system ensures that users with photographer
 - **Rating**: 0.0
 - **Review Count**: 0
 - **Hourly Rate**: "$50-100/hour"
-- **Avatar**: "/photosyncwork-logo.png"
+- **Avatar**: "/photosyncwork-logo.svg"
 - **Specialties**: Role-specific defaults
   - Photographer: `['Photography', 'Portrait', 'Event']`
   - Videographer: `['Videography', 'Cinematography', 'Editing']`
