@@ -30,7 +30,7 @@ INSERT INTO public.profiles (
   '11111111-1111-1111-1111-111111111111'::UUID,
   'dev@photosyncwork.com',
   'Dev Photographer',
-  '/photosyncwork-logo.png',
+  '/photosyncwork-logo.svg',
   now(),
   now()
 ) ON CONFLICT (id) DO UPDATE SET
@@ -83,7 +83,7 @@ INSERT INTO public.freelancers (
   4.8,
   45,
   '$120-180/hour',
-  '/photosyncwork-logo.png',
+  '/photosyncwork-logo.svg',
   ARRAY['Portrait Photography', 'Event Photography', 'Commercial', 'Product Photography'],
   true,
   'dev@photosyncwork.com',
@@ -170,7 +170,7 @@ INSERT INTO public.portfolio_gallery (
 (
   gen_random_uuid(),
   (SELECT id FROM public.portfolios WHERE user_id = 'dev-user-id-here' LIMIT 1),
-  '/photosyncwork-logo.png',
+  '/photosyncwork-logo.svg',
   'Portrait Session',
   'Portrait',
   now(),
@@ -179,7 +179,7 @@ INSERT INTO public.portfolio_gallery (
 (
   gen_random_uuid(),
   (SELECT id FROM public.portfolios WHERE user_id = 'dev-user-id-here' LIMIT 1),
-  '/photosyncwork-logo.png',
+  '/photosyncwork-logo.svg',
   'Corporate Event',
   'Event',
   now(),
@@ -188,7 +188,7 @@ INSERT INTO public.portfolio_gallery (
 (
   gen_random_uuid(),
   (SELECT id FROM public.portfolios WHERE user_id = 'dev-user-id-here' LIMIT 1),
-  '/photosyncwork-logo.png',
+  '/photosyncwork-logo.svg',
   'Product Photography',
   'Commercial',
   now(),

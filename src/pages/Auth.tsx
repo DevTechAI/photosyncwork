@@ -159,7 +159,7 @@ export default function Auth() {
             onClick={handleLogoClick}
           >
             <img 
-              src="/photosyncwork-logo.png" 
+              src="/photosyncwork-logo.svg" 
               alt="PhotoSyncWork Logo" 
               className="h-8 w-8 object-contain"
             />

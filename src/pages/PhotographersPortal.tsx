@@ -229,7 +229,7 @@ export default function PhotographersPortal() {
           <CardHeader>
             <div className="mx-auto mb-4 p-3 bg-primary/10 rounded-full w-fit">
               <img 
-                src="/photosyncwork-logo.png" 
+                src="/photosyncwork-logo.svg" 
                 alt="PhotoSyncWork Logo" 
                 className="h-8 w-8 object-contain"
               />

@@ -45,7 +45,7 @@ export function Header() {
             className="flex items-center space-x-2 text-2xl font-bold text-dustyBlue-dark hover:text-dustyBlue transition-colors ml-12 lg:ml-0"
           >
             <img 
-              src="/photosyncwork-logo.png" 
+              src="/photosyncwork-logo.svg" 
               alt="PhotoSyncWork Logo" 
               className="h-8 w-8 object-contain"
             />
