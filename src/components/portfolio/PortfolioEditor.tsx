@@ -102,7 +102,7 @@ export function PortfolioEditor({
                 id="name"
                 value={data.name}
                 onChange={(e) => updateField("name", e.target.value)}
-                placeholder="Your Photography Business Name"
+                placeholder="Sarah Johnson Photography"
               />
             </div>
             <div>
@@ -111,7 +111,7 @@ export function PortfolioEditor({
                 id="tagline"
                 value={data.tagline}
                 onChange={(e) => updateField("tagline", e.target.value)}
-                placeholder="Your professional tagline"
+                placeholder="Capturing life's beautiful moments with artistic vision"
               />
             </div>
             <div>
@@ -120,7 +120,7 @@ export function PortfolioEditor({
                 id="about"
                 value={data.about}
                 onChange={(e) => updateField("about", e.target.value)}
-                placeholder="Tell clients about your photography style and experience"
+                placeholder="I'm Sarah Johnson, a passionate photographer specializing in portrait, event, and commercial photography. With over 5 years of experience, I bring a unique blend of technical expertise and creative vision to every project. My style combines natural lighting with authentic moments, creating timeless images that tell your story beautifully. I believe every moment has a story worth telling, and I'm here to help you preserve those precious memories with stunning, professional photography."
                 rows={4}
               />
             </div>
@@ -139,7 +139,7 @@ export function PortfolioEditor({
                 type="email"
                 value={data.contact.email}
                 onChange={(e) => updateContactField("email", e.target.value)}
-                placeholder="your@email.com"
+                placeholder="sarah.johnson@email.com"
               />
             </div>
             <div>
@@ -157,7 +157,7 @@ export function PortfolioEditor({
                 id="location"
                 value={data.contact.location}
                 onChange={(e) => updateContactField("location", e.target.value)}
-                placeholder="City, State"
+                placeholder="San Francisco, CA"
               />
             </div>
           </CardContent>
@@ -174,7 +174,7 @@ export function PortfolioEditor({
               <Input
                 value={newService}
                 onChange={(e) => setNewService(e.target.value)}
-                placeholder="Add a service"
+                placeholder="e.g., Portrait Photography, Wedding Photography, Corporate Events"
                 onKeyPress={(e) => e.key === "Enter" && addService()}
               />
               <Button onClick={addService}>
@@ -208,7 +208,7 @@ export function PortfolioEditor({
                 id="instagram"
                 value={data.socialLinks.instagram}
                 onChange={(e) => updateSocialField("instagram", e.target.value)}
-                placeholder="@yourusername"
+                placeholder="@sarahjohnson_photography"
               />
             </div>
             <div>
@@ -217,7 +217,7 @@ export function PortfolioEditor({
                 id="facebook"
                 value={data.socialLinks.facebook}
                 onChange={(e) => updateSocialField("facebook", e.target.value)}
-                placeholder="facebook.com/yourpage"
+                placeholder="facebook.com/sarahjohnsonphotography"
               />
             </div>
             <div>
@@ -226,7 +226,7 @@ export function PortfolioEditor({
                 id="website"
                 value={data.socialLinks.website}
                 onChange={(e) => updateSocialField("website", e.target.value)}
-                placeholder="www.yourwebsite.com"
+                placeholder="www.sarahjohnsonphotography.com"
               />
             </div>
           </CardContent>

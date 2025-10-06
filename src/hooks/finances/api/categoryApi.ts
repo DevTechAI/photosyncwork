@@ -1,5 +1,4 @@
-import { collection, doc, getDocs, getDoc, addDoc, updateDoc, deleteDoc, query, where, orderBy } from "firebase/firestore";
-import { firestore } from "@/integrations/google/firebaseConfig";
+import { supabase } from "@/integrations/supabase/client";
 import { FinanceCategory } from "./types";
 
 export const fetchCategories = async (): Promise<FinanceCategory[]> => {

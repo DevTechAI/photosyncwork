@@ -1,16 +1,19 @@
-import { useState } from "react";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Camera, Edit, Eye, Share2, Loader2 } from "lucide-react";
+import { Camera, Edit, Eye, Share2, Loader2, Settings, Heart, Mountain, Palette, Move, GripVertical } from "lucide-react";
 import { PortfolioGallery } from "@/components/portfolio/PortfolioGallery";
 import { PortfolioEditor } from "@/components/portfolio/PortfolioEditor";
 import { PortfolioPreview } from "@/components/portfolio/PortfolioPreview";
+import { PortfolioTemplateSelector } from "@/components/portfolio/PortfolioTemplateSelector";
 import { usePortfolioData } from "@/hooks/portfolio/usePortfolioData";
 import { useAuth } from "@/contexts/AuthContext";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Portfolio() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { 
     portfolioData, 
     setPortfolioData, 
@@ -24,6 +27,84 @@ export default function Portfolio() {
     handleRemoveGalleryItem,
     hasPortfolio
   } = usePortfolioData();
+
+  const [showTemplateSelector, setShowTemplateSelector] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
+  const [isDragMode, setIsDragMode] = useState(false);
+  const [draggedElement, setDraggedElement] = useState<string | null>(null);
+  const [portfolioLayout, setPortfolioLayout] = useState([
+    { id: 'hero', title: 'Hero Section', visible: true, order: 0 },
+    { id: 'about', title: 'About Section', visible: true, order: 1 },
+    { id: 'services', title: 'Services Section', visible: true, order: 2 },
+    { id: 'gallery', title: 'Gallery Section', visible: true, order: 3 },
+    { id: 'testimonials', title: 'Testimonials Section', visible: true, order: 4 },
+    { id: 'contact', title: 'Contact Section', visible: true, order: 5 }
+  ]);
+
+  // Template configurations for preview
+  const templateConfigs = {
+    wedding: {
+      name: "Wedding Photography",
+      icon: <Heart className="h-5 w-5" />,
+      color: "bg-pink-50 border-pink-200 text-pink-700",
+      description: "Elegant and romantic templates perfect for wedding photographers"
+    },
+    wildlife: {
+      name: "Wildlife Photography", 
+      icon: <Mountain className="h-5 w-5" />,
+      color: "bg-green-50 border-green-200 text-green-700",
+      description: "Dynamic and nature-focused templates for wildlife photographers"
+    },
+    passion: {
+      name: "Passion Photography",
+      icon: <Palette className="h-5 w-5" />,
+      color: "bg-purple-50 border-purple-200 text-purple-700", 
+      description: "Creative and artistic templates for passionate photographers"
+    }
+  };
+
+  const currentTemplate = selectedTemplate ? templateConfigs[selectedTemplate as keyof typeof templateConfigs] : null;
+
+  // Drag and drop handlers
+  const handleDragStart = (e: React.DragEvent, elementId: string) => {
+    setDraggedElement(elementId);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (e: React.DragEvent, targetId: string) => {
+    e.preventDefault();
+    if (!draggedElement || draggedElement === targetId) return;
+
+    const newLayout = [...portfolioLayout];
+    const draggedIndex = newLayout.findIndex(item => item.id === draggedElement);
+    const targetIndex = newLayout.findIndex(item => item.id === targetId);
+
+    // Swap the elements
+    [newLayout[draggedIndex], newLayout[targetIndex]] = [newLayout[targetIndex], newLayout[draggedIndex]];
+
+    // Update order values
+    newLayout.forEach((item, index) => {
+      item.order = index;
+    });
+
+    setPortfolioLayout(newLayout);
+    setDraggedElement(null);
+  };
+
+  const toggleElementVisibility = (elementId: string) => {
+    setPortfolioLayout(prev => 
+      prev.map(item => 
+        item.id === elementId ? { ...item, visible: !item.visible } : item
+      )
+    );
+  };
+
+  const sortedLayout = [...portfolioLayout].sort((a, b) => a.order - b.order);
 
   // Handle upload complete from FileUploader
   const handleUploadComplete = (url: string, fileName: string) => {
@@ -93,12 +174,28 @@ export default function Portfolio() {
           <div>
             <h1 className="text-3xl font-bold">Portfolio Manager</h1>
             <p className="text-muted-foreground">Create and manage your photography showcase</p>
+            {currentTemplate && (
+              <div className="mt-2 flex items-center gap-2">
+                <div className={`px-3 py-1 rounded-full text-sm flex items-center gap-2 ${currentTemplate.color}`}>
+                  {currentTemplate.icon}
+                  <span className="font-medium">{currentTemplate.name}</span>
+                </div>
+                <span className="text-xs text-muted-foreground">{currentTemplate.description}</span>
+              </div>
+            )}
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setShowPreview(true)}>
-              <Eye className="h-4 w-4 mr-2" />
-              Preview
-            </Button>
+                      <div className="flex gap-2">
+                        <Button variant="outline" onClick={() => setShowPreview(true)}>
+                          <Eye className="h-4 w-4 mr-2" />
+                          Preview
+                        </Button>
+                        <Button 
+                          variant={isDragMode ? "default" : "outline"} 
+                          onClick={() => setIsDragMode(!isDragMode)}
+                        >
+                          <Move className="h-4 w-4 mr-2" />
+                          {isDragMode ? "Exit Drag Mode" : "Drag & Drop"}
+                        </Button>
             {isEditing ? (
               <>
                 <Button variant="outline" onClick={() => setIsEditing(false)}>
@@ -125,45 +222,118 @@ export default function Portfolio() {
             onCancel={() => setIsEditing(false)}
             onUploadComplete={handleUploadComplete}
           />
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Portfolio Overview</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div>
-                      <h3 className="text-xl font-semibold">{portfolioData.name || "Your Portfolio Name"}</h3>
-                      <p className="text-muted-foreground">{portfolioData.tagline || "Your professional tagline"}</p>
-                    </div>
-                    <p className="text-sm">{portfolioData.about || "Add a description about your photography style and experience."}</p>
-                    {portfolioData.services.length > 0 && (
-                      <div>
-                        <h4 className="font-medium mb-2">Services</h4>
-                        <div className="flex flex-wrap gap-2">
-                          {portfolioData.services.map((service, index) => (
-                            <div key={index} className="px-3 py-1 bg-gray-100 rounded-full text-sm">
-                              {service}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+                    ) : (
+                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div className="lg:col-span-2">
+                          {/* Drag & Drop Layout Manager */}
+                          {isDragMode && (
+                            <Card className="mb-6 border-2 border-blue-200 bg-blue-50">
+                              <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                  <GripVertical className="h-5 w-5" />
+                                  Portfolio Layout Manager
+                                </CardTitle>
+                              </CardHeader>
+                              <CardContent>
+                                <div className="space-y-3">
+                                  <p className="text-sm text-gray-600 mb-4">
+                                    Drag and drop to reorder sections. Click the eye icon to show/hide sections.
+                                  </p>
+                                  {sortedLayout.map((element) => (
+                                    <div
+                                      key={element.id}
+                                      draggable
+                                      onDragStart={(e) => handleDragStart(e, element.id)}
+                                      onDragOver={handleDragOver}
+                                      onDrop={(e) => handleDrop(e, element.id)}
+                                      className={`flex items-center justify-between p-3 bg-white rounded-lg border-2 cursor-move transition-all ${
+                                        draggedElement === element.id 
+                                          ? 'border-blue-500 bg-blue-100' 
+                                          : 'border-gray-200 hover:border-gray-300'
+                                      }`}
+                                    >
+                                      <div className="flex items-center gap-3">
+                                        <GripVertical className="h-4 w-4 text-gray-400" />
+                                        <span className="font-medium">{element.title}</span>
+                                      </div>
+                                      <button
+                                        onClick={() => toggleElementVisibility(element.id)}
+                                        className={`p-1 rounded ${
+                                          element.visible 
+                                            ? 'text-green-600 hover:bg-green-100' 
+                                            : 'text-gray-400 hover:bg-gray-100'
+                                        }`}
+                                      >
+                                        <Eye className={`h-4 w-4 ${element.visible ? '' : 'opacity-50'}`} />
+                                      </button>
+                                    </div>
+                                  ))}
+                                </div>
+                              </CardContent>
+                            </Card>
+                          )}
 
-              <div className="mt-6">
-                <PortfolioGallery 
-                  images={portfolioData.gallery}
-                  isEditing={false}
-                  onImagesChange={() => {}}
-                  onUploadComplete={handleUploadComplete}
-                  onRemoveImage={handleRemoveGalleryItem}
-                />
-              </div>
+                          {/* Portfolio Overview */}
+                          {sortedLayout.find(el => el.id === 'hero')?.visible && (
+                            <Card className="mb-6">
+                              <CardHeader>
+                                <div className="flex items-center justify-between">
+                                  <CardTitle>Portfolio Overview</CardTitle>
+                                  <Button variant="outline" size="sm" onClick={() => setShowTemplateSelector(!showTemplateSelector)}>
+                                    <Settings className="h-4 w-4 mr-2" />
+                                    Manage Portfolio
+                                  </Button>
+                                </div>
+                              </CardHeader>
+                              <CardContent>
+                                <div className="space-y-4">
+                                  <div>
+                                    <h3 className="text-xl font-semibold">{portfolioData.name || "Sarah Johnson Photography"}</h3>
+                                    <p className="text-muted-foreground">{portfolioData.tagline || "Capturing life's beautiful moments with artistic vision"}</p>
+                                  </div>
+                                  <p className="text-sm">{portfolioData.about || "I'm Sarah Johnson, a passionate photographer specializing in portrait, event, and commercial photography. With over 5 years of experience, I bring a unique blend of technical expertise and creative vision to every project. My style combines natural lighting with authentic moments, creating timeless images that tell your story beautifully."}</p>
+                                  {portfolioData.services.length > 0 && (
+                                    <div>
+                                      <h4 className="font-medium mb-2">Services</h4>
+                                      <div className="flex flex-wrap gap-2">
+                                        {portfolioData.services.map((service, index) => (
+                                          <div key={index} className="px-3 py-1 bg-gray-100 rounded-full text-sm">
+                                            {service}
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              </CardContent>
+                            </Card>
+                          )}
+
+                          {/* Gallery Section */}
+                          {sortedLayout.find(el => el.id === 'gallery')?.visible && (
+                            <div className="mt-6">
+                              <PortfolioGallery
+                                images={portfolioData.gallery}
+                                isEditing={false}
+                                onImagesChange={() => {}}
+                                onUploadComplete={handleUploadComplete}
+                                onRemoveImage={handleRemoveGalleryItem}
+                              />
+                            </div>
+                          )}
+
+              {showTemplateSelector && (
+                <div className="mt-6">
+                  <PortfolioTemplateSelector 
+                    onTemplateSelect={(template) => {
+                      setSelectedTemplate(template.id);
+                      setShowTemplateSelector(false);
+                      // Navigate to template page
+                      navigate(`/portfolio/template/${template.id}`);
+                    }}
+                  />
+                </div>
+              )}
             </div>
 
             <div className="space-y-6">

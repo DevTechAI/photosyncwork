@@ -1,5 +1,4 @@
-import { collection, doc, getDocs, getDoc, addDoc, updateDoc, deleteDoc, query, orderBy } from "firebase/firestore";
-import { firestore } from "@/integrations/google/firebaseConfig";
+import { supabase } from "@/integrations/supabase/client";
 import { Invoice } from "@/components/invoices/types";
 import { v4 as uuidv4 } from "uuid";
 

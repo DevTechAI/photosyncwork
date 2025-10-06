@@ -1,5 +1,4 @@
-import { collection, doc, getDocs, getDoc, addDoc, updateDoc, deleteDoc, query, orderBy } from "firebase/firestore";
-import { firestore } from "@/integrations/google/firebaseConfig";
+import { supabase } from "@/integrations/supabase/client";
 import { Job, JobFormData } from "@/types/hire";
 
 /**
@@ -25,18 +24,22 @@ const formatPostedDate = (dateString: string): string => {
 };
 
 /**
- * Fetch all job postings from Firestore
+ * Fetch all job postings from Supabase
  */
 export const fetchJobs = async (): Promise<Job[]> => {
   try {
-    const jobsRef = collection(firestore, "job_postings");
-    const q = query(jobsRef, orderBy("created_at", "desc"));
-    const querySnapshot = await getDocs(q);
+    const { data, error } = await supabase
+      .from('job_postings')
+      .select('*')
+      .order('created_at', { ascending: false });
     
-    return querySnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      postedDate: formatPostedDate(doc.data().created_at)
+    if (error) {
+      throw error;
+    }
+    
+    return (data || []).map(job => ({
+      ...job,
+      postedDate: formatPostedDate(job.created_at)
     })) as Job[];
   } catch (error) {
     console.error("Error fetching jobs:", error);
@@ -45,23 +48,28 @@ export const fetchJobs = async (): Promise<Job[]> => {
 };
 
 /**
- * Add a new job posting to Firestore
+ * Add a new job posting to Supabase
  */
 export const addJob = async (job: JobFormData): Promise<Job> => {
   try {
-    const jobsRef = collection(firestore, "job_postings");
-    
     const jobData = {
       ...job,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
     
-    const docRef = await addDoc(jobsRef, jobData);
+    const { data, error } = await supabase
+      .from('job_postings')
+      .insert([jobData])
+      .select()
+      .single();
+    
+    if (error) {
+      throw error;
+    }
     
     return {
-      id: docRef.id,
-      ...jobData,
+      ...data,
       postedDate: "Just now"
     } as Job;
   } catch (error) {
@@ -71,26 +79,29 @@ export const addJob = async (job: JobFormData): Promise<Job> => {
 };
 
 /**
- * Update an existing job posting in Firestore
+ * Update an existing job posting in Supabase
  */
 export const updateJob = async (id: string, job: JobFormData): Promise<Job> => {
   try {
-    const jobRef = doc(firestore, "job_postings", id);
-    
     const updateData = {
       ...job,
       updated_at: new Date().toISOString()
     };
     
-    await updateDoc(jobRef, updateData);
+    const { data, error } = await supabase
+      .from('job_postings')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
     
-    // Get the updated document
-    const docSnap = await getDoc(jobRef);
+    if (error) {
+      throw error;
+    }
     
     return {
-      id: docSnap.id,
-      ...docSnap.data(),
-      postedDate: formatPostedDate(docSnap.data().created_at)
+      ...data,
+      postedDate: formatPostedDate(data.created_at)
     } as Job;
   } catch (error) {
     console.error("Error updating job:", error);
@@ -99,12 +110,18 @@ export const updateJob = async (id: string, job: JobFormData): Promise<Job> => {
 };
 
 /**
- * Delete a job posting from Firestore
+ * Delete a job posting from Supabase
  */
 export const deleteJob = async (id: string): Promise<void> => {
   try {
-    const jobRef = doc(firestore, "job_postings", id);
-    await deleteDoc(jobRef);
+    const { error } = await supabase
+      .from('job_postings')
+      .delete()
+      .eq('id', id);
+    
+    if (error) {
+      throw error;
+    }
   } catch (error) {
     console.error("Error deleting job:", error);
     throw error;

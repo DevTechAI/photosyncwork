@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { useDashboard } from "@/services/dashboard";
 import { 
   Camera, 
   DollarSign, 
@@ -17,7 +18,8 @@ import {
   Image,
   Video,
   Edit,
-  Loader2
+  Loader2,
+  MessageSquare
 } from "lucide-react";
 import { StatCard } from "@/components/stats/StatCard";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -27,6 +29,7 @@ const MediaTagger = React.lazy(() => import("@/components/ai/MediaTagger").then(
 
 function Dashboard() {
   const { user, profile, loading } = useAuth();
+  const { metrics, loading: dashboardLoading, error: dashboardError } = useDashboard();
   const navigate = useNavigate();
 
   // Show loading if still checking auth
@@ -134,30 +137,48 @@ function Dashboard() {
         </div>
 
         {/* Stats Overview */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {dashboardError && (
+          <Card className="border-red-200 bg-red-50">
+            <CardContent className="pt-6">
+              <div className="flex items-center space-x-2 text-red-600">
+                <FileText className="h-4 w-4" />
+                <span className="text-sm">Error loading dashboard data: {dashboardError}</span>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+        
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
           <StatCard
-            title="Active Projects"
-            value="12"
-            icon={FileText}
-            trend={{ value: 3, label: "vs last month" }}
+            title="Quote Enquiries"
+            value={dashboardLoading ? <Skeleton className="h-6 w-8" /> : metrics?.pendingEnquiries?.toString() || '0'}
+            icon={MessageSquare}
+            trend={{ value: 5, label: "vs last week" }}
+            onClick={() => navigate("/quote-enquiries")}
           />
           <StatCard
             title="Monthly Revenue"
-            value="₹2,48,000"
+            value={dashboardLoading ? <Skeleton className="h-6 w-16" /> : `₹${metrics?.monthlyRevenue?.toLocaleString() || '0'}`}
             icon={DollarSign}
             trend={{ value: 12, label: "vs last month" }}
           />
           <StatCard
             title="Upcoming Events"
-            value="6"
+            value={dashboardLoading ? <Skeleton className="h-6 w-8" /> : metrics?.upcomingEvents?.toString() || '0'}
             icon={Calendar}
             trend={{ value: 2, label: "vs last week" }}
           />
           <StatCard
             title="Pending Invoices"
-            value="4"
+            value={dashboardLoading ? <Skeleton className="h-6 w-8" /> : metrics?.pendingInvoices?.toString() || '0'}
             icon={Receipt}
             trend={{ value: -1, label: "vs last week" }}
+          />
+          <StatCard
+            title="Active Projects"
+            value={dashboardLoading ? <Skeleton className="h-6 w-8" /> : metrics?.activeProjects?.toString() || '0'}
+            icon={FileText}
+            trend={{ value: 3, label: "vs last month" }}
           />
         </div>
 

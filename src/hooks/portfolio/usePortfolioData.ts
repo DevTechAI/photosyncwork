@@ -25,8 +25,8 @@ export function usePortfolioData() {
     isLoading: isLoadingPortfolio,
     refetch: refetchPortfolio
   } = useQuery({
-    queryKey: ['portfolio', user?.uid],
-    queryFn: () => user ? fetchPortfolio(user.uid) : null,
+    queryKey: ['portfolio', user?.id],
+    queryFn: () => user ? fetchPortfolio(user.id) : null,
     enabled: !!user,
     onError: (error: any) => {
       console.error("Error fetching portfolio:", error);
@@ -60,7 +60,7 @@ export function usePortfolioData() {
   // Create portfolio mutation
   const createPortfolioMutation = useMutation({
     mutationFn: (portfolioData: PortfolioFormData) => 
-      user ? createPortfolio(user.uid, portfolioData) : Promise.reject("No user"),
+      user ? createPortfolio(user.id, portfolioData) : Promise.reject("No user"),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['portfolio'] });
       toast({
@@ -190,8 +190,18 @@ export function usePortfolioData() {
         contact: portfolio.contact,
         socialLinks: portfolio.socialLinks
       }));
+    } else if (user) {
+      // If no portfolio exists, populate contact info from user profile
+      setPortfolioData(prev => ({
+        ...prev,
+        contact: {
+          email: user.email || "",
+          phone: "",
+          location: ""
+        }
+      }));
     }
-  }, [portfolio]);
+  }, [portfolio, user]);
 
   useEffect(() => {
     if (galleryItems.length > 0) {
@@ -223,7 +233,11 @@ export function usePortfolioData() {
       tagline: portfolioData.tagline,
       about: portfolioData.about,
       services: portfolioData.services,
-      contact: portfolioData.contact,
+      contact: {
+        email: portfolioData.contact.email || user.email || "",
+        phone: portfolioData.contact.phone || "",
+        location: portfolioData.contact.location || ""
+      },
       socialLinks: portfolioData.socialLinks
     };
 

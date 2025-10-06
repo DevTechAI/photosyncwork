@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Camera, Eye, EyeOff, ShieldCheck, AlertCircle } from "lucide-react";
+import { Camera, Eye, EyeOff, ShieldCheck, AlertCircle, Users } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -132,6 +132,14 @@ export default function Auth() {
     }
   };
 
+  // Handle Enter key press
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !emailPasswordLoading) {
+      e.preventDefault();
+      handleEmailAuth();
+    }
+  };
+
   const handleBypassAuth = () => {
     toggleBypassAuth(bypassRole);
     navigate('/dashboard');
@@ -150,14 +158,30 @@ export default function Auth() {
             className="mx-auto mb-4 p-3 bg-primary/10 rounded-full w-fit cursor-pointer"
             onClick={handleLogoClick}
           >
-            <Camera className="h-8 w-8 text-primary" />
+            <img 
+              src="/photosyncwork-logo.png" 
+              alt="PhotoSyncWork Logo" 
+              className="h-8 w-8 object-contain"
+            />
           </div>
           <CardTitle className="text-2xl font-bold">
-            Welcome to StudioSync
+            Welcome to PhotoSyncWork
           </CardTitle>
           <CardDescription>
             Sign in to manage your photography business
           </CardDescription>
+          
+          {/* Public User Access Button */}
+          <div className="mt-4">
+            <Button 
+              onClick={() => navigate("/photographers")} 
+              variant="outline"
+              className="w-full bg-green-50 border-green-200 text-green-700 hover:bg-green-100"
+            >
+              <Users className="h-4 w-4 mr-2" />
+              Non-PG End Public User
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Auth Error Alert */}
@@ -242,7 +266,7 @@ export default function Auth() {
           </div>
 
           {/* Email/Password Form */}
-          <div className="space-y-4">
+          <form onSubmit={(e) => { e.preventDefault(); handleEmailAuth(); }} className="space-y-4">
             {isSignUp && (
               <div className="space-y-2">
                 <Label htmlFor="fullName">Full Name</Label>
@@ -252,6 +276,7 @@ export default function Auth() {
                   placeholder="Enter your full name"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
+                  onKeyDown={handleKeyDown}
                   disabled={emailPasswordLoading}
                 />
               </div>
@@ -265,6 +290,7 @@ export default function Auth() {
                 placeholder="Enter your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                onKeyDown={handleKeyDown}
                 disabled={emailPasswordLoading}
               />
             </div>
@@ -278,6 +304,7 @@ export default function Auth() {
                   placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  onKeyDown={handleKeyDown}
                   disabled={emailPasswordLoading}
                 />
                 <Button
@@ -307,6 +334,7 @@ export default function Auth() {
                     placeholder="Confirm your password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
+                    onKeyDown={handleKeyDown}
                     disabled={emailPasswordLoading}
                   />
                   <Button
@@ -328,7 +356,7 @@ export default function Auth() {
             )}
             
             <Button
-              type="button"
+              type="submit"
               onClick={handleEmailAuth}
               className="w-full"
               size="lg"
@@ -362,7 +390,7 @@ export default function Auth() {
                 {isSignUp ? "Already have an account? Sign in" : "Don't have an account? Sign up"}
               </Button>
             </div>
-          </div>
+          </form>
 
           <div className="text-center">
             <p className="text-sm text-muted-foreground">

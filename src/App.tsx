@@ -16,6 +16,8 @@ import { LoadingSpinner } from "./components/ui/loading-spinner";
 const Home = React.lazy(() => import("./pages/Home"));
 const Auth = React.lazy(() => import("./pages/Auth"));
 const Portfolio = React.lazy(() => import("./pages/Portfolio"));
+const PortfolioTemplate = React.lazy(() => import("./pages/PortfolioTemplate"));
+const PortfolioEditor = React.lazy(() => import("./pages/PortfolioEditor"));
 const PhotographersPortal = React.lazy(() => import("./pages/PhotographersPortal"));
 const Profile = React.lazy(() => import("./pages/Profile"));
 const Settings = React.lazy(() => import("./pages/Settings"));
@@ -28,6 +30,8 @@ const Hire = React.lazy(() => import("./pages/Hire"));
 const NotFound = React.lazy(() => import("./pages/NotFound"));
 const ClientPortal = React.lazy(() => import("./pages/ClientPortal"));
 const UnifiedWorkflowPage = React.lazy(() => import("./pages/UnifiedWorkflowPage"));
+const QuoteEnquiries = React.lazy(() => import("./pages/QuoteEnquiries"));
+const PublicPhotographerDirectory = React.lazy(() => import("./pages/PublicPhotographerDirectory"));
 const RoleManager = React.lazy(() => import("./components/rbac/RoleManager").then(mod => ({ default: mod.RoleManager })));
 
 function App() {
@@ -42,12 +46,15 @@ function App() {
           <Route path="/login" element={<Navigate to="/auth" replace />} />
           <Route path="/hire" element={<Hire />} />
           <Route path="/photographers" element={<PhotographersPortal />} />
+          <Route path="/public-photographers" element={<PublicPhotographerDirectory />} />
           
           {/* Client Portal - Public access with its own authentication */}
           <Route path="/client-portal" element={<ClientPortal />} />
           
           {/* Portfolio can be accessed without login for creation */}
           <Route path="/portfolio" element={<Portfolio />} />
+          <Route path="/portfolio/template/:templateId" element={<PortfolioTemplate />} />
+          <Route path="/portfolio/editor" element={<PortfolioEditor />} />
           
           {/* Protected routes - require authentication */}
           <Route path="/dashboard" element={
@@ -73,6 +80,11 @@ function App() {
           <Route path="/estimates" element={
             <AuthGuard>
               <EstimatesPage />
+            </AuthGuard>
+          } />
+          <Route path="/quote-enquiries" element={
+            <AuthGuard>
+              <QuoteEnquiries />
             </AuthGuard>
           } />
           

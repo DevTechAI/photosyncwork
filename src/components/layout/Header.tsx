@@ -42,9 +42,14 @@ export function Header() {
           {/* Logo with increased left margin on mobile */}
           <button 
             onClick={handleLogoClick}
-            className="text-2xl font-bold text-dustyBlue-dark hover:text-dustyBlue transition-colors ml-12 lg:ml-0"
+            className="flex items-center space-x-2 text-2xl font-bold text-dustyBlue-dark hover:text-dustyBlue transition-colors ml-12 lg:ml-0"
           >
-            StudioSync
+            <img 
+              src="/photosyncwork-logo.png" 
+              alt="PhotoSyncWork Logo" 
+              className="h-8 w-8 object-contain"
+            />
+            <span>PhotoSyncWork</span>
           </button>
           
           <div className="flex items-center space-x-4">
