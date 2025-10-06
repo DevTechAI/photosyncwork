@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { useEffect, useState } from "react";
+import { WorkInProgress } from "./ui/WorkInProgress";
 import { useUser } from "@/contexts/UserContext";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
@@ -81,7 +82,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 alt="PhotoSyncWork Logo" 
                 className="h-8 w-8 object-contain"
               />
-              <h1 className="text-2xl font-semibold">PhotoSyncWork</h1>
+              <div className="flex-1">
+                <h1 className="text-2xl font-semibold">PhotoSyncWork</h1>
+                <WorkInProgress size="sm" className="mt-1" />
+              </div>
             </div>
             <p className="text-sm text-muted-foreground px-2">Studio Success System</p>
           </div>

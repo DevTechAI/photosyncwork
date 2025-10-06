@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { StatCard } from "@/components/stats/StatCard";
 import { Skeleton } from "@/components/ui/skeleton";
+import { WorkInProgress } from "@/components/ui/WorkInProgress";
 
 // Lazy-loaded components
 const MediaTagger = React.lazy(() => import("@/components/ai/MediaTagger").then(mod => ({ default: mod.MediaTagger })));
@@ -135,6 +136,9 @@ function Dashboard() {
             Settings
           </Button>
         </div>
+
+        {/* Work in Progress Card */}
+        <WorkInProgress variant="card" size="lg" className="mb-6" />
 
         {/* Stats Overview */}
         {dashboardError && (

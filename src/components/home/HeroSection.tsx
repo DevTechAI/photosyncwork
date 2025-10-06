@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { WebGLBackground } from "./WebGLBackground";
+import { WorkInProgress } from "@/components/ui/WorkInProgress";
 
 export function HeroSection() {
   const navigate = useNavigate();
@@ -27,6 +28,15 @@ export function HeroSection() {
           src="/photosyncwork-logo.svg" 
           alt="PhotoSyncWork Logo" 
           className="h-24 md:h-32 w-auto object-contain mx-auto drop-shadow-lg"
+        />
+      </div>
+
+      {/* Work in Progress Banner */}
+      <div className="mb-8 z-20 relative">
+        <WorkInProgress 
+          variant="banner" 
+          size="lg" 
+          className="mx-auto w-fit"
         />
       </div>
 

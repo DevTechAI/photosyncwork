@@ -10,6 +10,7 @@ import { PortfolioTemplateSelector } from "@/components/portfolio/PortfolioTempl
 import { usePortfolioData } from "@/hooks/portfolio/usePortfolioData";
 import { useAuth } from "@/contexts/AuthContext";
 import { Skeleton } from "@/components/ui/skeleton";
+import { WorkInProgress } from "@/components/ui/WorkInProgress";
 
 export default function Portfolio() {
   const { user } = useAuth();
@@ -174,6 +175,7 @@ export default function Portfolio() {
           <div>
             <h1 className="text-3xl font-bold">Portfolio Manager</h1>
             <p className="text-muted-foreground">Create and manage your photography showcase</p>
+            <WorkInProgress variant="banner" size="md" className="mt-4" />
             {currentTemplate && (
               <div className="mt-2 flex items-center gap-2">
                 <div className={`px-3 py-1 rounded-full text-sm flex items-center gap-2 ${currentTemplate.color}`}>
